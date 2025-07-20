@@ -42,6 +42,9 @@
 #include <QGridLayout>
 #include <QFormLayout>
 #include <QSpacerItem>
+#include <QPixmap>
+#include <QDir>
+#include <QStandardPaths>
 
 MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent) {
     // 设置主界面
@@ -51,19 +54,29 @@ MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent) {
     // 主布局
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
+    // 创建滚动区域
+    QScrollArea *scrollArea = new QScrollArea();
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+    // 创建内容容器
+    QWidget *contentWidget = new QWidget();
+    QVBoxLayout *contentLayout = new QVBoxLayout(contentWidget);
+
     // 添加标题
     QLabel *titleLabel = new QLabel("Qt 常用 UI 控件全集示例");
     titleLabel->setAlignment(Qt::AlignCenter);
     QFont titleFont("Arial", 18, QFont::Bold);
     titleLabel->setFont(titleFont);
     titleLabel->setStyleSheet("color: #2c3e50; margin: 15px;");
-    mainLayout->addWidget(titleLabel);
+    contentLayout->addWidget(titleLabel);
 
     // 创建选项卡
     QTabWidget *tabWidget = new QTabWidget();
     tabWidget->setTabPosition(QTabWidget::West);
     tabWidget->setStyleSheet("QTabBar::tab { height: 80px; width: 30px; }");
-    mainLayout->addWidget(tabWidget);
+    contentLayout->addWidget(tabWidget);
 
     // ================= 第一个选项卡 - 基本控件 =================
     QWidget *basicTab = new QWidget();
@@ -282,20 +295,20 @@ MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent) {
     QGroupBox *scrollGroup = new QGroupBox("滚动区域");
     QVBoxLayout *scrollLayout = new QVBoxLayout(scrollGroup);
 
-    QScrollArea *scrollArea = new QScrollArea();
+    QScrollArea *demoScrollArea = new QScrollArea();
     QWidget *scrollContent = new QWidget();
-    QVBoxLayout *contentLayout = new QVBoxLayout(scrollContent);
+    QVBoxLayout *demoContentLayout = new QVBoxLayout(scrollContent);
 
     for (int i = 1; i <= 20; ++i) {
         QLabel *label = new QLabel("滚动内容项 #" + QString::number(i));
         label->setStyleSheet(QString("background-color: %1; padding: 8px;")
-                                 .arg(i % 2 == 0 ? "#f0f0f0" : "#ffffff"));
-        contentLayout->addWidget(label);
+                             .arg(i % 2 == 0 ? "#f0f0f0" : "#ffffff"));
+        demoContentLayout->addWidget(label);
     }
 
-    scrollArea->setWidget(scrollContent);
-    scrollArea->setWidgetResizable(true);
-    scrollLayout->addWidget(scrollArea);
+    demoScrollArea->setWidget(scrollContent);
+    demoScrollArea->setWidgetResizable(true);
+    scrollLayout->addWidget(demoScrollArea);
     dialogLayout->addWidget(scrollGroup);
 
     tabWidget->addTab(dialogTab, "对话框");
@@ -313,7 +326,7 @@ MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent) {
         for (int col = 0; col < 4; ++col) {
             QPushButton *btn = new QPushButton(
                 QString("行%1列%2").arg(row+1).arg(col+1)
-                );
+            );
             btn->setMinimumHeight(40);
             gridLayout->addWidget(btn, row, col);
         }
@@ -330,19 +343,19 @@ MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent) {
     formLayout->addRow("", new QPushButton("登录"));
     layoutTabLayout->addWidget(formGroup);
 
-    // ===== 新增：水平两栏布局 =====
+    // 水平两栏布局
     QGroupBox *hSplitGroup = new QGroupBox("水平两栏布局 (左侧固定, 右侧自适应)");
     QHBoxLayout *hSplitLayout = new QHBoxLayout(hSplitGroup);
 
     // 左侧固定区域
     QWidget *leftFixedWidget = new QWidget();
-    leftFixedWidget->setFixedWidth(200); // 固定宽度200px
+    leftFixedWidget->setFixedWidth(200);
     leftFixedWidget->setStyleSheet("background-color: #e3f2fd; border: 1px solid #bbdefb;");
     QVBoxLayout *leftLayout = new QVBoxLayout(leftFixedWidget);
     leftLayout->addWidget(new QLabel("左侧固定区域"));
     leftLayout->addWidget(new QLabel("宽度: 200px"));
     leftLayout->addWidget(new QPushButton("操作按钮"));
-    leftLayout->addStretch(); // 添加伸缩因子
+    leftLayout->addStretch();
 
     // 右侧自适应区域
     QWidget *rightAutoWidget = new QWidget();
@@ -354,17 +367,16 @@ MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent) {
     rightLayout->addWidget(autoTextEdit);
 
     hSplitLayout->addWidget(leftFixedWidget);
-    hSplitLayout->addWidget(rightAutoWidget, 1); // 设置拉伸因子为1
-
+    hSplitLayout->addWidget(rightAutoWidget, 1);
     layoutTabLayout->addWidget(hSplitGroup);
 
-    // ===== 新增：垂直两栏布局 =====
+    // 垂直两栏布局
     QGroupBox *vSplitGroup = new QGroupBox("垂直两栏布局 (顶部固定, 底部自适应)");
     QVBoxLayout *vSplitLayout = new QVBoxLayout(vSplitGroup);
 
     // 顶部固定区域
     QWidget *topFixedWidget = new QWidget();
-    topFixedWidget->setFixedHeight(100); // 固定高度100px
+    topFixedWidget->setFixedHeight(100);
     topFixedWidget->setStyleSheet("background-color: #f1f8e9; border: 1px solid #dcedc8;");
     QVBoxLayout *topLayout = new QVBoxLayout(topFixedWidget);
     topLayout->addWidget(new QLabel("顶部固定区域"));
@@ -385,11 +397,220 @@ MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent) {
     bottomLayout->addWidget(autoList);
 
     vSplitLayout->addWidget(topFixedWidget);
-    vSplitLayout->addWidget(bottomAutoWidget, 1); // 设置拉伸因子为1
-
+    vSplitLayout->addWidget(bottomAutoWidget, 1);
     layoutTabLayout->addWidget(vSplitGroup);
 
+    // ===== 水平列表图文混排（使用本地图片） =====
+    QGroupBox *hImageTextGroup = new QGroupBox("水平列表图文混排（使用本地图片）");
+    QVBoxLayout *hImageTextLayout = new QVBoxLayout(hImageTextGroup);
+
+    // 滚动区域容器
+    QScrollArea *hScrollArea = new QScrollArea();
+    hScrollArea->setWidgetResizable(true);
+    hScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+
+    // 内容容器
+    QWidget *hContentWidget = new QWidget();
+    QHBoxLayout *hContentLayout = new QHBoxLayout(hContentWidget);
+    hContentLayout->setAlignment(Qt::AlignLeft);
+    hContentLayout->setSpacing(15);
+
+    // 获取项目中的图片目录
+    QString imageDir = QDir::currentPath() + "/images";
+    // 如果当前目录没有images文件夹，尝试从项目根目录查找
+    if (!QDir(imageDir).exists()) {
+        imageDir = QDir::currentPath() + "/../images";
+    }
+
+    // 创建多个图文混排项目
+    QStringList titles = {
+        "美丽的自然风光",
+        "城市夜景",
+        "海滩度假",
+        "山脉徒步",
+        "历史建筑",
+        "现代艺术"
+    };
+
+    QStringList descriptions = {
+        "壮丽的山脉和湖泊，大自然的杰作",
+        "灯火辉煌的城市夜景，繁华都市的魅力",
+        "阳光沙滩，休闲度假的理想之地",
+        "徒步旅行者的天堂，挑战自我的旅程",
+        "古老建筑的魅力，历史的见证",
+        "当代艺术的创新表达，视觉的盛宴"
+    };
+
+    // 尝试加载本地图片，如果失败则使用默认图片
+    for (int i = 0; i < 6; i++) {
+        // 创建单个项目容器
+        QWidget *itemWidget = new QWidget();
+        itemWidget->setFixedSize(250, 300);
+        itemWidget->setStyleSheet("background-color: white; border: 1px solid #e0e0e0; border-radius: 5px;");
+
+        QVBoxLayout *itemLayout = new QVBoxLayout(itemWidget);
+        itemLayout->setContentsMargins(10, 10, 10, 10);
+
+        // 图片区域 - 使用本地图片
+        QLabel *imageLabel = new QLabel();
+        imageLabel->setFixedHeight(150);
+        imageLabel->setAlignment(Qt::AlignCenter);
+        imageLabel->setStyleSheet("border-radius: 3px;");
+
+        // 尝试加载图片
+        QString imagePath = QString("%1/example%2.png").arg(imageDir).arg(i+1);
+        QPixmap pixmap(imagePath);
+
+        if (pixmap.isNull()) {
+            // 如果图片不存在，使用彩色占位符
+            QColor color = QColor::fromHsv(i * 60, 150, 230);
+            imageLabel->setStyleSheet(QString("background-color: %1; border-radius: 3px;").arg(color.name()));
+            imageLabel->setText(QString("图片 %1\n(未找到本地图片)").arg(i+1));
+        } else {
+            // 缩放图片并设置
+            pixmap = pixmap.scaledToHeight(140, Qt::SmoothTransformation);
+            imageLabel->setPixmap(pixmap);
+            imageLabel->setToolTip("本地图片: " + imagePath);
+        }
+
+        itemLayout->addWidget(imageLabel);
+
+        // 文字区域
+        QLabel *titleLabel = new QLabel(titles[i]);
+        titleLabel->setStyleSheet("font-weight: bold; font-size: 14px; margin-top: 10px;");
+        itemLayout->addWidget(titleLabel);
+
+        QLabel *descLabel = new QLabel(descriptions[i]);
+        descLabel->setStyleSheet("color: #616161; font-size: 12px; margin-top: 5px;");
+        descLabel->setWordWrap(true);
+        itemLayout->addWidget(descLabel);
+
+        // 底部按钮
+        QPushButton *viewButton = new QPushButton("查看详情");
+        viewButton->setStyleSheet("background-color: #4fc3f7; color: white; border: none; padding: 5px; border-radius: 3px; margin-top: 10px;");
+        itemLayout->addWidget(viewButton);
+
+        // 添加到水平布局
+        hContentLayout->addWidget(itemWidget);
+    }
+
+    hScrollArea->setWidget(hContentWidget);
+    hImageTextLayout->addWidget(hScrollArea);
+    layoutTabLayout->addWidget(hImageTextGroup);
+
+    // ===== 垂直列表图文混排（使用本地图片） =====
+    QGroupBox *vImageTextGroup = new QGroupBox("垂直列表图文混排（使用本地图片）");
+    QVBoxLayout *vImageTextLayout = new QVBoxLayout(vImageTextGroup);
+
+    // 滚动区域容器
+    QScrollArea *vScrollArea = new QScrollArea();
+    vScrollArea->setWidgetResizable(true);
+
+    // 内容容器
+    QWidget *vContentWidget = new QWidget();
+    QVBoxLayout *vContentLayout = new QVBoxLayout(vContentWidget);
+    vContentLayout->setSpacing(10);
+
+    // 创建多个图文混排项目
+    QStringList vTitles = {
+        "科技新闻",
+        "财经报道",
+        "体育赛事",
+        "娱乐八卦",
+        "健康生活",
+        "旅游攻略"
+    };
+
+    QStringList vDescriptions = {
+        "最新科技动态：人工智能在医疗领域的突破性应用",
+        "全球股市波动分析：投资者应该如何应对市场变化",
+        "世界杯足球赛：冠军争夺战精彩回顾",
+        "明星婚礼现场直击：豪华阵容羡煞旁人",
+        "健康饮食指南：营养师推荐的10种超级食物",
+        "东南亚旅游攻略：必去的10个景点和当地美食"
+    };
+
+    for (int i = 0; i < 6; i++) {
+        // 创建单个项目容器
+        QWidget *itemWidget = new QWidget();
+        itemWidget->setMinimumHeight(150);
+        itemWidget->setStyleSheet("background-color: white; border: 1px solid #e0e0e0; border-radius: 5px;");
+
+        QHBoxLayout *itemLayout = new QHBoxLayout(itemWidget);
+        itemLayout->setContentsMargins(10, 10, 10, 10);
+
+        // 图片区域 - 使用本地图片
+        QLabel *imageLabel = new QLabel();
+        imageLabel->setFixedSize(120, 120);
+        imageLabel->setAlignment(Qt::AlignCenter);
+        imageLabel->setStyleSheet("border-radius: 3px;");
+
+        // 尝试加载图片
+        QString imagePath = QString("%1/example%2.png").arg(imageDir).arg(i+1);
+        QPixmap pixmap(imagePath);
+
+        if (pixmap.isNull()) {
+            // 如果图片不存在，使用彩色占位符
+            QColor color = QColor::fromHsv(i * 60, 150, 230);
+            imageLabel->setStyleSheet(QString("background-color: %1; border-radius: 3px;").arg(color.name()));
+            imageLabel->setText(QString("图片 %1\n(未找到本地图片)").arg(i+1));
+        } else {
+            // 缩放图片并设置
+            pixmap = pixmap.scaled(120, 120, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            imageLabel->setPixmap(pixmap);
+            imageLabel->setToolTip("本地图片: " + imagePath);
+        }
+
+        itemLayout->addWidget(imageLabel);
+
+        // 文字区域
+        QWidget *textWidget = new QWidget();
+        QVBoxLayout *textLayout = new QVBoxLayout(textWidget);
+        textLayout->setContentsMargins(10, 0, 0, 0);
+
+        QLabel *titleLabel = new QLabel(vTitles[i]);
+        titleLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
+        textLayout->addWidget(titleLabel);
+
+        QLabel *descLabel = new QLabel(vDescriptions[i]);
+        descLabel->setStyleSheet("color: #616161; font-size: 12px; margin-top: 5px;");
+        descLabel->setWordWrap(true);
+        textLayout->addWidget(descLabel);
+
+        // 时间和按钮区域
+        QHBoxLayout *metaLayout = new QHBoxLayout();
+        metaLayout->addWidget(new QLabel(QString("%1分钟前").arg(30 - i*5)));
+        metaLayout->addStretch();
+
+        QPushButton *readButton = new QPushButton("阅读全文");
+        readButton->setStyleSheet("background-color: #81c784; color: white; border: none; padding: 3px 8px; border-radius: 3px;");
+        metaLayout->addWidget(readButton);
+
+        textLayout->addLayout(metaLayout);
+        textLayout->addStretch();
+
+        itemLayout->addWidget(textWidget, 1); // 设置拉伸因子
+
+        // 添加到垂直布局
+        vContentLayout->addWidget(itemWidget);
+    }
+
+    vScrollArea->setWidget(vContentWidget);
+    vImageTextLayout->addWidget(vScrollArea);
+
+    // 添加图片提示
+    QLabel *imageHint = new QLabel(QString("提示: 本示例使用项目中的图片\n图片路径: %1/example[1-6].png\n如果未找到图片，将显示彩色占位符").arg(imageDir));
+    imageHint->setStyleSheet("color: #757575; font-size: 11px; margin-top: 5px;");
+    imageHint->setWordWrap(true);
+    vImageTextLayout->addWidget(imageHint);
+
+    layoutTabLayout->addWidget(vImageTextGroup);
+
     tabWidget->addTab(layoutTab, "布局示例");
+
+    // 将内容容器设置到滚动区域
+    scrollArea->setWidget(contentWidget);
+    mainLayout->addWidget(scrollArea);
 
     // 添加状态栏
     QStatusBar *statusBar = new QStatusBar();
