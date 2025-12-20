@@ -2,7 +2,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++17
+CONFIG += c++17 sdk_no_version_check
 
 # 你可以让代码在使用已弃用API时报错
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000
@@ -27,7 +27,7 @@ HEADERS += \
 FORMS += \
     mainuiwindow.ui
 
-RESOURCES += resources.qrc
+# #RESOURCES += resources.qrc
 
 # 默认部署规则
 qnx: target.path = /tmp/$${TARGET}/bin

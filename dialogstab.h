@@ -12,7 +12,6 @@
 #include <QInputDialog>
 #include <QScrollArea>
 #include <QLabel>
-#include <QVBoxLayout>
 
 
 class DialogsTab : public QWidget
