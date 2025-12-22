@@ -4,6 +4,7 @@
 #include "datadisplay/datadisplaytab.h"
 #include "dialogs/dialogstab.h"
 #include "layoutexamples/layoutexamplestab.h"
+#include "echarts/echartstab.h"
 #include <QFont>
 #include <QListWidgetItem>
 #include <QScrollArea>
@@ -76,6 +77,7 @@ void MainUIWindow::setupMainMenu()
     new QListWidgetItem("控件示例", mainMenuList);
     new QListWidgetItem("布局示例", mainMenuList);
     new QListWidgetItem("对话框示例", mainMenuList);
+    new QListWidgetItem("图表示例", mainMenuList);
 
     connect(mainMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onMainMenuClicked);
 
@@ -95,6 +97,8 @@ void MainUIWindow::setupSubMenu(const QString &mainMenu)
         new QListWidgetItem("布局示例", subMenuList);
     } else if (mainMenu == "对话框示例") {
         new QListWidgetItem("对话框", subMenuList);
+    } else if (mainMenu == "图表示例") {
+        new QListWidgetItem("ECharts示例", subMenuList);
     }
 
     // 默认选择第一个二级菜单
@@ -140,6 +144,8 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         contentWidget = new LayoutExamplesTab();
     } else if (subMenu == "对话框") {
         contentWidget = new DialogsTab();
+    } else if (subMenu == "ECharts示例") {
+        contentWidget = new EChartsTab();
     }
 
     // 如果创建了内容控件，添加到内容区域

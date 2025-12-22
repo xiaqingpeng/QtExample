@@ -11,7 +11,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # 查找Qt模块
-find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets WebEngineWidgets REQUIRED)
 
 # 设置MacOS特定选项
 if(APPLE)
@@ -82,6 +82,18 @@ target_link_libraries(LayoutExamples PRIVATE
     Qt6::Widgets
 )
 
+# ECharts模块
+qt_add_library(ECharts SHARED
+    echarts/echartstab.cpp
+    echarts/echartstab.h
+)
+target_link_libraries(ECharts PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::WebEngineWidgets
+)
+
 # 主应用程序源文件
 set(SOURCES
     main.cpp
@@ -106,11 +118,13 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    Qt6::WebEngineWidgets
     BasicControls
     DataDisplay
     AdvancedControls
     Dialogs
     LayoutExamples
+    ECharts
 )
 
 # 包含模块头文件目录
@@ -121,6 +135,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/datadisplay
     ${CMAKE_CURRENT_SOURCE_DIR}/dialogs
     ${CMAKE_CURRENT_SOURCE_DIR}/layoutexamples
+    ${CMAKE_CURRENT_SOURCE_DIR}/echarts
 )
 
 # 安装规则
@@ -131,7 +146,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # 安装模块库
-install(TARGETS BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples
+install(TARGETS BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples ECharts
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui webenginewidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -16,7 +16,8 @@ SOURCES += \
     advancedcontrols/advancedcontrolstab.cpp \
     datadisplay/datadisplaytab.cpp \
     dialogs/dialogstab.cpp \
-    layoutexamples/layoutexamplestab.cpp
+    layoutexamples/layoutexamplestab.cpp \
+    echarts/echartstab.cpp
 
 HEADERS += \
     mainuiwindow.h \
@@ -24,7 +25,8 @@ HEADERS += \
     advancedcontrols/advancedcontrolstab.h \
     datadisplay/datadisplaytab.h \
     dialogs/dialogstab.h \
-    layoutexamples/layoutexamplestab.h
+    layoutexamples/layoutexamplestab.h \
+    echarts/echartstab.h
 
 FORMS += \
     mainuiwindow.ui
