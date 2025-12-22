@@ -17,6 +17,7 @@
 #include <QPixmap>
 #include <QStandardPaths>
 #include <QDir>
+#include <QCoreApplication>
 
 class LayoutExamplesTab : public QWidget
 {

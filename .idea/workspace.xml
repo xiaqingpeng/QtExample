@@ -34,37 +34,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4809be23-3e22-465c-be5f-cbe61f5162ed" name="更改" comment="更改">
-      <change afterPath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/MODULARIZATION_README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/advancedcontrols/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/advancedcontrols/advancedcontrols.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/basiccontrols/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/basiccontrols/basiccontrols.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/datadisplay/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/datadisplay/datadisplay.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dialogs/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/dialogs/dialogs.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/layoutexamples/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/layoutexamples/layoutexamples.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/migrate_files.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/migrate_to_modular.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/new_cmakelists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/update_cmake.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/images/小马发红包.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/images/小马吃棒棒糖.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/images/小马抱福字.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/images/小马拿红包.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/images/小马拿金元宝.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/images/小马送饺子.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/advancedcontrolstab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/advancedcontrols/advancedcontrolstab.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/advancedcontrolstab.h" beforeDir="false" afterPath="$PROJECT_DIR$/advancedcontrols/advancedcontrolstab.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basiccontrolstab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/basiccontrols/basiccontrolstab.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/basiccontrolstab.h" beforeDir="false" afterPath="$PROJECT_DIR$/basiccontrols/basiccontrolstab.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datadisplaytab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/datadisplay/datadisplaytab.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/datadisplaytab.h" beforeDir="false" afterPath="$PROJECT_DIR$/datadisplay/datadisplaytab.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dialogstab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/dialogs/dialogstab.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dialogstab.h" beforeDir="false" afterPath="$PROJECT_DIR$/dialogs/dialogstab.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/example.pro" beforeDir="false" afterPath="$PROJECT_DIR$/example.pro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/layoutexamplestab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/layoutexamplestab.h" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mainuiwindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mainuiwindow.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.h" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -5,10 +5,20 @@ LayoutExamplesTab::LayoutExamplesTab(QWidget *parent) : QWidget(parent)
     mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(15);
     
-    // 获取图片目录
-    imageDir = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+    // 使用项目中的images目录
+    QDir currentDir(QCoreApplication::applicationDirPath());
+    // 向上导航直到找到项目根目录（包含images文件夹）
+    for (int i = 0; i < 10; i++) { // 最多向上查找10级目录
+        if (currentDir.exists("images")) {
+            imageDir = currentDir.absoluteFilePath("images");
+            break;
+        }
+        currentDir.cdUp();
+    }
+    
+    // 如果找不到images目录，使用当前工作目录
     if (imageDir.isEmpty()) {
-        imageDir = QDir::homePath();
+        imageDir = QDir::currentPath();
     }
     
     createGridLayout();
@@ -123,22 +133,32 @@ void LayoutExamplesTab::createHorizontalImageTextLayout()
     hContentLayout->setAlignment(Qt::AlignLeft);
     hContentLayout->setSpacing(15);
     
+    // 使用项目中的小马图片
+    QStringList imageFiles = {
+        "小马发红包.png",
+        "小马吃棒棒糖.png",
+        "小马抱福字.png",
+        "小马拿红包.png",
+        "小马拿金元宝.png",
+        "小马送饺子.png"
+    };
+    
     QStringList titles = {
-        "美丽的自然风光",
-        "城市夜景",
-        "海滩度假",
-        "山脉徒步",
-        "历史建筑",
-        "现代艺术"
+        "小马发红包",
+        "小马吃棒棒糖",
+        "小马抱福字",
+        "小马拿红包",
+        "小马拿金元宝",
+        "小马送饺子"
     };
     
     QStringList descriptions = {
-        "壮丽的山脉和湖泊，大自然的杰作",
-        "灯火辉煌的城市夜景，繁华都市的魅力",
-        "阳光沙滩，休闲度假的理想之地",
-        "徒步旅行者的天堂，挑战自我的旅程",
-        "古老建筑的魅力，历史的见证",
-        "当代艺术的创新表达，视觉的盛宴"
+        "可爱的小马在发放红包",
+        "小马正在享受美味的棒棒糖",
+        "小马抱着福字，祝福大家新年快乐",
+        "小马手里拿着红包，准备送给朋友",
+        "小马抱着金元宝，象征着财富和好运",
+        "小马正在送饺子，传递温暖和关爱"
     };
     
     for (int i = 0; i < 6; i++) {
@@ -154,7 +174,8 @@ void LayoutExamplesTab::createHorizontalImageTextLayout()
         imageLabel->setAlignment(Qt::AlignCenter);
         imageLabel->setStyleSheet("border-radius: 3px;");
         
-        QString imagePath = QString("%1/sample%2.jpg").arg(imageDir).arg(i+1);
+        // 使用项目中的小马图片
+        QString imagePath = QString("%1/%2").arg(imageDir).arg(imageFiles[i]);
         QPixmap pixmap(imagePath);
         
         if (pixmap.isNull()) {
@@ -233,7 +254,16 @@ void LayoutExamplesTab::createVerticalImageTextLayout()
         imageLabel->setAlignment(Qt::AlignCenter);
         imageLabel->setStyleSheet("border-radius: 3px;");
         
-        QString imagePath = QString("%1/sample%2.jpg").arg(imageDir).arg(i+1);
+        // 使用项目中的小马图片
+        QStringList imageFiles = {
+            "小马发红包.png",
+            "小马吃棒棒糖.png",
+            "小马抱福字.png",
+            "小马拿红包.png",
+            "小马拿金元宝.png",
+            "小马送饺子.png"
+        };
+        QString imagePath = QString("%1/%2").arg(imageDir).arg(imageFiles[i]);
         QPixmap pixmap(imagePath);
         
         if (pixmap.isNull()) {
@@ -280,7 +310,7 @@ void LayoutExamplesTab::createVerticalImageTextLayout()
     vScrollArea->setWidget(vContentWidget);
     vImageTextLayout->addWidget(vScrollArea);
     
-    QLabel *imageHint = new QLabel(QString("提示: 本示例尝试从您的图片目录加载图片\n图片路径: %1/sample[1-6].jpg\n如果未找到图片，将显示彩色占位符").arg(imageDir));
+    QLabel *imageHint = new QLabel(QString("提示: 本示例使用项目中的小马图片\n图片路径: %1/\n包含图片: 小马发红包.png, 小马吃棒棒糖.png, 小马抱福字.png, 小马拿红包.png, 小马拿金元宝.png, 小马送饺子.png").arg(imageDir));
     imageHint->setStyleSheet("color: #757575; font-size: 11px; margin-top: 5px;");
     imageHint->setWordWrap(true);
     vImageTextLayout->addWidget(imageHint);
