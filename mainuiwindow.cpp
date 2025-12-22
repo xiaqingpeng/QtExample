@@ -1,9 +1,9 @@
 #include "mainuiwindow.h"
-#include "advancedcontrolstab.h"
-#include "basiccontrolstab.h"
-#include "datadisplaytab.h"
-#include "dialogstab.h"
-#include "layoutexamplestab.h"
+#include "advancedcontrols/advancedcontrolstab.h"
+#include "basiccontrols/basiccontrolstab.h"
+#include "datadisplay/datadisplaytab.h"
+#include "dialogs/dialogstab.h"
+#include "layoutexamples/layoutexamplestab.h"
 
 MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
 {

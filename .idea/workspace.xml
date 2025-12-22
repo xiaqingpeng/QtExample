@@ -18,7 +18,14 @@
     <option name="reloaded" value="true" />
   </component>
   <component name="CMakeRunConfigurationManager">
-    <generated />
+    <generated>
+      <config projectName="example" targetName="example" />
+      <config projectName="example" targetName="BasicControls" />
+      <config projectName="example" targetName="DataDisplay" />
+      <config projectName="example" targetName="LayoutExamples" />
+      <config projectName="example" targetName="AdvancedControls" />
+      <config projectName="example" targetName="Dialogs" />
+    </generated>
   </component>
   <component name="CMakeSettings">
     <configurations>
@@ -27,17 +34,37 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4809be23-3e22-465c-be5f-cbe61f5162ed" name="更改" comment="更改">
-      <change afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/moc_predefs.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/editor.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/example.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dialogstab.h" beforeDir="false" afterPath="$PROJECT_DIR$/dialogstab.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/MODULARIZATION_README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/advancedcontrols/CMakeLists.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/advancedcontrols/advancedcontrols.pro" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/basiccontrols/CMakeLists.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/basiccontrols/basiccontrols.pro" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/datadisplay/CMakeLists.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/datadisplay/datadisplay.pro" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dialogs/CMakeLists.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/dialogs/dialogs.pro" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/layoutexamples/CMakeLists.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/layoutexamples/layoutexamples.pro" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrate_files.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrate_to_modular.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/new_cmakelists.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/update_cmake.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/advancedcontrolstab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/advancedcontrols/advancedcontrolstab.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/advancedcontrolstab.h" beforeDir="false" afterPath="$PROJECT_DIR$/advancedcontrols/advancedcontrolstab.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/basiccontrolstab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/basiccontrols/basiccontrolstab.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/basiccontrolstab.h" beforeDir="false" afterPath="$PROJECT_DIR$/basiccontrols/basiccontrolstab.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datadisplaytab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/datadisplay/datadisplaytab.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/datadisplaytab.h" beforeDir="false" afterPath="$PROJECT_DIR$/datadisplay/datadisplaytab.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dialogstab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/dialogs/dialogstab.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dialogstab.h" beforeDir="false" afterPath="$PROJECT_DIR$/dialogs/dialogstab.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/example.pro" beforeDir="false" afterPath="$PROJECT_DIR$/example.pro" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layoutexamplestab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layoutexamplestab.h" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mainuiwindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mainuiwindow.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,38 +100,64 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
-    "CMake Application.MyQtProject.executor": "Run",
-    "CMake Application.example.executor": "Run",
-    "CMake 应用程序.MyQtProject.executor": "Run",
-    "CMake 应用程序.example.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.RadMigrateCodeStyle": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "RunOnceActivity.west.config.association.type.startup.service": "true",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "/Applications/qingpengxia/qt/qt6/example/CMakeLists.txt",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "CMakePythonSettings",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_MARK_IGNORED_FILES_AS_EXCLUDED&quot;: &quot;true&quot;,
+    &quot;CMake Application.MyQtProject.executor&quot;: &quot;Run&quot;,
+    &quot;CMake Application.example.executor&quot;: &quot;Run&quot;,
+    &quot;CMake 应用程序.MyQtProject.executor&quot;: &quot;Run&quot;,
+    &quot;CMake 应用程序.example.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.RadMigrateCodeStyle&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.west.config.association.type.startup.service&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Applications/qingpengxia/qt/qt6/example/CMakeLists.txt&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;CMakePythonSettings&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
-  <component name="RunManager">
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+}</component>
+  <component name="RunManager" selected="CMake Application.example">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AdvancedControls" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="example" TARGET_NAME="AdvancedControls" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="BasicControls" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="example" TARGET_NAME="BasicControls" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="DataDisplay" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="example" TARGET_NAME="DataDisplay" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Dialogs" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="example" TARGET_NAME="Dialogs" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="LayoutExamples" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="example" TARGET_NAME="LayoutExamples" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -114,6 +167,14 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="CMake Application.AdvancedControls" />
+      <item itemvalue="CMake Application.BasicControls" />
+      <item itemvalue="CMake Application.DataDisplay" />
+      <item itemvalue="CMake Application.Dialogs" />
+      <item itemvalue="CMake Application.example" />
+      <item itemvalue="CMake Application.LayoutExamples" />
+    </list>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="默认任务">
@@ -139,6 +200,7 @@
       <workItem from="1766224736683" duration="418000" />
       <workItem from="1766225168119" duration="22000" />
       <workItem from="1766225217012" duration="419000" />
+      <workItem from="1766227585002" duration="1152000" />
     </task>
     <task id="LOCAL-00001" summary="更改">
       <option name="closed" value="true" />
