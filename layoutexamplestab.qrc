@@ -1,0 +1,11 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource>
+        <file>images/小马发红包.png</file>
+        <file>images/小马吃棒棒糖.png</file>
+        <file>images/小马抱福字.png</file>
+        <file>images/小马拿红包.png</file>
+        <file>images/小马拿金元宝.png</file>
+        <file>images/小马送饺子.png</file>
+    </qresource>
+</RCC>

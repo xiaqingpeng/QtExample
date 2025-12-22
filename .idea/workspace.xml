@@ -34,13 +34,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4809be23-3e22-465c-be5f-cbe61f5162ed" name="更改" comment="更改">
-      <change afterPath="$PROJECT_DIR$/images/小马发红包.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/小马吃棒棒糖.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/小马抱福字.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/小马拿红包.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/小马拿金元宝.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/images/小马送饺子.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.h" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.h" afterDir="false" />
     </list>
@@ -110,11 +105,6 @@
   }
 }</component>
   <component name="RunManager" selected="CMake Application.example">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="AdvancedControls" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="example" TARGET_NAME="AdvancedControls" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -179,6 +169,7 @@
       <workItem from="1766225168119" duration="22000" />
       <workItem from="1766225217012" duration="419000" />
       <workItem from="1766227585002" duration="1152000" />
+      <workItem from="1766376716334" duration="9000" />
     </task>
     <task id="LOCAL-00001" summary="更改">
       <option name="closed" value="true" />

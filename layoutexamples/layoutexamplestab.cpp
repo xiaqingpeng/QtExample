@@ -5,22 +5,6 @@ LayoutExamplesTab::LayoutExamplesTab(QWidget *parent) : QWidget(parent)
     mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(15);
     
-    // 使用项目中的images目录
-    QDir currentDir(QCoreApplication::applicationDirPath());
-    // 向上导航直到找到项目根目录（包含images文件夹）
-    for (int i = 0; i < 10; i++) { // 最多向上查找10级目录
-        if (currentDir.exists("images")) {
-            imageDir = currentDir.absoluteFilePath("images");
-            break;
-        }
-        currentDir.cdUp();
-    }
-    
-    // 如果找不到images目录，使用当前工作目录
-    if (imageDir.isEmpty()) {
-        imageDir = QDir::currentPath();
-    }
-    
     createGridLayout();
     createFormLayout();
     createHorizontalSplitLayout();
@@ -174,18 +158,18 @@ void LayoutExamplesTab::createHorizontalImageTextLayout()
         imageLabel->setAlignment(Qt::AlignCenter);
         imageLabel->setStyleSheet("border-radius: 3px;");
         
-        // 使用项目中的小马图片
-        QString imagePath = QString("%1/%2").arg(imageDir).arg(imageFiles[i]);
+        // 使用Qt资源系统加载图片
+        QString imagePath = QString(":/images/%1").arg(imageFiles[i]);
         QPixmap pixmap(imagePath);
         
         if (pixmap.isNull()) {
             QColor color = QColor::fromHsv(i * 60, 150, 230);
             imageLabel->setStyleSheet(QString("background-color: %1; border-radius: 3px;").arg(color.name()));
-            imageLabel->setText(QString("图片 %1\n(未找到本地图片)").arg(i+1));
+            imageLabel->setText(QString("图片 %1\n(未找到资源图片)").arg(i+1));
         } else {
             pixmap = pixmap.scaledToHeight(140, Qt::SmoothTransformation);
             imageLabel->setPixmap(pixmap);
-            imageLabel->setToolTip("本地图片: " + imagePath);
+            imageLabel->setToolTip("资源图片: " + imagePath);
         }
         
         itemLayout->addWidget(imageLabel);
@@ -263,17 +247,18 @@ void LayoutExamplesTab::createVerticalImageTextLayout()
             "小马拿金元宝.png",
             "小马送饺子.png"
         };
-        QString imagePath = QString("%1/%2").arg(imageDir).arg(imageFiles[i]);
+        // 使用Qt资源系统加载图片
+        QString imagePath = QString(":/images/%1").arg(imageFiles[i]);
         QPixmap pixmap(imagePath);
         
         if (pixmap.isNull()) {
             QColor color = QColor::fromHsv(i * 60, 150, 230);
             imageLabel->setStyleSheet(QString("background-color: %1; border-radius: 3px;").arg(color.name()));
-            imageLabel->setText(QString("图片 %1\n(未找到本地图片)").arg(i+1));
+            imageLabel->setText(QString("图片 %1\n(未找到资源图片)").arg(i+1));
         } else {
             pixmap = pixmap.scaled(120, 120, Qt::KeepAspectRatio, Qt::SmoothTransformation);
             imageLabel->setPixmap(pixmap);
-            imageLabel->setToolTip("本地图片: " + imagePath);
+            imageLabel->setToolTip("资源图片: " + imagePath);
         }
         
         itemLayout->addWidget(imageLabel);
@@ -310,7 +295,7 @@ void LayoutExamplesTab::createVerticalImageTextLayout()
     vScrollArea->setWidget(vContentWidget);
     vImageTextLayout->addWidget(vScrollArea);
     
-    QLabel *imageHint = new QLabel(QString("提示: 本示例使用项目中的小马图片\n图片路径: %1/\n包含图片: 小马发红包.png, 小马吃棒棒糖.png, 小马抱福字.png, 小马拿红包.png, 小马拿金元宝.png, 小马送饺子.png").arg(imageDir));
+    QLabel *imageHint = new QLabel(QString("提示: 本示例使用Qt资源系统中的小马图片\n资源路径: :/images/\n包含图片: 小马发红包.png, 小马吃棒棒糖.png, 小马抱福字.png, 小马拿红包.png, 小马拿金元宝.png, 小马送饺子.png"));
     imageHint->setStyleSheet("color: #757575; font-size: 11px; margin-top: 5px;");
     imageHint->setWordWrap(true);
     vImageTextLayout->addWidget(imageHint);

@@ -29,8 +29,8 @@ HEADERS += \
 FORMS += \
     mainuiwindow.ui
 
-# 如果后续恢复资源文件，可在这里启用
-# RESOURCES += resources.qrc
+# 添加资源文件
+RESOURCES += layoutexamplestab.qrc
 
 # 默认部署规则
 qnx: target.path = /tmp/${TARGET}/bin

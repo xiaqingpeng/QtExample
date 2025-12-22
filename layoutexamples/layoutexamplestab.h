@@ -34,7 +34,6 @@ private:
     void createVerticalImageTextLayout();
     
     QVBoxLayout *mainLayout;
-    QString imageDir;
 };
 
 #endif // LAYOUTEXAMPLESTAB_H

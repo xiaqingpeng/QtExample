@@ -74,6 +74,7 @@ target_link_libraries(Dialogs PRIVATE
 qt_add_library(LayoutExamples SHARED
     layoutexamples/layoutexamplestab.cpp
     layoutexamples/layoutexamplestab.h
+    layoutexamplestab.qrc
 )
 target_link_libraries(LayoutExamples PRIVATE
     Qt6::Core

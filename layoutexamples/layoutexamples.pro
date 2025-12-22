@@ -16,6 +16,10 @@ SOURCES += \
 HEADERS += \
     layoutexamplestab.h
 
+# 添加资源文件
+RESOURCES += \
+    ../layoutexamplestab.qrc
+
 # 安装配置
 target.path = $$[QT_INSTALL_LIBS]
 INSTALLS += target
