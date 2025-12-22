@@ -1,4 +1,18 @@
 #include "layoutexamplestab.h"
+#include <QDateEdit>
+#include <QCalendarWidget>
+#include <QRadioButton>
+#include <QButtonGroup>
+#include <QComboBox>
+#include <QTextEdit>
+#include <QTimeEdit>
+#include <QDateTimeEdit>
+#include <QSpinBox>
+#include <QDoubleSpinBox>
+#include <QSlider>
+#include <QProgressBar>
+#include <QRegularExpression>
+#include <QRegularExpressionValidator>
 
 LayoutExamplesTab::LayoutExamplesTab(QWidget *parent) : QWidget(parent)
 {
@@ -34,11 +48,118 @@ void LayoutExamplesTab::createFormLayout()
 {
     QGroupBox *formGroup = new QGroupBox("表单布局");
     QFormLayout *formLayout = new QFormLayout(formGroup);
+    formLayout->setVerticalSpacing(10);
     
-    formLayout->addRow("用户名:", new QLineEdit());
-    formLayout->addRow("密码:", new QLineEdit());
-    formLayout->addRow("记住我:", new QCheckBox());
-    formLayout->addRow("", new QPushButton("登录"));
+    // 用户名
+    QLineEdit *usernameEdit = new QLineEdit();
+    usernameEdit->setPlaceholderText("请输入用户名");
+    formLayout->addRow("用户名:", usernameEdit);
+    
+    // 密码
+    QLineEdit *passwordEdit = new QLineEdit();
+    passwordEdit->setPlaceholderText("请输入密码");
+    passwordEdit->setEchoMode(QLineEdit::Password);
+    formLayout->addRow("密码:", passwordEdit);
+    
+    // 邮箱地址
+    QLineEdit *emailEdit = new QLineEdit();
+    emailEdit->setPlaceholderText("请输入邮箱地址");
+    // 使用正则表达式验证邮箱格式，而不是输入掩码
+    QRegularExpression emailRegExp("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
+    emailEdit->setValidator(new QRegularExpressionValidator(emailRegExp, this));
+    formLayout->addRow("邮箱地址:", emailEdit);
+    
+    // 手机号
+    QLineEdit *phoneEdit = new QLineEdit();
+    phoneEdit->setPlaceholderText("请输入手机号");
+    phoneEdit->setInputMask("+86 999 9999 9999;_");
+    formLayout->addRow("手机号:", phoneEdit);
+    
+    // 性别选择
+    QWidget *genderWidget = new QWidget();
+    QHBoxLayout *genderLayout = new QHBoxLayout(genderWidget);
+    genderLayout->setContentsMargins(0, 0, 0, 0);
+    
+    QRadioButton *maleRadio = new QRadioButton("男");
+    QRadioButton *femaleRadio = new QRadioButton("女");
+    QRadioButton *otherRadio = new QRadioButton("其他");
+    
+    QButtonGroup *genderGroup = new QButtonGroup(genderWidget);
+    genderGroup->addButton(maleRadio);
+    genderGroup->addButton(femaleRadio);
+    genderGroup->addButton(otherRadio);
+    
+    genderLayout->addWidget(maleRadio);
+    genderLayout->addWidget(femaleRadio);
+    genderLayout->addWidget(otherRadio);
+    genderLayout->addStretch();
+    
+    formLayout->addRow("性别:", genderWidget);
+    
+    // 兴趣爱好
+    QWidget *hobbyWidget = new QWidget();
+    QHBoxLayout *hobbyLayout = new QHBoxLayout(hobbyWidget);
+    hobbyLayout->setContentsMargins(0, 0, 0, 0);
+    
+    QCheckBox *readingCheck = new QCheckBox("阅读");
+    QCheckBox *sportsCheck = new QCheckBox("运动");
+    QCheckBox *musicCheck = new QCheckBox("音乐");
+    QCheckBox *travelCheck = new QCheckBox("旅行");
+    
+    hobbyLayout->addWidget(readingCheck);
+    hobbyLayout->addWidget(sportsCheck);
+    hobbyLayout->addWidget(musicCheck);
+    hobbyLayout->addWidget(travelCheck);
+    hobbyLayout->addStretch();
+    
+    formLayout->addRow("兴趣爱好:", hobbyWidget);
+    
+    // 出生日期
+    QDateEdit *birthdateEdit = new QDateEdit();
+    birthdateEdit->setCalendarPopup(true);
+    birthdateEdit->setDate(QDate::currentDate().addYears(-20));
+    birthdateEdit->setDisplayFormat("yyyy-MM-dd");
+    formLayout->addRow("出生日期:", birthdateEdit);
+    
+    // 所在城市
+    QComboBox *cityCombo = new QComboBox();
+    cityCombo->addItems({"北京", "上海", "广州", "深圳", "杭州", "成都", "武汉", "西安"});
+    cityCombo->setEditable(true);
+    formLayout->addRow("所在城市:", cityCombo);
+    
+    // 个人简介
+    QTextEdit *bioEdit = new QTextEdit();
+    bioEdit->setPlaceholderText("请输入个人简介...");
+    bioEdit->setMaximumHeight(80);
+    formLayout->addRow("个人简介:", bioEdit);
+    
+    // 同意协议
+    QCheckBox *agreeCheck = new QCheckBox("我已阅读并同意用户协议和隐私政策");
+    formLayout->addRow("", agreeCheck);
+    
+    // 记住我
+    QCheckBox *rememberCheck = new QCheckBox("记住我");
+    formLayout->addRow("", rememberCheck);
+    
+    // 按钮组
+    QWidget *buttonWidget = new QWidget();
+    QHBoxLayout *buttonLayout = new QHBoxLayout(buttonWidget);
+    buttonLayout->setContentsMargins(0, 0, 0, 0);
+    
+    QPushButton *loginButton = new QPushButton("登录");
+    loginButton->setStyleSheet("background-color: #2196F3; color: white; padding: 8px 16px; border-radius: 4px;");
+    QPushButton *registerButton = new QPushButton("注册");
+    registerButton->setStyleSheet("background-color: #4CAF50; color: white; padding: 8px 16px; border-radius: 4px;");
+    QPushButton *resetButton = new QPushButton("重置");
+    resetButton->setStyleSheet("background-color: #FF9800; color: white; padding: 8px 16px; border-radius: 4px;");
+    
+    buttonLayout->addWidget(loginButton);
+    buttonLayout->addWidget(registerButton);
+    buttonLayout->addWidget(resetButton);
+    buttonLayout->addStretch();
+    
+    formLayout->addRow("", buttonWidget);
+    
     mainLayout->addWidget(formGroup);
 }
 
@@ -139,7 +260,7 @@ void LayoutExamplesTab::createHorizontalImageTextLayout()
     QStringList descriptions = {
         "可爱的小马在发放红包",
         "小马正在享受美味的棒棒糖",
-        "小马抱着福字，祝福大家新年快乐",
+        "小马福字，祝福大家新年快乐",
         "小马手里拿着红包，准备送给朋友",
         "小马抱着金元宝，象征着财富和好运",
         "小马正在送饺子，传递温暖和关爱"
