@@ -4,8 +4,10 @@
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QLabel>
-#include <QTabWidget>
+#include <QListWidget>
+#include <QStackedWidget>
 #include <QStatusBar>
+#include <QGridLayout>
 
 class MainUIWindow : public QWidget
 {
@@ -14,12 +16,21 @@ class MainUIWindow : public QWidget
 public:
     MainUIWindow(QWidget *parent = nullptr);
 
+private slots:
+    void onMainMenuClicked(QListWidgetItem *item);
+    void onSubMenuClicked(QListWidgetItem *item);
+
 private:
     void setupUI();
+    void setupMainMenu();
+    void setupSubMenu(const QString &mainMenu);
+    void setupContent();
 
-    QVBoxLayout *mainLayout;
+    QGridLayout *mainLayout;
     QLabel *titleLabel;
-    QTabWidget *tabWidget;
+    QListWidget *mainMenuList;
+    QListWidget *subMenuList;
+    QStackedWidget *contentStack;
     QStatusBar *statusBar;
 };
 
