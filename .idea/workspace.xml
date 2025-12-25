@@ -39,13 +39,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4809be23-3e22-465c-be5f-cbe61f5162ed" name="更改" comment="更改">
-      <change afterPath="$PROJECT_DIR$/echarts/echarts.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/echarts/ECharts/chart.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/echarts/ECharts/echarts.min.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/echarts/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/echarts/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/echarts/echartstab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/echarts/echartstab.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/echarts/echartstab.h" beforeDir="false" afterPath="$PROJECT_DIR$/echarts/echartstab.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/layoutexamples3/layoutexamplestab3.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples3/layoutexamplestab3.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mainuiwindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mainuiwindow.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

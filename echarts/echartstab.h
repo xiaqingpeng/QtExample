@@ -1,34 +1,40 @@
-#ifndef ECHARTSTAB_H
-#define ECHARTSTAB_H
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QGroupBox>
-#include <QTabWidget>
+#include <QMainWindow>
+#include <QWebEngineView>
+#include <QWebChannel>
+#include <QVariant>
 
-// 注意：需要在项目中启用Qt WebEngine模块
-class QWebEngineView;
+// 用于JS与Qt交互的类（必须继承QObject）
+class ChartBridge : public QObject
+{
+    Q_OBJECT
+public:
+    explicit ChartBridge(QObject *parent = nullptr) : QObject(parent) {}
+    
+public slots:
+    // 接收ECharts的点击事件（供JS调用）
+    void onChartClicked(const QString& name, const QVariant& value) {
+        qDebug() << "ECharts点击：" << name << "=" << value;
+    }
+};
 
-class EChartsTab : public QWidget
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit EChartsTab(QWidget *parent = nullptr);
-    ~EChartsTab() override;
+    MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+
+private slots:
+    // 模拟按钮点击，更新ECharts数据
+    void onUpdateDataClicked();
 
 private:
-    void createBarChart();
-    void createLineChart();
-    void createPieChart();
-    void createScatterChart();
-
-    QVBoxLayout *mainLayout;
-    QTabWidget *chartTabs;
-    QWebEngineView *barChartView;
-    QWebEngineView *lineChartView;
-    QWebEngineView *pieChartView;
-    QWebEngineView *scatterChartView;
+    QWebEngineView *m_webView;  // 加载HTML的WebView
+    ChartBridge *m_bridge;      // Qt与JS的桥接对象
 };
 
-#endif // ECHARTSTAB_H
+#endif // MAINWINDOW_H
