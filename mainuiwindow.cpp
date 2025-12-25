@@ -162,7 +162,7 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
     else if (subMenu == "对话框") {
         contentWidget = new DialogsTab();
     } else if (subMenu == "ECharts示例") {
-        contentWidget = new MainWindow();
+        contentWidget = new EChartsTab();
     }
 
     // 如果创建了内容控件，添加到内容区域

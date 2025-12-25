@@ -2,66 +2,311 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Qt + ECharts Demo</title>
+    <title>Qt + ECharts API数据监控</title>
     <!-- 引入ECharts -->
     <script src="echarts.min.js"></script>
     <style>
         /* 让图表占满整个页面 */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
         #chart-container { width: 100%; height: 100%; }
+        
+        /* 控制面板样式 */
+        .control-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .control-panel button {
+            margin: 2px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background: #f5f5f5;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .control-panel button:hover {
+            background: #e0e0e0;
+        }
+        
+        .status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
+    <!-- 控制面板 -->
+    <div class="control-panel">
+        <button onclick="switchChart('bar')">柱状图</button>
+        <button onclick="switchChart('line')">折线图</button>
+        <button onclick="switchChart('pie')">饼图</button>
+        <button onclick="switchChart('mixed')">混合图</button>
+        <div class="status" id="status">等待数据...</div>
+    </div>
+    
     <div id="chart-container"></div>
 
     <script>
         // 初始化ECharts实例
         var myChart = echarts.init(document.getElementById('chart-container'));
-
-        // 默认配置（可被Qt动态修改）
-        var option = {
-            title: { text: 'Qt + ECharts 柱状图示例', left: 'center' },
-            tooltip: { trigger: 'axis' },
-            legend: { data: ['销量'], left: 'left' },
-            xAxis: {
-                type: 'category',
-                data: ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子']
-            },
-            yAxis: { type: 'value' },
-            series: [{
-                name: '销量',
-                type: 'bar',
-                data: [5, 20, 36, 10, 10, 20]
-            }]
+        
+        // 全局变量
+        var currentChartType = 'bar';
+        var apiData = {
+            categories: [],
+            counts: [],
+            durations: []
         };
 
-        // 渲染图表
-        myChart.setOption(option);
+        // 生成默认配置
+        function getDefaultOption() {
+            return {
+                title: { 
+                    text: 'API访问统计监控', 
+                    subtext: '实时数据更新',
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'bold' }
+                },
+                tooltip: { 
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            result += item.marker + item.seriesName + ': ' + item.value + '<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: { 
+                    data: ['访问次数', '平均响应时间(ms)'], 
+                    left: 'left',
+                    top: '10%'
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: { title: '保存为图片' },
+                        dataView: { title: '数据视图', readOnly: true },
+                        restore: { title: '重置' }
+                    },
+                    right: '10%',
+                    top: '10%'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true,
+                    top: '20%'
+                }
+            };
+        }
+
+        // 柱状图配置
+        function getBarOption() {
+            var option = getDefaultOption();
+            option.xAxis = {
+                type: 'category',
+                data: apiData.categories,
+                axisLabel: { 
+                    rotate: 45,
+                    fontSize: 10
+                }
+            };
+            option.yAxis = [
+                { type: 'value', name: '访问次数', position: 'left' },
+                { type: 'value', name: '响应时间(ms)', position: 'right' }
+            ];
+            option.series = [
+                {
+                    name: '访问次数',
+                    type: 'bar',
+                    data: apiData.counts,
+                    itemStyle: { color: '#5470c6' }
+                },
+                {
+                    name: '平均响应时间(ms)',
+                    type: 'line',
+                    yAxisIndex: 1,
+                    data: apiData.durations,
+                    itemStyle: { color: '#ee6666' }
+                }
+            ];
+            return option;
+        }
+
+        // 折线图配置
+        function getLineOption() {
+            var option = getDefaultOption();
+            option.xAxis = {
+                type: 'category',
+                data: apiData.categories,
+                axisLabel: { rotate: 45, fontSize: 10 }
+            };
+            option.yAxis = [
+                { type: 'value', name: '访问次数', position: 'left' },
+                { type: 'value', name: '响应时间(ms)', position: 'right' }
+            ];
+            option.series = [
+                {
+                    name: '访问次数',
+                    type: 'line',
+                    data: apiData.counts,
+                    smooth: true,
+                    itemStyle: { color: '#5470c6' }
+                },
+                {
+                    name: '平均响应时间(ms)',
+                    type: 'line',
+                    yAxisIndex: 1,
+                    data: apiData.durations,
+                    smooth: true,
+                    itemStyle: { color: '#ee6666' }
+                }
+            ];
+            return option;
+        }
+
+        // 饼图配置
+        function getPieOption() {
+            var pieData = [];
+            for (var i = 0; i < apiData.categories.length; i++) {
+                pieData.push({
+                    name: apiData.categories[i],
+                    value: apiData.counts[i]
+                });
+            }
+            
+            return {
+                title: { 
+                    text: 'API访问分布', 
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'bold' }
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b} : {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    top: '10%'
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: { title: '保存为图片' }
+                    },
+                    right: '10%',
+                    top: '10%'
+                },
+                series: [{
+                    name: '访问次数',
+                    type: 'pie',
+                    radius: '50%',
+                    center: ['50%', '60%'],
+                    data: pieData,
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }]
+            };
+        }
+
+        // 混合图配置
+        function getMixedOption() {
+            return getBarOption(); // 混合图就是柱状图+折线图
+        }
+
+        // 切换图表类型
+        function switchChart(type) {
+            currentChartType = type;
+            updateChartDisplay();
+        }
+
+        // 更新图表显示
+        function updateChartDisplay() {
+            var option;
+            switch (currentChartType) {
+                case 'line':
+                    option = getLineOption();
+                    break;
+                case 'pie':
+                    option = getPieOption();
+                    break;
+                case 'mixed':
+                    option = getMixedOption();
+                    break;
+                default:
+                    option = getBarOption();
+            }
+            
+            if (myChart && option) {
+                myChart.setOption(option, true);
+                document.getElementById('status').textContent = 
+                    '最后更新: ' + new Date().toLocaleString();
+            }
+        }
+
+        // 供Qt调用的函数：更新API数据
+        function updateApiChart(categories, counts, durations) {
+            if (categories && counts && durations && 
+                categories.length > 0 && counts.length > 0 && durations.length > 0) {
+                apiData.categories = categories;
+                apiData.counts = counts;
+                apiData.durations = durations;
+                updateChartDisplay();
+                console.log('API数据已更新:', apiData);
+            } else {
+                console.log('API数据为空或格式错误:', {categories, counts, durations});
+            }
+        }
+
+        // 供Qt调用的函数：更新图表数据（兼容性）
+        function updateChartData(newData) {
+            if (apiData.counts.length === 0) {
+                // 如果没有API数据，使用测试数据
+                apiData.counts = newData || [5, 20, 36, 10, 10, 20];
+                apiData.categories = ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子'];
+                apiData.durations = [1, 3, 2, 1, 0, 2];
+            }
+            updateChartDisplay();
+        }
+
+        // 供Qt调用的函数：更新X轴类别（兼容性）
+        function updateXAxis(newCategories) {
+            apiData.categories = newCategories;
+            updateChartDisplay();
+        }
 
         // 监听窗口大小变化，自适应图表
         window.onresize = function() {
             myChart.resize();
         };
 
-        // 供Qt调用的函数：更新图表数据
-        function updateChart(newData) {
-            option.series[0].data = newData;
-            myChart.setOption(option);
-        }
-
-        // 供Qt调用的函数：更新X轴类别
-        function updateXAxis(newCategories) {
-            option.xAxis.data = newCategories;
-            myChart.setOption(option);
-        }
-
         // ECharts点击事件：回调到Qt
         myChart.on('click', function(params) {
-            // 向Qt发送信号（通过window.qt对象，由Qt注册）
             if (window.qt) {
                 window.qt.onChartClicked(params.name, params.value);
             }
         });
+
+        // 初始化图表
+        // 使用默认测试数据进行初始化
+        apiData.categories = ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子'];
+        apiData.counts = [5, 20, 36, 10, 10, 20];
+        apiData.durations = [1, 3, 2, 1, 0, 2];
+        updateChartDisplay();
     </script>
 </body>
 </html>

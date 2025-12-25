@@ -1,10 +1,13 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef ECHARTSTAB_H
+#define ECHARTSTAB_H
 
 #include <QMainWindow>
 #include <QWebEngineView>
 #include <QWebChannel>
 #include <QVariant>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QTimer>
 
 // 用于JS与Qt交互的类（必须继承QObject）
 class ChartBridge : public QObject
@@ -20,21 +23,33 @@ public slots:
     }
 };
 
-class MainWindow : public QMainWindow
+class EChartsTab : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    EChartsTab(QWidget *parent = nullptr);
+    ~EChartsTab();
 
 private slots:
     // 模拟按钮点击，更新ECharts数据
     void onUpdateDataClicked();
+    // API数据请求完成后的处理
+    void onApiDataReceived();
 
 private:
     QWebEngineView *m_webView;  // 加载HTML的WebView
+    QWebChannel *m_channel;
     ChartBridge *m_bridge;      // Qt与JS的桥接对象
+    QNetworkAccessManager *m_networkManager;
+    
+    // API请求方法
+    void fetchApiData();
+    
+    // JSON数据转换方法
+    QString jsonArrayToString(const QStringList &list);
+    QString jsonArrayToString(const QList<int> &list);
+    QString jsonArrayToString(const QList<double> &list);
 };
 
-#endif // MAINWINDOW_H
+#endif // ECHARTSTAB_H

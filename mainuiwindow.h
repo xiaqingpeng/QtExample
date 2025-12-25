@@ -8,6 +8,7 @@
 #include <QStackedWidget>
 #include <QStatusBar>
 #include <QGridLayout>
+#include "echarts/echartstab.h"
 
 class MainUIWindow : public QWidget
 {
