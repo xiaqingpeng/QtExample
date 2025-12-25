@@ -3,7 +3,9 @@
 #include "basiccontrols/basiccontrolstab.h"
 #include "datadisplay/datadisplaytab.h"
 #include "dialogs/dialogstab.h"
-#include "layoutexamples/layoutexamplestab.h"
+#include "layoutexamples1/layoutexamplestab1.h"
+#include "layoutexamples2/layoutexamplestab2.h"
+#include "layoutexamples3/layoutexamplestab3.h"
 #include "echarts/echartstab.h"
 #include <QFont>
 #include <QListWidgetItem>
@@ -42,7 +44,7 @@ void MainUIWindow::setupUI()
         "QListWidget::item { padding: 10px; border-bottom: 1px solid #e9ecef; }"
         "QListWidget::item:hover { background-color: #e3f2fd; }"
         "QListWidget::item:selected { background-color: #2196f3; color: white; }"
-    );
+        );
     connect(subMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onSubMenuClicked);
     mainLayout->addWidget(subMenuList, 1, 1);
 
@@ -71,7 +73,7 @@ void MainUIWindow::setupMainMenu()
         "QListWidget::item { padding: 15px; color: white; border-bottom: 1px solid #495057; }"
         "QListWidget::item:hover { background-color: #495057; }"
         "QListWidget::item:selected { background-color: #007bff; }"
-    );
+        );
 
     // 添加一级菜单
     new QListWidgetItem("控件示例", mainMenuList);
@@ -94,7 +96,10 @@ void MainUIWindow::setupSubMenu(const QString &mainMenu)
         new QListWidgetItem("高级控件", subMenuList);
         new QListWidgetItem("数据显示", subMenuList);
     } else if (mainMenu == "布局示例") {
-        new QListWidgetItem("布局示例", subMenuList);
+        new QListWidgetItem("布局示例1", subMenuList);
+        new QListWidgetItem("布局示例2", subMenuList);
+        new QListWidgetItem("布局示例3", subMenuList);
+
     } else if (mainMenu == "对话框示例") {
         new QListWidgetItem("对话框", subMenuList);
     } else if (mainMenu == "图表示例") {
@@ -140,9 +145,21 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         contentWidget = new AdvancedControlsTab();
     } else if (subMenu == "数据显示") {
         contentWidget = new DataDisplayTab();
-    } else if (subMenu == "布局示例") {
+    } 
+    
+    else if (subMenu == "布局示例1") {
         contentWidget = new LayoutExamplesTab();
-    } else if (subMenu == "对话框") {
+    } 
+
+    else if (subMenu == "布局示例2") {
+        contentWidget = new LayoutExamplesTab2();
+    } 
+
+    else if (subMenu == "布局示例3") {
+        contentWidget = new LayoutExamplesTab3();
+    } 
+    
+    else if (subMenu == "对话框") {
         contentWidget = new DialogsTab();
     } else if (subMenu == "ECharts示例") {
         contentWidget = new EChartsTab();

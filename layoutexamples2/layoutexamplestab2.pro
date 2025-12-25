@@ -1,4 +1,4 @@
-# LayoutExamples模块的qmake项目文件
+# LayoutExamplesTab2模块的qmake项目文件
 
 QT += core gui widgets
 
@@ -8,17 +8,13 @@ CONFIG += c++17 sdk_no_version_check
 TEMPLATE = lib
 CONFIG += shared
 
-TARGET = layoutexamples
+TARGET = layoutexamplestab2
 
 SOURCES += \
-    layoutexamplestab.cpp
+    layoutexamplestab2.cpp
 
 HEADERS += \
-    layoutexamplestab.h
-
-# 添加资源文件
-RESOURCES += \
-    ../layoutexamplestab.qrc
+    layoutexamplestab2.h
 
 # 安装配置
 target.path = $$[QT_INSTALL_LIBS]
@@ -26,5 +22,5 @@ INSTALLS += target
 
 # 头文件安装
 headers.files = $$HEADERS
-headers.path = $$[QT_INSTALL_HEADERS]/layoutexamples
+headers.path = $$[QT_INSTALL_HEADERS]/layoutexamplestab2
 INSTALLS += headers

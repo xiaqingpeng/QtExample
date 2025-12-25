@@ -16,7 +16,7 @@ find_package(Qt6 COMPONENTS Core Gui Widgets WebEngineWidgets REQUIRED)
 # 设置MacOS特定选项
 if(APPLE)
     # 忽略SDK版本检查（与qmake中的sdk_no_version_check对应）
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Minimum macOS version" FORCE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "26.0" CACHE STRING "Minimum macOS version" FORCE)
     # 设置应用程序包类型
     set(MACOSX_BUNDLE_BUNDLE_NAME "example")
     set(MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION})
@@ -27,7 +27,7 @@ endif()
 # 定义模块库
 
 # BasicControls模块
-qt_add_library(BasicControls SHARED
+qt_add_library(BasicControls STATIC
     basiccontrols/basiccontrolstab.cpp
     basiccontrols/basiccontrolstab.h
 )
@@ -38,7 +38,7 @@ target_link_libraries(BasicControls PRIVATE
 )
 
 # DataDisplay模块
-qt_add_library(DataDisplay SHARED
+qt_add_library(DataDisplay STATIC
     datadisplay/datadisplaytab.cpp
     datadisplay/datadisplaytab.h
 )
@@ -49,7 +49,7 @@ target_link_libraries(DataDisplay PRIVATE
 )
 
 # AdvancedControls模块
-qt_add_library(AdvancedControls SHARED
+qt_add_library(AdvancedControls STATIC
     advancedcontrols/advancedcontrolstab.cpp
     advancedcontrols/advancedcontrolstab.h
 )
@@ -60,7 +60,7 @@ target_link_libraries(AdvancedControls PRIVATE
 )
 
 # Dialogs模块
-qt_add_library(Dialogs SHARED
+qt_add_library(Dialogs STATIC
     dialogs/dialogstab.cpp
     dialogs/dialogstab.h
 )
@@ -71,19 +71,41 @@ target_link_libraries(Dialogs PRIVATE
 )
 
 # LayoutExamples模块
-qt_add_library(LayoutExamples SHARED
-    layoutexamples/layoutexamplestab.cpp
-    layoutexamples/layoutexamplestab.h
+qt_add_library(LayoutExamples1 STATIC
+    layoutexamples1/layoutexamplestab1.cpp
+    layoutexamples1/layoutexamplestab1.h
     layoutexamplestab.qrc
 )
-target_link_libraries(LayoutExamples PRIVATE
+target_link_libraries(LayoutExamples1 PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+)
+
+# LayoutExamplesTab2模块
+qt_add_library(LayoutExamplesTab2 STATIC
+    layoutexamples2/layoutexamplestab2.cpp
+    layoutexamples2/layoutexamplestab2.h
+)
+target_link_libraries(LayoutExamplesTab2 PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+)
+
+# LayoutExamplesTab3模块
+qt_add_library(LayoutExamplesTab3 STATIC
+    layoutexamples3/layoutexamplestab3.cpp
+    layoutexamples3/layoutexamplestab3.h
+)
+target_link_libraries(LayoutExamplesTab3 PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
 )
 
 # ECharts模块
-qt_add_library(ECharts SHARED
+qt_add_library(ECharts STATIC
     echarts/echartstab.cpp
     echarts/echartstab.h
 )
@@ -113,6 +135,13 @@ set(UIS
 # 创建可执行文件
 qt_add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${UIS})
 
+# 设置RPATH，确保应用程序能找到共享库
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    MACOSX_RPATH YES
+    BUILD_WITH_INSTALL_RPATH YES
+    INSTALL_RPATH @executable_path/../Frameworks
+)
+
 # 链接Qt库和自定义模块
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
@@ -123,7 +152,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     DataDisplay
     AdvancedControls
     Dialogs
-    LayoutExamples
+    LayoutExamples1
+    LayoutExamplesTab2
+    LayoutExamplesTab3
     ECharts
 )
 
@@ -134,7 +165,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/basiccontrols
     ${CMAKE_CURRENT_SOURCE_DIR}/datadisplay
     ${CMAKE_CURRENT_SOURCE_DIR}/dialogs
-    ${CMAKE_CURRENT_SOURCE_DIR}/layoutexamples
+    ${CMAKE_CURRENT_SOURCE_DIR}/LayoutExamples1
+    ${CMAKE_CURRENT_SOURCE_DIR}/layoutexamples2
+    ${CMAKE_CURRENT_SOURCE_DIR}/layoutexamples3
     ${CMAKE_CURRENT_SOURCE_DIR}/echarts
 )
 
@@ -146,7 +179,17 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # 安装模块库
-install(TARGETS BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples ECharts
+install(TARGETS BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+# 复制共享库到应用程序的Frameworks目录中
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    MACOSX_BUNDLE TRUE
+    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in
+    MACOSX_RPATH TRUE
+    BUILD_WITH_INSTALL_RPATH TRUE
+    INSTALL_RPATH @executable_path/../Frameworks
+)
+
