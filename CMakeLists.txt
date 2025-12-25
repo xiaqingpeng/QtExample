@@ -102,6 +102,7 @@ target_link_libraries(LayoutExamplesTab3 PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    Qt6::Network
 )
 
 # ECharts模块

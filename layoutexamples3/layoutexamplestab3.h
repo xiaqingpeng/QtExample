@@ -15,6 +15,16 @@
 #include <QScrollArea>
 #include <QLabel>
 #include <QPixmap>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QTableWidget>
+#include <QHeaderView>
+#include <QMessageBox>
+#include <QUrl>
 
 class LayoutExamplesTab3 : public QWidget
 {
@@ -22,13 +32,19 @@ class LayoutExamplesTab3 : public QWidget
 public:
     explicit LayoutExamplesTab3(QWidget *parent = nullptr);
 
+private slots:
+    void onApiDataReceived(QNetworkReply *reply);
+
 private:
     void createDashboardLayout();
     void createMultiPanelLayout();
     void createCollapsiblePanelLayout();
     void createResponsiveFormLayout();
+    void createApiDataTable();
     
     QVBoxLayout *mainLayout;
+    QNetworkAccessManager *networkManager;
+    QTableWidget *apiDataTable;
 };
 
 #endif // LAYOUTEXAMPLESTAB3_H

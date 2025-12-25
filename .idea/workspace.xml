@@ -4,6 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="BackendCodeEditorMiscSettings">
+    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="3" type="long" />
     <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexedValue" value="true" type="bool" />
     <option name="/Default/Housekeeping/GlobalSettingsUpgraded/IsUpgraded/@EntryValue" value="true" type="bool" />
     <option name="/Default/RiderDebugger/RiderRestoreDecompile/RestoreDecompileSetting/@EntryValue" value="false" type="bool" />
@@ -22,9 +23,13 @@
       <config projectName="example" targetName="example" />
       <config projectName="example" targetName="BasicControls" />
       <config projectName="example" targetName="DataDisplay" />
-      <config projectName="example" targetName="LayoutExamples" />
+      <config projectName="example" targetName="LayoutExamples1" />
       <config projectName="example" targetName="AdvancedControls" />
+      <config projectName="example" targetName="ECharts" />
+      <config projectName="example" targetName="LayoutExamplesTab3" />
+      <config projectName="example" targetName="LayoutExamplesTab2" />
       <config projectName="example" targetName="Dialogs" />
+      <config projectName="example" targetName="example_qmlimportscan" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -34,7 +39,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4809be23-3e22-465c-be5f-cbe61f5162ed" name="更改" comment="更改">
-      <change beforePath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples/layoutexamplestab.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layoutexamples3/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples3/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layoutexamples3/layoutexamplestab3.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples3/layoutexamplestab3.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layoutexamples3/layoutexamplestab3.h" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples3/layoutexamplestab3.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layoutexamples3/layoutexamplestab3.pro" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples3/layoutexamplestab3.pro" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -102,6 +112,11 @@
   }
 }</component>
   <component name="RunManager" selected="CMake Application.example">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="AdvancedControls" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="example" TARGET_NAME="AdvancedControls" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -127,12 +142,17 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="LayoutExamples" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="example" TARGET_NAME="LayoutExamples" CONFIG_NAME="Debug">
+    <configuration name="LayoutExamples1" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="example" TARGET_NAME="LayoutExamples1" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+    <configuration name="LayoutExamplesTab2" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="example" TARGET_NAME="LayoutExamplesTab2" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="LayoutExamplesTab3" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="example" TARGET_NAME="LayoutExamplesTab3" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -155,7 +175,9 @@
       <item itemvalue="CMake Application.ECharts" />
       <item itemvalue="CMake Application.example" />
       <item itemvalue="CMake Application.example_qmlimportscan" />
-      <item itemvalue="CMake Application.LayoutExamples" />
+      <item itemvalue="CMake Application.LayoutExamples1" />
+      <item itemvalue="CMake Application.LayoutExamplesTab2" />
+      <item itemvalue="CMake Application.LayoutExamplesTab3" />
     </list>
   </component>
   <component name="TaskManager">

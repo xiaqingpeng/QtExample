@@ -12,6 +12,7 @@ target_link_libraries(LayoutExamples3 PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    Qt6::Network
 )
 
 # 导出头文件

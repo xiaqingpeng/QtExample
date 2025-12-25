@@ -1,6 +1,6 @@
 # LayoutExamplesTab3模块的qmake项目文件
 
-QT += core gui widgets
+QT += core gui widgets network
 
 CONFIG += c++17 sdk_no_version_check
 

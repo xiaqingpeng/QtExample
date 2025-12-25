@@ -18,16 +18,29 @@
 #include <QTableWidget>
 #include <QTreeWidget>
 #include <QTabWidget>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QMessageBox>
+#include <QUrl>
 
 LayoutExamplesTab3::LayoutExamplesTab3(QWidget *parent) : QWidget(parent)
 {
     mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(15);
     
+    // 初始化网络管理器
+    networkManager = new QNetworkAccessManager(this);
+    connect(networkManager, &QNetworkAccessManager::finished, this, &LayoutExamplesTab3::onApiDataReceived);
+    
     createDashboardLayout();
     createMultiPanelLayout();
     createCollapsiblePanelLayout();
     createResponsiveFormLayout();
+    createApiDataTable();
 }
 
 void LayoutExamplesTab3::createDashboardLayout()
@@ -316,4 +329,105 @@ void LayoutExamplesTab3::createResponsiveFormLayout()
     responsiveFormLayout->addWidget(formContainer);
     
     mainLayout->addWidget(responsiveFormGroup);
+}
+
+// 创建API数据表格并请求数据
+void LayoutExamplesTab3::createApiDataTable()
+{
+    QGroupBox *apiDataGroup = new QGroupBox("系统通知列表 (API数据展示)");
+    QVBoxLayout *apiLayout = new QVBoxLayout(apiDataGroup);
+    
+    // 创建表格
+    apiDataTable = new QTableWidget();
+    apiDataTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    apiDataTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    apiDataTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    apiDataTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    
+    // 添加表格到布局
+    apiLayout->addWidget(apiDataTable);
+    
+    // 发起API请求
+    QUrl url("http://127.0.0.1:7001/system/notice/list");
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    networkManager->get(request);
+    
+    mainLayout->addWidget(apiDataGroup);
+}
+
+// 处理API响应数据
+void LayoutExamplesTab3::onApiDataReceived(QNetworkReply *reply)
+{
+    if (reply->error() != QNetworkReply::NoError) {
+        QMessageBox::warning(this, "API请求错误", reply->errorString());
+        reply->deleteLater();
+        return;
+    }
+    
+    // 读取响应数据
+    QByteArray response = reply->readAll();
+    reply->deleteLater();
+    
+    // 解析JSON
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(response);
+    if (jsonDoc.isNull()) {
+        QMessageBox::warning(this, "JSON解析错误", "无法解析API响应数据");
+        return;
+    }
+    
+    QJsonObject jsonObj = jsonDoc.object();
+    if (jsonObj["code"].toInt() != 0) {
+        QMessageBox::warning(this, "API返回错误", jsonObj["msg"].toString());
+        return;
+    }
+    
+    // 提取通知列表
+    QJsonArray noticesArray = jsonObj["rows"].toArray();
+    
+    // 设置表格列数和标题
+    QStringList headers;
+    headers << "通知ID" << "通知标题" << "通知内容" << "创建人" << "创建时间" << "更新人" << "更新时间";
+    apiDataTable->setColumnCount(headers.size());
+    apiDataTable->setHorizontalHeaderLabels(headers);
+    
+    // 设置表格行数
+    apiDataTable->setRowCount(noticesArray.size());
+    
+    // 填充表格数据
+    for (int i = 0; i < noticesArray.size(); ++i) {
+        QJsonObject notice = noticesArray[i].toObject();
+        
+        // 设置表格数据并垂直居中
+        QTableWidgetItem *item0 = new QTableWidgetItem(QString::number(notice["noticeId"].toInt()));
+        item0->setTextAlignment(Qt::AlignVCenter);
+        apiDataTable->setItem(i, 0, item0);
+        
+        QTableWidgetItem *item1 = new QTableWidgetItem(notice["noticeTitle"].toString());
+        item1->setTextAlignment(Qt::AlignVCenter);
+        apiDataTable->setItem(i, 1, item1);
+        
+        QTableWidgetItem *item2 = new QTableWidgetItem(notice["noticeContent"].toString());
+        item2->setTextAlignment(Qt::AlignVCenter);
+        apiDataTable->setItem(i, 2, item2);
+        
+        QTableWidgetItem *item3 = new QTableWidgetItem(notice["createBy"].toString());
+        item3->setTextAlignment(Qt::AlignVCenter);
+        apiDataTable->setItem(i, 3, item3);
+        
+        QTableWidgetItem *item4 = new QTableWidgetItem(notice["createTime"].toString());
+        item4->setTextAlignment(Qt::AlignVCenter);
+        apiDataTable->setItem(i, 4, item4);
+        
+        QTableWidgetItem *item5 = new QTableWidgetItem(notice["updateBy"].toString());
+        item5->setTextAlignment(Qt::AlignVCenter);
+        apiDataTable->setItem(i, 5, item5);
+        
+        QTableWidgetItem *item6 = new QTableWidgetItem(notice["updateTime"].toString());
+        item6->setTextAlignment(Qt::AlignVCenter);
+        apiDataTable->setItem(i, 6, item6);
+    }
+    
+    // 调整第2列（通知内容）的宽度以适应内容
+    apiDataTable->resizeColumnToContents(2);
 }
