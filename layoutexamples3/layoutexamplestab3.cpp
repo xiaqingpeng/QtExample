@@ -348,7 +348,7 @@ void LayoutExamplesTab3::createApiDataTable()
     apiLayout->addWidget(apiDataTable);
     
     // 发起API请求
-    QUrl url("http://127.0.0.1:7001/system/notice/list");
+    QUrl url("http://120.48.95.51:7001/system/notice/list");
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     networkManager->get(request);

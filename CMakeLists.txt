@@ -11,7 +11,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # 查找Qt模块
-find_package(Qt6 COMPONENTS Core Gui Widgets WebEngineWidgets REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets WebEngineWidgets Network REQUIRED)
 
 # 设置MacOS特定选项
 if(APPLE)

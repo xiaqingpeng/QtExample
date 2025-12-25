@@ -10,6 +10,7 @@ target_link_libraries(ECharts PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::WebEngineWidgets
+    Qt6::Network
 )
 
 # 设置头文件导出
