@@ -8,6 +8,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QTimer>
+#include <QComboBox>
 
 // 用于JS与Qt交互的类（必须继承QObject）
 class ChartBridge : public QObject
@@ -32,16 +33,23 @@ public:
     ~EChartsTab();
 
 private slots:
-    // 模拟按钮点击，更新ECharts数据
-    void onUpdateDataClicked();
     // API数据请求完成后的处理
     void onApiDataReceived();
+    // 当筛选条件改变时重新获取数据
+    void onFilterChanged();
+    // WebView页面加载完成后获取API数据
+    void onPageLoaded(bool ok);
 
 private:
     QWebEngineView *m_webView;  // 加载HTML的WebView
     QWebChannel *m_channel;
     ChartBridge *m_bridge;      // Qt与JS的桥接对象
     QNetworkAccessManager *m_networkManager;
+    QTimer *m_apiTimer;         // API自动更新定时器
+    
+    // 筛选控件
+    QComboBox *m_methodCombo;   // 方法选择下拉框
+    QComboBox *m_platformCombo; // 平台选择下拉框
     
     // API请求方法
     void fetchApiData();

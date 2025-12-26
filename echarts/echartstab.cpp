@@ -14,6 +14,10 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QTimer>
+#include <QComboBox>
+#include <QLabel>
+#include <QHBoxLayout>
+#include <QList>
 
 EChartsTab::EChartsTab(QWidget *parent)
     : QMainWindow(parent)
@@ -46,55 +50,110 @@ EChartsTab::EChartsTab(QWidget *parent)
         qDebug() << "HTML文件不存在:" << htmlPath;
         return;
     }
+    
+    // 连接WebView加载完成信号
+    connect(m_webView, &QWebEngineView::loadFinished, this, &EChartsTab::onPageLoaded);
+    
     m_webView->load(QUrl::fromLocalFile(htmlPath));
 
-    // 6. 创建测试按钮
-    QPushButton *btnUpdate = new QPushButton("更新图表数据", this);
+    // 6. 创建筛选控件
+    QHBoxLayout *filterLayout = new QHBoxLayout();
+    
+    // Method选择下拉框
+    m_methodCombo = new QComboBox(this);
+    m_methodCombo->addItem("All", "");  // All表示不筛选
+    m_methodCombo->addItem("Post", "Post");
+    m_methodCombo->addItem("Get", "Get");
+    m_methodCombo->setCurrentIndex(0);  // 默认选择All
+    filterLayout->addWidget(new QLabel("Method:"));
+    filterLayout->addWidget(m_methodCombo);
+    
+    // Platform选择下拉框
+    m_platformCombo = new QComboBox(this);
+    m_platformCombo->addItem("All", "");  // All表示不筛选
+    m_platformCombo->addItem("Web", "web");
+    m_platformCombo->addItem("Android", "android");
+    m_platformCombo->addItem("IOS", "ios");
+    m_platformCombo->addItem("Windows", "windows");
+    m_platformCombo->addItem("Mac", "mac");
+    m_platformCombo->setCurrentIndex(0);  // 默认选择All
+    filterLayout->addWidget(new QLabel("Platform:"));
+    filterLayout->addWidget(m_platformCombo);
+    
+    layout->addLayout(filterLayout);
+    
+    // 7. 创建API数据获取按钮
     QPushButton *btnFetchApi = new QPushButton("获取API数据", this);
-    layout->addWidget(btnUpdate);
     layout->addWidget(btnFetchApi);
     
-    connect(btnUpdate, &QPushButton::clicked, this, &EChartsTab::onUpdateDataClicked);
     connect(btnFetchApi, &QPushButton::clicked, this, &EChartsTab::fetchApiData);
     
-    // 7. 自动获取API数据（每30秒更新一次）
-    QTimer *apiTimer = new QTimer(this);
-    connect(apiTimer, &QTimer::timeout, this, &EChartsTab::fetchApiData);
-    apiTimer->start(30000); // 30秒
+    // 连接筛选条件改变信号
+    connect(m_methodCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), 
+            this, &EChartsTab::onFilterChanged);
+    connect(m_platformCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), 
+            this, &EChartsTab::onFilterChanged);
     
-    // 8. 初始加载API数据
-    fetchApiData();
+    // 创建定时器（但不启动，等待首次手动获取数据后才启动）
+    m_apiTimer = new QTimer(this);
+    connect(m_apiTimer, &QTimer::timeout, this, &EChartsTab::fetchApiData);
 }
 
 EChartsTab::~EChartsTab()
 {
 }
 
-void EChartsTab::onUpdateDataClicked()
+void EChartsTab::onFilterChanged()
 {
-    // 模拟新数据
-    QList<int> newData = {10, 30, 20, 15, 25, 18};
+    // 当筛选条件改变时，自动重新获取数据
+    qDebug() << "筛选条件已改变，重新获取数据...";
+    fetchApiData();
+}
 
-    // 将QList<int>转换为JavaScript数组格式
-    QString jsArray = "[";
-    for (int i = 0; i < newData.size(); ++i) {
-        if (i > 0) jsArray += ",";
-        jsArray += QString::number(newData[i]);
+void EChartsTab::onPageLoaded(bool ok)
+{
+    if (ok) {
+        qDebug() << "WebView页面加载完成，开始获取API数据";
+        // 页面加载完成后，延迟一小段时间确保JavaScript环境准备好
+        QTimer::singleShot(500, this, &EChartsTab::fetchApiData);
+    } else {
+        qDebug() << "WebView页面加载失败";
     }
-    jsArray += "]";
-
-    // 调用JS的updateChartData函数，传递数据给ECharts
-    m_webView->page()->runJavaScript(QString("updateChartData(%1)").arg(jsArray));
-
-    // 可选：更新X轴类别
-    m_webView->page()->runJavaScript("updateXAxis(['苹果', '香蕉', '橙子', '葡萄', '芒果', '西瓜'])");
 }
 
 void EChartsTab::fetchApiData()
 {
     qDebug() << "开始请求API数据...";
     
-    QNetworkRequest request(QUrl("http://120.48.95.51:7001/system/logs/stats"));
+    // 如果定时器未启动，则启动定时器（首次手动获取数据后）
+    if (!m_apiTimer->isActive()) {
+        m_apiTimer->start(30000); // 30秒
+        qDebug() << "启动自动更新定时器";
+    }
+    
+    // 从下拉框获取筛选条件
+    QString method = m_methodCombo->currentData().toString();
+    QString platform = m_platformCombo->currentData().toString();
+    
+    // 构建带筛选条件的API URL
+    QString apiUrl = "http://120.48.95.51:7001/system/logs/stats";
+    
+    // 添加查询参数（只添加非空的参数）
+    QList<QString> params;
+    if (!method.isEmpty()) {
+        params.append(QString("method=%1").arg(method));
+    }
+    if (!platform.isEmpty()) {
+        params.append(QString("platform=%1").arg(platform));
+    }
+    
+    if (!params.isEmpty()) {
+        apiUrl += "?" + params.join("&");
+    }
+    
+    qDebug() << "API URL:" << apiUrl;
+    
+    QNetworkRequest request{QUrl(apiUrl)};
     request.setRawHeader("Content-Type", "application/json");
     
     QNetworkReply *reply = m_networkManager->get(request);

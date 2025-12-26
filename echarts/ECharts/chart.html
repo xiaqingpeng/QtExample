@@ -269,25 +269,95 @@
                 console.log('API数据已更新:', apiData);
             } else {
                 console.log('API数据为空或格式错误:', {categories, counts, durations});
+                // 显示"暂无相关筛选数据"提示
+                showNoDataMessage();
             }
         }
 
-        // 供Qt调用的函数：更新图表数据（兼容性）
-        function updateChartData(newData) {
-            if (apiData.counts.length === 0) {
-                // 如果没有API数据，使用测试数据
-                apiData.counts = newData || [5, 20, 36, 10, 10, 20];
-                apiData.categories = ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子'];
-                apiData.durations = [1, 3, 2, 1, 0, 2];
-            }
-            updateChartDisplay();
+        // 显示加载中提示
+        function showLoadingMessage() {
+            var option = {
+                title: {
+                    text: 'API访问统计监控',
+                    subtext: '实时数据更新',
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'bold' }
+                },
+                graphic: [
+                    {
+                        type: 'text',
+                        left: 'center',
+                        top: 'center',
+                        style: {
+                            text: '正在加载中...',
+                            fontSize: 24,
+                            fontWeight: 'bold',
+                            fill: '#5470c6'
+                        }
+                    },
+                    {
+                        type: 'rect',
+                        left: 'center',
+                        top: '55%',
+                        shape: {
+                            width: 200,
+                            height: 4
+                        },
+                        style: {
+                            fill: '#e0e0e0'
+                        }
+                    },
+                    {
+                        type: 'rect',
+                        left: 'center',
+                        top: '55%',
+                        shape: {
+                            width: 100,
+                            height: 4
+                        },
+                        style: {
+                            fill: '#5470c6'
+                        }
+                    }
+                ],
+                xAxis: { show: false },
+                yAxis: { show: false },
+                series: []
+            };
+            myChart.setOption(option, true);
+            document.getElementById('status').textContent = '正在加载数据...';
         }
 
-        // 供Qt调用的函数：更新X轴类别（兼容性）
-        function updateXAxis(newCategories) {
-            apiData.categories = newCategories;
-            updateChartDisplay();
+        // 显示无数据提示
+        function showNoDataMessage() {
+            var option = {
+                title: {
+                    text: 'API访问统计监控',
+                    subtext: '实时数据更新',
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'bold' }
+                },
+                graphic: {
+                    type: 'text',
+                    left: 'center',
+                    top: 'center',
+                    style: {
+                        text: '暂无相关筛选数据',
+                        fontSize: 24,
+                        fontWeight: 'bold',
+                        fill: '#999'
+                    }
+                },
+                xAxis: { show: false },
+                yAxis: { show: false },
+                series: []
+            };
+            myChart.setOption(option, true);
+            document.getElementById('status').textContent = 
+                '最后更新: ' + new Date().toLocaleString() + ' - 暂无数据';
         }
+
+
 
         // 监听窗口大小变化，自适应图表
         window.onresize = function() {
@@ -302,11 +372,8 @@
         });
 
         // 初始化图表
-        // 使用默认测试数据进行初始化
-        apiData.categories = ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子'];
-        apiData.counts = [5, 20, 36, 10, 10, 20];
-        apiData.durations = [1, 3, 2, 1, 0, 2];
-        updateChartDisplay();
+        // 等待Qt通过updateApiChart函数传入真实数据
+        showLoadingMessage();
     </script>
 </body>
 </html>
