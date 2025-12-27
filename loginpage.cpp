@@ -15,11 +15,7 @@
 
 LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
 {
-    m_networkManager = new QNetworkAccessManager(this);
-    
-    // 禁用代理，避免认证问题
-    QNetworkProxyFactory::setUseSystemConfiguration(false);
-    m_networkManager->setProxy(QNetworkProxy::NoProxy);
+    m_networkManager = new NetworkManager(this);
 
     m_pageStack = new QStackedWidget(this);
 
@@ -479,7 +475,6 @@ void LoginPage::onLoginClicked()
     qDebug() << "Login Input - Email:" << email;
     qDebug() << "Login Input - Password length:" << password.length();
     qDebug() << "Login Input - Email trimmed:" << email.trimmed();
-    
 
     if (email.isEmpty() || password.isEmpty()) {
         showError("邮箱和密码不能为空");
@@ -493,21 +488,53 @@ void LoginPage::onLoginClicked()
     json["email"] = email;
     json["password"] = password;
 
-    QJsonDocument doc(json);
-    QByteArray data = doc.toJson();
+    // 使用NetworkManager发送登录请求，自动添加平台识别头
+    m_networkManager->post("http://120.48.95.51:7001/login",
+                           json,
+                           [this](const QJsonObject &response) {
+        // 成功回调
+        int code = response["code"].toInt();
+        QString msg = response["msg"].toString();
 
-    QNetworkRequest request(QUrl("http://120.48.95.51:7001/login"));
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("Accept", "application/json");
-    request.setRawHeader("User-Agent", "QtApp/1.0");
-    
-    // 清除旧的cookie
-    m_networkManager->clearAccessCache();
-    
-    qDebug() << "Sending login request to:" << request.url();
+        qDebug() << "=== Login Response ===";
+        qDebug() << "Full response:" << QJsonDocument(response).toJson(QJsonDocument::Indented);
+        qDebug() << "Code:" << code;
+        qDebug() << "Message:" << msg;
+        qDebug() << "Token field exists:" << response.contains("token");
+        if (response.contains("token")) {
+            qDebug() << "Token value:" << response["token"].toString();
+        }
+        qDebug() << "All keys in response:" << response.keys();
 
-    QNetworkReply *reply = m_networkManager->post(request, data);
-    connect(reply, &QNetworkReply::finished, this, &LoginPage::onLoginReply);
+        if (code == 0) {
+            QString cookie;
+            if (response.contains("token")) {
+                cookie = response["token"].toString();
+            }
+
+            qDebug() << "Cookie received:" << cookie;
+
+            // 保存用户信息用于自动登录
+            QString email = m_loginEmail->text().trimmed();
+            QString password = m_rememberPassword->isChecked() ? m_loginPassword->text() : "";
+            saveUserInfo(cookie, email, password);
+            showSuccess("登录成功！");
+            emit loginSuccess(cookie);
+        } else {
+            showError(msg);
+        }
+
+        m_loginButton->setEnabled(true);
+        m_loginButton->setText("登录");
+    },
+    [this](const QString &errorMsg) {
+        // 错误回调
+        qDebug() << "Login Error:" << errorMsg;
+        showError("网络错误：" + errorMsg);
+
+        m_loginButton->setEnabled(true);
+        m_loginButton->setText("登录");
+    });
 }
 
 void LoginPage::onRegisterClicked()
@@ -536,16 +563,33 @@ void LoginPage::onRegisterClicked()
     json["password"] = password;
     json["confirmPassword"] = confirmPassword;
 
-    QJsonDocument doc(json);
-    QByteArray data = doc.toJson();
+    // 使用NetworkManager发送注册请求，自动添加平台识别头
+    m_networkManager->post("http://120.48.95.51:7001/register",
+                           json,
+                           [this](const QJsonObject &response) {
+        // 成功回调
+        int code = response["code"].toInt();
+        QString msg = response["msg"].toString();
 
-    QNetworkRequest request(QUrl("http://120.48.95.51:7001/register"));
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("Accept", "application/json");
-    request.setRawHeader("User-Agent", "QtApp/1.0");
+        if (code == 0) {
+            showSuccess("注册成功！请登录");
+            // 延迟1秒后切换到登录页面
+            QTimer::singleShot(1000, this, &LoginPage::onSwitchToLogin);
+        } else {
+            showError(msg);
+        }
 
-    QNetworkReply *reply = m_networkManager->post(request, data);
-    connect(reply, &QNetworkReply::finished, this, &LoginPage::onRegisterReply);
+        m_registerButton->setEnabled(true);
+        m_registerButton->setText("注册");
+    },
+    [this](const QString &errorMsg) {
+        // 错误回调
+        qDebug() << "Register Error:" << errorMsg;
+        showError("网络错误：" + errorMsg);
+
+        m_registerButton->setEnabled(true);
+        m_registerButton->setText("注册");
+    });
 }
 
 void LoginPage::onSwitchToLogin()
@@ -558,124 +602,6 @@ void LoginPage::onSwitchToRegister()
 {
     m_pageStack->setCurrentIndex(1);
     m_loginMessage->clear();
-}
-
-void LoginPage::onLoginReply()
-{
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
-    if (!reply) return;
-
-    m_loginButton->setEnabled(true);
-    m_loginButton->setText("登录");
-
-    if (reply->error() == QNetworkReply::NoError) {
-        QByteArray data = reply->readAll();
-        QJsonDocument doc = QJsonDocument::fromJson(data);
-
-        if (doc.isObject()) {
-            QJsonObject rootObj = doc.object();
-            int code = rootObj["code"].toInt();
-            QString msg = rootObj["msg"].toString();
-
-            // 调试输出：打印完整的JSON响应
-            qDebug() << "=== Login Response ===";
-            qDebug() << "Full response:" << doc.toJson(QJsonDocument::Indented);
-            qDebug() << "Code:" << code;
-            qDebug() << "Message:" << msg;
-            qDebug() << "Token field exists:" << rootObj.contains("token");
-            if (rootObj.contains("token")) {
-                qDebug() << "Token value:" << rootObj["token"].toString();
-            }
-            // 打印所有键
-            qDebug() << "All keys in response:" << rootObj.keys();
-
-            if (code == 0) {
-                // 打印所有响应头
-                qDebug() << "=== Response Headers ===";
-                QList<QNetworkReply::RawHeaderPair> headers = reply->rawHeaderPairs();
-                for (const QNetworkReply::RawHeaderPair &header : headers) {
-                    qDebug() << header.first << ":" << header.second;
-                }
-                
-                // 从响应头中获取cookie
-                QString cookie;
-                for (const QNetworkReply::RawHeaderPair &header : headers) {
-                    if (header.first.toLower() == "set-cookie") {
-                        cookie = QString::fromUtf8(header.second);
-                        // 只保留cookie的名称和值，去掉其他属性
-                        int semicolonPos = cookie.indexOf(';');
-                        if (semicolonPos > 0) {
-                            cookie = cookie.left(semicolonPos);
-                        }
-                        break;
-                    }
-                }
-                
-                qDebug() << "Cookie received:" << cookie;
-                
-                // 保存用户信息用于自动登录
-                QString email = m_loginEmail->text().trimmed();
-                QString password = m_rememberPassword->isChecked() ? m_loginPassword->text() : "";
-                saveUserInfo(cookie, email, password);
-                showSuccess("登录成功！");
-                emit loginSuccess(cookie);
-            } else {
-                showError(msg);
-            }
-        } else {
-            showError("服务器返回数据格式错误");
-        }
-    } else {
-        // 输出详细的错误信息
-        qDebug() << "Login Error:" << reply->error();
-        qDebug() << "Error String:" << reply->errorString();
-        qDebug() << "HTTP Status Code:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        qDebug() << "Response Data:" << reply->readAll();
-        
-        showError("网络错误：" + reply->errorString());
-    }
-
-    reply->deleteLater();
-}
-
-void LoginPage::onRegisterReply()
-{
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
-    if (!reply) return;
-
-    m_registerButton->setEnabled(true);
-    m_registerButton->setText("注册");
-
-    if (reply->error() == QNetworkReply::NoError) {
-        QByteArray data = reply->readAll();
-        QJsonDocument doc = QJsonDocument::fromJson(data);
-
-        if (doc.isObject()) {
-            QJsonObject rootObj = doc.object();
-            int code = rootObj["code"].toInt();
-            QString msg = rootObj["msg"].toString();
-
-            if (code == 0) {
-                showSuccess("注册成功！请登录");
-                // 延迟1秒后切换到登录页面
-                QTimer::singleShot(1000, this, &LoginPage::onSwitchToLogin);
-            } else {
-                showError(msg);
-            }
-        } else {
-            showError("服务器返回数据格式错误");
-        }
-    } else {
-        // 输出详细的错误信息
-        qDebug() << "Register Error:" << reply->error();
-        qDebug() << "Error String:" << reply->errorString();
-        qDebug() << "HTTP Status Code:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        qDebug() << "Response Data:" << reply->readAll();
-        
-        showError("网络错误：" + reply->errorString());
-    }
-
-    reply->deleteLater();
 }
 
 void LoginPage::showError(const QString &message)

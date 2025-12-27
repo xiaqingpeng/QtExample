@@ -26,6 +26,16 @@ endif()
 
 # 定义模块库
 
+# NetworkManager模块
+qt_add_library(NetworkManager STATIC
+    networkmanager.cpp
+    networkmanager.h
+)
+target_link_libraries(NetworkManager PRIVATE
+    Qt6::Core
+    Qt6::Network
+)
+
 # BasicControls模块
 qt_add_library(BasicControls STATIC
     basiccontrols/basiccontrolstab.cpp
@@ -103,6 +113,7 @@ target_link_libraries(LayoutExamplesTab3 PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::Network
+    NetworkManager
 )
 
 # ECharts模块
@@ -115,6 +126,8 @@ target_link_libraries(ECharts PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::WebEngineWidgets
+    Qt6::Network
+    NetworkManager
 )
 
 # 主应用程序源文件
@@ -154,6 +167,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
     Qt6::WebEngineWidgets
     Qt6::Network
+    NetworkManager
     BasicControls
     DataDisplay
     AdvancedControls
@@ -185,7 +199,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # 安装模块库
-install(TARGETS BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts
+install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

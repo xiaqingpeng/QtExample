@@ -7,9 +7,7 @@
 #include <QWebChannel>
 #include <QWebEngineView>
 #include <QFile>
-#include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
+#include "networkmanager.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -20,10 +18,11 @@
 #include <QList>
 #include <QDateTimeEdit>
 #include <QDate>
+#include <QUrlQuery>
 
 EChartsTab::EChartsTab(QWidget *parent)
     : QMainWindow(parent)
-    , m_networkManager(new QNetworkAccessManager(this))
+    , m_networkManager(new NetworkManager(this))
 {
     // 1. 设置窗口基本属性
     this->setWindowTitle("Qt + ECharts Demo");
@@ -493,108 +492,82 @@ void EChartsTab::fetchApiData()
     qDebug() << "  - PageNum: 1";
     qDebug() << "  - PageSize: 1000";
     
-    QNetworkRequest request{QUrl(apiUrl)};
-    request.setRawHeader("Content-Type", "application/json");
-    
-    QNetworkReply *reply = m_networkManager->get(request);
-    
-    connect(reply, &QNetworkReply::finished, this, &EChartsTab::onApiDataReceived);
-    connect(reply, &QNetworkReply::errorOccurred,
-            [reply](QNetworkReply::NetworkError error) {
-                qDebug() << "API请求错误:" << error << reply->errorString();
-                // 不在这里删除reply，让onApiDataReceived统一处理
-            });
-}
-
-void EChartsTab::onApiDataReceived()
-{
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
-    if (!reply) return;
-    
-    if (reply->error() == QNetworkReply::NoError) {
-        QByteArray data = reply->readAll();
-        QJsonDocument doc = QJsonDocument::fromJson(data);
-        
-        if (doc.isObject()) {
-            QJsonObject rootObj = doc.object();
-            if (rootObj["code"].toInt() == 0) {
-                QJsonArray rows = rootObj["rows"].toArray();
-                
-                qDebug() << "API返回数据条数:" << rows.size();
-                
-                // 统计各路径的访问次数和响应时间
-                QMap<QString, int> pathCounts;
-                QMap<QString, QList<int>> pathDurations;
-                
-                // 输出数据的时间范围
-                if (!rows.isEmpty()) {
-                    QString firstTime = rows.first().toObject()["requestTime"].toString();
-                    QString lastTime = rows.last().toObject()["requestTime"].toString();
-                    qDebug() << "数据时间范围:" << firstTime << "至" << lastTime;
-                }
-                
-                for (const QJsonValue &rowValue : rows) {
-                    QJsonObject rowObj = rowValue.toObject();
-                    QString path = rowObj["path"].toString();
-                    int duration = rowObj["durationMs"].toInt();
-                    
-                    pathCounts[path]++;
-                    pathDurations[path].append(duration);
-                }
-                
-                // 准备图表数据
-                QStringList categories;
-                QList<int> counts;
-                QList<double> avgDurations;
-                
-                // 按访问次数排序，取前10个
-                QList<QPair<QString, int>> sortedPaths;
-                for (auto it = pathCounts.begin(); it != pathCounts.end(); ++it) {
-                    sortedPaths.append(qMakePair(it.key(), it.value()));
-                }
-                std::sort(sortedPaths.begin(), sortedPaths.end(), 
-                         [](const QPair<QString, int> &a, const QPair<QString, int> &b) {
-                             return a.second > b.second;
-                         });
-                
-                int maxItems = qMin(10, sortedPaths.size());
-                for (int i = 0; i < maxItems; ++i) {
-                    QString path = sortedPaths[i].first;
-                    categories.append(path.length() > 20 ? path.left(20) + "..." : path);
-                    counts.append(sortedPaths[i].second);
-                    
-                    // 计算平均响应时间
-                    QList<int> durations = pathDurations[path];
-                    double avgDuration = 0;
-                    for (int d : durations) {
-                        avgDuration += d;
-                    }
-                    avgDuration /= durations.size();
-                    avgDurations.append(avgDuration);
-                }
-                
-                // 生成JavaScript代码更新图表
-                QString jsCode = QString(
-                    "if (window.updateApiChart) {"
-                    "    window.updateApiChart(%1, %2, %3);"
-                    "} else {"
-                    "    console.log('updateApiChart函数未找到');"
-                    "}"
-                ).arg(jsonArrayToString(categories))
-                 .arg(jsonArrayToString(counts))
-                 .arg(jsonArrayToString(avgDurations));
-                
-                m_webView->page()->runJavaScript(jsCode);
-                qDebug() << "API数据已更新到图表";
-                
-            } else {
-                qDebug() << "API返回错误:" << rootObj["msg"].toString();
+    m_networkManager->get(apiUrl, [this](const QJsonObject &rootObj) {
+        if (rootObj["code"].toInt() == 0) {
+            QJsonArray rows = rootObj["rows"].toArray();
+            
+            qDebug() << "API返回数据条数:" << rows.size();
+            
+            // 统计各路径的访问次数和响应时间
+            QMap<QString, int> pathCounts;
+            QMap<QString, QList<int>> pathDurations;
+            
+            // 输出数据的时间范围
+            if (!rows.isEmpty()) {
+                QString firstTime = rows.first().toObject()["requestTime"].toString();
+                QString lastTime = rows.last().toObject()["requestTime"].toString();
+                qDebug() << "数据时间范围:" << firstTime << "至" << lastTime;
             }
+            
+            for (const QJsonValue &rowValue : rows) {
+                QJsonObject rowObj = rowValue.toObject();
+                QString path = rowObj["path"].toString();
+                int duration = rowObj["durationMs"].toInt();
+                
+                pathCounts[path]++;
+                pathDurations[path].append(duration);
+            }
+            
+            // 准备图表数据
+            QStringList categories;
+            QList<int> counts;
+            QList<double> avgDurations;
+            
+            // 按访问次数排序，取前10个
+            QList<QPair<QString, int>> sortedPaths;
+            for (auto it = pathCounts.begin(); it != pathCounts.end(); ++it) {
+                sortedPaths.append(qMakePair(it.key(), it.value()));
+            }
+            std::sort(sortedPaths.begin(), sortedPaths.end(), 
+                     [](const QPair<QString, int> &a, const QPair<QString, int> &b) {
+                         return a.second > b.second;
+                     });
+            
+            int maxItems = qMin(10, sortedPaths.size());
+            for (int i = 0; i < maxItems; ++i) {
+                QString path = sortedPaths[i].first;
+                categories.append(path.length() > 20 ? path.left(20) + "..." : path);
+                counts.append(sortedPaths[i].second);
+                
+                // 计算平均响应时间
+                QList<int> durations = pathDurations[path];
+                double avgDuration = 0;
+                for (int d : durations) {
+                    avgDuration += d;
+                }
+                avgDuration /= durations.size();
+                avgDurations.append(avgDuration);
+            }
+            
+            // 生成JavaScript代码更新图表
+            QString jsCode = QString(
+                "if (window.updateApiChart) {"
+                "    window.updateApiChart(%1, %2, %3);"
+                "} else {"
+                "    console.log('updateApiChart函数未找到');"
+                "}"
+            ).arg(jsonArrayToString(categories))
+             .arg(jsonArrayToString(counts))
+             .arg(jsonArrayToString(avgDurations));
+            
+            m_webView->page()->runJavaScript(jsCode);
+            qDebug() << "API数据已更新到图表";
+            
         } else {
-            qDebug() << "API返回的不是有效的JSON格式";
+            qDebug() << "API返回错误:" << rootObj["msg"].toString();
         }
-    } else {
-        qDebug() << "API请求失败:" << reply->errorString();
+    }, [this](const QString &errorMsg) {
+        qDebug() << "API请求失败:" << errorMsg;
         // 调用JavaScript显示网络错误提示
         QString jsCode = QString(
             "if (window.showNetworkErrorMessage) {"
@@ -604,10 +577,10 @@ void EChartsTab::onApiDataReceived()
             "}"
         );
         m_webView->page()->runJavaScript(jsCode);
-    }
-    
-    reply->deleteLater();
+    });
 }
+
+
 
 QString EChartsTab::jsonArrayToString(const QStringList &list)
 {

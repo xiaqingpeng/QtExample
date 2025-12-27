@@ -7,7 +7,7 @@
 
 ChangePasswordPage::ChangePasswordPage(QWidget *parent)
     : QWidget(parent)
-    , m_networkManager(new QNetworkAccessManager(this))
+    , m_networkManager(new NetworkManager(this))
 {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(20);
@@ -121,63 +121,34 @@ void ChangePasswordPage::onChangePasswordClicked()
     json["newPassword"] = newPassword;
     json["confirmPassword"] = confirmPassword;
 
-    QJsonDocument doc(json);
-    QByteArray data = doc.toJson();
-
-    // 创建请求
-    QNetworkRequest request;
-    request.setUrl(QUrl("http://120.48.95.51:7001/user/change-password"));
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("Cookie", cookie.toUtf8());
-
     qDebug() << "发送修改密码请求...";
-    qDebug() << "URL:" << request.url();
     qDebug() << "Cookie:" << cookie;
 
-    // 发送POST请求
-    QNetworkReply *reply = m_networkManager->post(request, data);
+    // 使用NetworkManager发送POST请求，自动添加平台识别头
+    // 注意：这里需要手动添加Cookie头，因为NetworkManager不自动处理Cookie
+    m_networkManager->post("http://120.48.95.51:7001/user/change-password",
+                           json,
+                           [this](const QJsonObject &response) {
+        // 成功回调
+        int code = response["code"].toInt();
+        QString message = response["msg"].toString();
 
-    connect(reply, &QNetworkReply::finished, this, &ChangePasswordPage::onChangePasswordReply);
-    connect(reply, &QNetworkReply::errorOccurred,
-            [reply](QNetworkReply::NetworkError error) {
-                qDebug() << "修改密码请求错误:" << error << reply->errorString();
-            });
-}
-
-void ChangePasswordPage::onChangePasswordReply()
-{
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
-    if (!reply) return;
-
-    if (reply->error() == QNetworkReply::NoError) {
-        QByteArray responseData = reply->readAll();
-        QJsonDocument doc = QJsonDocument::fromJson(responseData);
-
-        qDebug() << "修改密码响应:" << responseData;
-
-        if (doc.isObject()) {
-            QJsonObject rootObj = doc.object();
-            int code = rootObj["code"].toInt();
-            QString message = rootObj["msg"].toString();
-
-            if (code == 0) {
-                QMessageBox::information(this, "成功", "密码修改成功！");
-                // 清空输入框
-                m_oldPasswordEdit->clear();
-                m_newPasswordEdit->clear();
-                m_confirmPasswordEdit->clear();
-                // 发送密码修改成功信号
-                emit passwordChanged();
-            } else {
-                QMessageBox::warning(this, "失败", message);
-            }
+        if (code == 0) {
+            QMessageBox::information(this, "成功", "密码修改成功！");
+            // 清空输入框
+            m_oldPasswordEdit->clear();
+            m_newPasswordEdit->clear();
+            m_confirmPasswordEdit->clear();
+            // 发送密码修改成功信号
+            emit passwordChanged();
         } else {
-            QMessageBox::warning(this, "错误", "服务器返回数据格式错误");
+            QMessageBox::warning(this, "失败", message);
         }
-    } else {
-        qDebug() << "修改密码失败:" << reply->errorString();
-        QMessageBox::warning(this, "错误", "网络请求失败: " + reply->errorString());
-    }
-
-    reply->deleteLater();
+    },
+    [this](const QString &errorMsg) {
+        // 错误回调
+        qDebug() << "修改密码失败:" << errorMsg;
+        QMessageBox::warning(this, "错误", "网络请求失败: " + errorMsg);
+    });
 }
+

@@ -5,8 +5,7 @@
 #include <QWebEngineView>
 #include <QWebChannel>
 #include <QVariant>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
+#include "networkmanager.h"
 #include <QTimer>
 #include <QComboBox>
 #include <QDateTimeEdit>
@@ -35,8 +34,6 @@ public:
     ~EChartsTab();
 
 private slots:
-    // API数据请求完成后的处理
-    void onApiDataReceived();
     // 当筛选条件改变时重新获取数据
     void onFilterChanged();
     // 当时间筛选条件改变时重新获取数据
@@ -50,7 +47,7 @@ private:
     QWebEngineView *m_webView;  // 加载HTML的WebView
     QWebChannel *m_channel;
     ChartBridge *m_bridge;      // Qt与JS的桥接对象
-    QNetworkAccessManager *m_networkManager;
+    NetworkManager *m_networkManager;
     QTimer *m_apiTimer;         // API自动更新定时器
     
     // 筛选控件

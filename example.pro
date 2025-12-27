@@ -17,6 +17,7 @@ SOURCES += \
     mainuiwindow.cpp \
     loginpage.cpp \
     changepasswordpage.cpp \
+    networkmanager.cpp \
     basiccontrols/basiccontrolstab.cpp \
     advancedcontrols/advancedcontrolstab.cpp \
     datadisplay/datadisplaytab.cpp \
@@ -30,6 +31,7 @@ HEADERS += \
     mainuiwindow.h \
     loginpage.h \
     changepasswordpage.h \
+    networkmanager.h \
     basiccontrols/basiccontrolstab.h \
     advancedcontrols/advancedcontrolstab.h \
     datadisplay/datadisplaytab.h \

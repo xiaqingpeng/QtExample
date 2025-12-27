@@ -7,8 +7,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
+#include "networkmanager.h"
 
 class ChangePasswordPage : public QWidget
 {
@@ -22,14 +21,13 @@ signals:
 
 private slots:
     void onChangePasswordClicked();
-    void onChangePasswordReply();
 
 private:
     QLineEdit *m_oldPasswordEdit;
     QLineEdit *m_newPasswordEdit;
     QLineEdit *m_confirmPasswordEdit;
     QPushButton *m_changePasswordBtn;
-    QNetworkAccessManager *m_networkManager;
+    NetworkManager *m_networkManager;
 };
 
 #endif // CHANGEPASSWORDPAGE_H

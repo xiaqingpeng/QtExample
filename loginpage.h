@@ -6,9 +6,9 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QStackedWidget>
-#include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QCheckBox>
+#include "networkmanager.h"
 
 class LoginPage : public QWidget
 {
@@ -27,8 +27,6 @@ private slots:
     void onRegisterClicked();
     void onSwitchToLogin();
     void onSwitchToRegister();
-    void onLoginReply();
-    void onRegisterReply();
 
 private:
     void setupLoginUI();
@@ -62,7 +60,7 @@ private:
     QStackedWidget *m_pageStack;
 
     // 网络请求
-    QNetworkAccessManager *m_networkManager;
+    NetworkManager *m_networkManager;
 };
 
 #endif // LOGINPAGE_H
