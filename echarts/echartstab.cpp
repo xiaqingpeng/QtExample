@@ -323,6 +323,10 @@ void EChartsTab::onTimeShortcutClicked(int days)
     // 清除所有按钮的高亮
     updateButtonHighlight(-1);
     
+    // 阻止信号发射，避免触发多次请求
+    m_startTimeEdit->blockSignals(true);
+    m_endTimeEdit->blockSignals(true);
+    
     if (days == 0) {
         // 今天
         m_startTimeEdit->setDateTime(QDateTime(now.date(), QTime(0, 0, 0)));
@@ -356,7 +360,11 @@ void EChartsTab::onTimeShortcutClicked(int days)
         updateButtonHighlight(-1);
     }
     
-    // 自动重新获取数据
+    // 恢复信号发射
+    m_startTimeEdit->blockSignals(false);
+    m_endTimeEdit->blockSignals(false);
+    
+    // 手动触发一次数据获取
     fetchApiData();
 }
 
@@ -437,11 +445,11 @@ void EChartsTab::fetchApiData()
 {
     qDebug() << "开始请求API数据...";
     
-    // 如果定时器未启动，则启动定时器（首次手动获取数据后）
-    if (!m_apiTimer->isActive()) {
-        m_apiTimer->start(30000); // 30秒
-        qDebug() << "启动自动更新定时器";
-    }
+    // 自动更新定时器已关闭
+    // if (!m_apiTimer->isActive()) {
+    //     m_apiTimer->start(30000); // 30秒
+    //     qDebug() << "启动自动更新定时器";
+    // }
     
     // 从下拉框获取筛选条件
     QString method = m_methodCombo->currentData().toString();

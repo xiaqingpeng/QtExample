@@ -398,6 +398,10 @@ void LogStatsTab::onTimeShortcutClicked(int days)
     // 清除所有按钮的高亮
     updateButtonHighlight(-1);
 
+    // 阻止信号发射，避免触发多次请求
+    m_startTimeEdit->blockSignals(true);
+    m_endTimeEdit->blockSignals(true);
+
     if (days == 0) {
         // 今天
         m_startTimeEdit->setDateTime(QDateTime(now.date(), QTime(0, 0, 0)));
@@ -429,7 +433,12 @@ void LogStatsTab::onTimeShortcutClicked(int days)
         qDebug() << "清除时间筛选";
     }
 
-    // 重新获取数据
+    // 恢复信号发射
+    m_startTimeEdit->blockSignals(false);
+    m_endTimeEdit->blockSignals(false);
+
+    // 手动触发一次数据获取
+    m_currentPage = 1;
     fetchLogData();
 }
 
@@ -621,11 +630,13 @@ void LogStatsTab::updateButtonHighlight(int days)
 void LogStatsTab::updatePaginationInfo()
 {
     // 更新页码选择器
+    m_pageCombo->blockSignals(true);  // 阻止信号，避免重复触发
     m_pageCombo->clear();
     for (int i = 1; i <= m_totalPages; ++i) {
         m_pageCombo->addItem(QString::number(i));
     }
     m_pageCombo->setCurrentIndex(m_currentPage - 1);
+    m_pageCombo->blockSignals(false);  // 恢复信号
 
     // 更新页码信息标签
     m_pageInfoLabel->setText(QString("共 %1 条记录，第 %2/%3 页").arg(m_totalRecords).arg(m_currentPage).arg(m_totalPages));
