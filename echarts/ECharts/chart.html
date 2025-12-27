@@ -357,6 +357,64 @@
                 '最后更新: ' + new Date().toLocaleString() + ' - 暂无数据';
         }
 
+        // 显示网络错误提示
+        function showNetworkErrorMessage() {
+            var option = {
+                title: {
+                    text: 'API访问统计监控',
+                    subtext: '实时数据更新',
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'bold' }
+                },
+                graphic: [
+                    // 错误图标（红色X）
+                    // {
+                    //     type: 'text',
+                    //     left: 'center',
+                    //     top: 'center',
+                    //     style: {
+                    //         text: '✕',
+                    //         fontSize: 60,
+                    //         fontWeight: 'bold',
+                    //         fill: '#ee6666'
+                    //     },
+                    //     position: [0, -40]
+                    // },
+                    // 错误文字
+                    // {
+                    //     type: 'text',
+                    //     left: 'center',
+                    //     top: 'center',
+                    //     style: {
+                    //         text: '网络请求异常',
+                    //         fontSize: 24,
+                    //         fontWeight: 'bold',
+                    //         fill: '#ee6666'
+                    //     },
+                    //     position: [0, 20]
+                    // },
+                    // 提示文字
+                    {
+                        type: 'text',
+                        left: 'center',
+                        top: 'center',
+                        style: {
+                            text: '请检查网络服务，网络请求异常',
+                            fontSize: 16,
+                            fill: '#999'
+                        },
+                        position: [0, 50]
+                    }
+                ],
+                xAxis: { show: false },
+                yAxis: { show: false },
+                series: []
+            };
+            myChart.setOption(option, true);
+            document.getElementById('status').textContent = 
+                '最后更新: ' + new Date().toLocaleString() + ' - 网络错误';
+        }
+
 
 
         // 监听窗口大小变化，自适应图表

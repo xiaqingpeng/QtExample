@@ -162,7 +162,7 @@ void EChartsTab::fetchApiData()
     connect(reply, &QNetworkReply::errorOccurred,
             [reply](QNetworkReply::NetworkError error) {
                 qDebug() << "API请求错误:" << error << reply->errorString();
-                reply->deleteLater();
+                // 不在这里删除reply，让onApiDataReceived统一处理
             });
 }
 
@@ -246,6 +246,15 @@ void EChartsTab::onApiDataReceived()
         }
     } else {
         qDebug() << "API请求失败:" << reply->errorString();
+        // 调用JavaScript显示网络错误提示
+        QString jsCode = QString(
+            "if (window.showNetworkErrorMessage) {"
+            "    window.showNetworkErrorMessage();"
+            "} else {"
+            "    console.log('showNetworkErrorMessage函数未找到');"
+            "}"
+        );
+        m_webView->page()->runJavaScript(jsCode);
     }
     
     reply->deleteLater();
