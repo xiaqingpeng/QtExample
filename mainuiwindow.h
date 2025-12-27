@@ -10,6 +10,7 @@
 #include <QGridLayout>
 #include "echarts/echartstab.h"
 #include "loginpage.h"
+#include "changepasswordpage.h"
 
 class MainUIWindow : public QWidget
 {

@@ -122,12 +122,14 @@ set(SOURCES
     main.cpp
     mainuiwindow.cpp
     loginpage.cpp
+    changepasswordpage.cpp
 )
 
 # 主应用程序头文件
 set(HEADERS
     mainuiwindow.h
     loginpage.h
+    changepasswordpage.h
 )
 
 # UI文件列表

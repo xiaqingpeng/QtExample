@@ -8,6 +8,7 @@
 #include "layoutexamples3/layoutexamplestab3.h"
 #include "echarts/echartstab.h"
 #include "loginpage.h"
+#include "changepasswordpage.h"
 #include <QFont>
 #include <QListWidgetItem>
 #include <QScrollArea>
@@ -96,6 +97,7 @@ void MainUIWindow::setupMainMenu()
     new QListWidgetItem("布局示例", mainMenuList);
     new QListWidgetItem("对话框示例", mainMenuList);
     new QListWidgetItem("图表示例", mainMenuList);
+    new QListWidgetItem("个人中心", mainMenuList);
 
     connect(mainMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onMainMenuClicked);
 
@@ -120,6 +122,10 @@ void MainUIWindow::setupSubMenu(const QString &mainMenu)
         new QListWidgetItem("对话框", subMenuList);
     } else if (mainMenu == "图表示例") {
         new QListWidgetItem("ECharts示例", subMenuList);
+    } else if (mainMenu == "个人中心") {
+        new QListWidgetItem("修改密码", subMenuList);
+    } else if (mainMenu == "个人中心") {
+        new QListWidgetItem("修改密码", subMenuList);
     }
 
     // 默认选择第一个二级菜单
@@ -179,6 +185,8 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         contentWidget = new DialogsTab();
     } else if (subMenu == "ECharts示例") {
         contentWidget = new EChartsTab();
+    } else if (subMenu == "修改密码") {
+        contentWidget = new ChangePasswordPage();
     }
 
     // 如果创建了内容控件，添加到内容区域

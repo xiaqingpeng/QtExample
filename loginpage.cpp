@@ -500,6 +500,11 @@ void LoginPage::onLoginClicked()
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Accept", "application/json");
     request.setRawHeader("User-Agent", "QtApp/1.0");
+    
+    // 清除旧的cookie
+    m_networkManager->clearAccessCache();
+    
+    qDebug() << "Sending login request to:" << request.url();
 
     QNetworkReply *reply = m_networkManager->post(request, data);
     connect(reply, &QNetworkReply::finished, this, &LoginPage::onLoginReply);
@@ -572,14 +577,48 @@ void LoginPage::onLoginReply()
             int code = rootObj["code"].toInt();
             QString msg = rootObj["msg"].toString();
 
+            // 调试输出：打印完整的JSON响应
+            qDebug() << "=== Login Response ===";
+            qDebug() << "Full response:" << doc.toJson(QJsonDocument::Indented);
+            qDebug() << "Code:" << code;
+            qDebug() << "Message:" << msg;
+            qDebug() << "Token field exists:" << rootObj.contains("token");
+            if (rootObj.contains("token")) {
+                qDebug() << "Token value:" << rootObj["token"].toString();
+            }
+            // 打印所有键
+            qDebug() << "All keys in response:" << rootObj.keys();
+
             if (code == 0) {
-                QString token = rootObj["token"].toString();
+                // 打印所有响应头
+                qDebug() << "=== Response Headers ===";
+                QList<QNetworkReply::RawHeaderPair> headers = reply->rawHeaderPairs();
+                for (const QNetworkReply::RawHeaderPair &header : headers) {
+                    qDebug() << header.first << ":" << header.second;
+                }
+                
+                // 从响应头中获取cookie
+                QString cookie;
+                for (const QNetworkReply::RawHeaderPair &header : headers) {
+                    if (header.first.toLower() == "set-cookie") {
+                        cookie = QString::fromUtf8(header.second);
+                        // 只保留cookie的名称和值，去掉其他属性
+                        int semicolonPos = cookie.indexOf(';');
+                        if (semicolonPos > 0) {
+                            cookie = cookie.left(semicolonPos);
+                        }
+                        break;
+                    }
+                }
+                
+                qDebug() << "Cookie received:" << cookie;
+                
                 // 保存用户信息用于自动登录
                 QString email = m_loginEmail->text().trimmed();
                 QString password = m_rememberPassword->isChecked() ? m_loginPassword->text() : "";
-                saveUserInfo(token, email, password);
+                saveUserInfo(cookie, email, password);
                 showSuccess("登录成功！");
-                emit loginSuccess(token);
+                emit loginSuccess(cookie);
             } else {
                 showError(msg);
             }
@@ -658,6 +697,12 @@ void LoginPage::showSuccess(const QString &message)
 void LoginPage::saveUserInfo(const QString &token, const QString &email, const QString &password)
 {
     QSettings settings("YourCompany", "QtApp");
+    
+    qDebug() << "=== Saving User Info ===";
+    qDebug() << "Token to save:" << token;
+    qDebug() << "Email to save:" << email;
+    qDebug() << "Password to save:" << (password.isEmpty() ? "empty" : "exists");
+    
     settings.setValue("user/token", token);
     settings.setValue("user/email", email);
     
@@ -677,9 +722,13 @@ void LoginPage::saveUserInfo(const QString &token, const QString &email, const Q
     // 同步设置，确保立即写入
     settings.sync();
     
+    // 验证保存的值
+    QString savedToken = settings.value("user/token", "").toString();
+    QString savedEmail = settings.value("user/email", "").toString();
+    
     qDebug() << "=== User Info Saved ===";
     qDebug() << "Email:" << email;
-    qDebug() << "Token:" << (token.isEmpty() ? "empty" : "exists");
+    qDebug() << "Token saved:" << (savedToken.isEmpty() ? "empty" : savedToken);
     qDebug() << "Password saved:" << !password.isEmpty();
     qDebug() << "Settings file:" << settings.fileName();
 }
