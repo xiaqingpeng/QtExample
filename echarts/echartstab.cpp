@@ -28,14 +28,25 @@ EChartsTab::EChartsTab(QWidget *parent)
     // 1. 设置窗口基本属性
     this->setWindowTitle("Qt + ECharts Demo");
     this->resize(800, 600);
+    
+    // 设置窗口样式
+    this->setStyleSheet(
+        "QMainWindow { background-color: #f5f7fa; }"
+        "QLabel { color: #333; font-size: 13px; font-weight: 500; }"
+    );
 
     // 2. 创建中心部件和布局
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *layout = new QVBoxLayout(centralWidget);
+    layout->setContentsMargins(16, 16, 16, 16);
+    layout->setSpacing(12);
     this->setCentralWidget(centralWidget);
 
     // 3. 创建WebEngineView，加载ECharts HTML页面
     m_webView = new QWebEngineView(this);
+    m_webView->setStyleSheet(
+        "QWebEngineView { border: 1px solid #e0e0e0; border-radius: 8px; background-color: white; }"
+    );
     layout->addWidget(m_webView);
 
     // 4. 创建桥接对象，实现Qt与JS交互
@@ -67,6 +78,30 @@ EChartsTab::EChartsTab(QWidget *parent)
     m_methodCombo->addItem("Post", "Post");
     m_methodCombo->addItem("Get", "Get");
     m_methodCombo->setCurrentIndex(0);  // 默认选择All
+    m_methodCombo->setMinimumWidth(120);
+    m_methodCombo->setMinimumHeight(36);
+    m_methodCombo->setStyleSheet(
+        "QComboBox {"
+        "    background-color: white;"
+        "    border: 1px solid #d0d0d0;"
+        "    border-radius: 6px;"
+        "    padding: 6px 12px;"
+        "    font-size: 13px;"
+        "    color: #333;"
+        "}"
+        "QComboBox:hover { border: 1px solid #0078d4; }"
+        "QComboBox:focus { border: 1px solid #0078d4; }"
+        "QComboBox::drop-down { border: none; width: 24px; }"
+        "QComboBox::down-arrow { image: none; border: none; }"
+        "QComboBox QAbstractItemView {"
+        "    background-color: white;"
+        "    border: 1px solid #d0d0d0;"
+        "    border-radius: 6px;"
+        "    selection-background-color: #0078d4;"
+        "    selection-color: white;"
+        "    outline: none;"
+        "}"
+    );
     filterLayout->addWidget(new QLabel("Method:"));
     filterLayout->addWidget(m_methodCombo);
     
@@ -79,6 +114,30 @@ EChartsTab::EChartsTab(QWidget *parent)
     m_platformCombo->addItem("Windows", "windows");
     m_platformCombo->addItem("Mac", "mac");
     m_platformCombo->setCurrentIndex(0);  // 默认选择All
+    m_platformCombo->setMinimumWidth(120);
+    m_platformCombo->setMinimumHeight(36);
+    m_platformCombo->setStyleSheet(
+        "QComboBox {"
+        "    background-color: white;"
+        "    border: 1px solid #d0d0d0;"
+        "    border-radius: 6px;"
+        "    padding: 6px 12px;"
+        "    font-size: 13px;"
+        "    color: #333;"
+        "}"
+        "QComboBox:hover { border: 1px solid #0078d4; }"
+        "QComboBox:focus { border: 1px solid #0078d4; }"
+        "QComboBox::drop-down { border: none; width: 24px; }"
+        "QComboBox::down-arrow { image: none; border: none; }"
+        "QComboBox QAbstractItemView {"
+        "    background-color: white;"
+        "    border: 1px solid #d0d0d0;"
+        "    border-radius: 6px;"
+        "    selection-background-color: #0078d4;"
+        "    selection-color: white;"
+        "    outline: none;"
+        "}"
+    );
     filterLayout->addWidget(new QLabel("Platform:"));
     filterLayout->addWidget(m_platformCombo);
     
@@ -93,6 +152,26 @@ EChartsTab::EChartsTab(QWidget *parent)
     m_startTimeEdit->setDisplayFormat("yyyy-MM-dd HH:mm:ss");
     m_startTimeEdit->setCalendarPopup(true);
     m_startTimeEdit->setDateTime(QDateTime::currentDateTime().addDays(-7));  // 默认7天前
+    m_startTimeEdit->setMinimumHeight(36);
+    m_startTimeEdit->setStyleSheet(
+        "QDateTimeEdit {"
+        "    background-color: white;"
+        "    border: 1px solid #d0d0d0;"
+        "    border-radius: 6px;"
+        "    padding: 6px 12px;"
+        "    font-size: 13px;"
+        "    color: #333;"
+        "}"
+        "QDateTimeEdit:hover { border: 1px solid #0078d4; }"
+        "QDateTimeEdit:focus { border: 1px solid #0078d4; }"
+        "QDateTimeEdit::drop-down { border: none; width: 24px; }"
+        "QDateTimeEdit::down-arrow { image: none; border: none; }"
+        "QDateTimeEdit QCalendarWidget {"
+        "    background-color: white;"
+        "    border: 1px solid #d0d0d0;"
+        "    border-radius: 6px;"
+        "}"
+    );
     timeFilterLayout->addWidget(m_startTimeEdit);
     
     // 结束时间选择器
@@ -101,6 +180,26 @@ EChartsTab::EChartsTab(QWidget *parent)
     m_endTimeEdit->setDisplayFormat("yyyy-MM-dd HH:mm:ss");
     m_endTimeEdit->setCalendarPopup(true);
     m_endTimeEdit->setDateTime(QDateTime::currentDateTime());  // 默认当前时间
+    m_endTimeEdit->setMinimumHeight(36);
+    m_endTimeEdit->setStyleSheet(
+        "QDateTimeEdit {"
+        "    background-color: white;"
+        "    border: 1px solid #d0d0d0;"
+        "    border-radius: 6px;"
+        "    padding: 6px 12px;"
+        "    font-size: 13px;"
+        "    color: #333;"
+        "}"
+        "QDateTimeEdit:hover { border: 1px solid #0078d4; }"
+        "QDateTimeEdit:focus { border: 1px solid #0078d4; }"
+        "QDateTimeEdit::drop-down { border: none; width: 24px; }"
+        "QDateTimeEdit::down-arrow { image: none; border: none; }"
+        "QDateTimeEdit QCalendarWidget {"
+        "    background-color: white;"
+        "    border: 1px solid #d0d0d0;"
+        "    border-radius: 6px;"
+        "}"
+    );
     timeFilterLayout->addWidget(m_endTimeEdit);
     
     layout->addLayout(timeFilterLayout);
@@ -113,6 +212,35 @@ EChartsTab::EChartsTab(QWidget *parent)
     m_btnLast7Days = new QPushButton("最近7天", this);
     m_btnLast30Days = new QPushButton("最近30天", this);
     m_btnClearTime = new QPushButton("清除时间", this);
+    
+    // 设置快捷按钮的初始样式
+    QString normalButtonStyle =
+        "QPushButton {"
+        "    background-color: white;"
+        "    border: 1px solid #d0d0d0;"
+        "    border-radius: 6px;"
+        "    padding: 8px 16px;"
+        "    font-size: 13px;"
+        "    color: #333;"
+        "}"
+        "QPushButton:hover {"
+        "    background-color: #f0f0f0;"
+        "    border: 1px solid #0078d4;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: #e0e0e0;"
+        "}"
+        "QPushButton:checked {"
+        "    background-color: #0078d4;"
+        "    color: white;"
+        "    border: 1px solid #005a9e;"
+        "}";
+    
+    m_btnToday->setStyleSheet(normalButtonStyle);
+    m_btnYesterday->setStyleSheet(normalButtonStyle);
+    m_btnLast7Days->setStyleSheet(normalButtonStyle);
+    m_btnLast30Days->setStyleSheet(normalButtonStyle);
+    m_btnClearTime->setStyleSheet(normalButtonStyle);
     
     shortcutLayout->addWidget(m_btnToday);
     shortcutLayout->addWidget(m_btnYesterday);
@@ -135,6 +263,24 @@ EChartsTab::EChartsTab(QWidget *parent)
     
     // 7. 创建API数据获取按钮
     QPushButton *btnFetchApi = new QPushButton("获取API数据", this);
+    btnFetchApi->setMinimumHeight(40);
+    btnFetchApi->setStyleSheet(
+        "QPushButton {"
+        "    background-color: #0078d4;"
+        "    color: white;"
+        "    border: none;"
+        "    border-radius: 6px;"
+        "    padding: 10px 20px;"
+        "    font-size: 14px;"
+        "    font-weight: 600;"
+        "}"
+        "QPushButton:hover {"
+        "    background-color: #106ebe;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: #005a9e;"
+        "}"
+    );
     layout->addWidget(btnFetchApi);
     
     connect(btnFetchApi, &QPushButton::clicked, this, &EChartsTab::fetchApiData);
@@ -218,10 +364,37 @@ void EChartsTab::onTimeShortcutClicked(int days)
 void EChartsTab::updateButtonHighlight(int days)
 {
     // 定义按钮样式
-    QString normalStyle = "QPushButton { background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px 15px; border-radius: 3px; }"
-                       "QPushButton:hover { background-color: #e0e0e0; }";
-    QString highlightStyle = "QPushButton { background-color: #0078d4; color: white; border: 1px solid #005a9e; padding: 5px 15px; border-radius: 3px; }"
-                          "QPushButton:hover { background-color: #106ebe; }";
+    QString normalStyle =
+        "QPushButton {"
+        "    background-color: white;"
+        "    border: 1px solid #d0d0d0;"
+        "    border-radius: 6px;"
+        "    padding: 8px 16px;"
+        "    font-size: 13px;"
+        "    color: #333;"
+        "}"
+        "QPushButton:hover {"
+        "    background-color: #f0f0f0;"
+        "    border: 1px solid #0078d4;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: #e0e0e0;"
+        "}";
+    QString highlightStyle =
+        "QPushButton {"
+        "    background-color: #0078d4;"
+        "    color: white;"
+        "    border: 1px solid #005a9e;"
+        "    border-radius: 6px;"
+        "    padding: 8px 16px;"
+        "    font-size: 13px;"
+        "}"
+        "QPushButton:hover {"
+        "    background-color: #106ebe;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: #005a9e;"
+        "}";
     
     // 重置所有按钮为普通样式
     m_btnToday->setStyleSheet(normalStyle);
