@@ -531,7 +531,16 @@ void LogStatsTab::fetchLogData()
 
                 // Request Time
                 QString requestTime = logObj["requestTime"].toString();
-                m_tableWidget->setItem(row, 4, new QTableWidgetItem(requestTime));
+                // 转换为北京时间格式: yyyy-MM-dd HH:mm:ss
+                QDateTime utcTime = QDateTime::fromString(requestTime, Qt::ISODate);
+                QString displayTime;
+                if (utcTime.isValid()) {
+                    QDateTime beijingTime = utcTime.toOffsetFromUtc(8 * 3600);
+                    displayTime = beijingTime.toString("yyyy-MM-dd HH:mm:ss");
+                } else {
+                    displayTime = requestTime;
+                }
+                m_tableWidget->setItem(row, 4, new QTableWidgetItem(displayTime));
 
                 // Duration
                 m_tableWidget->setItem(row, 5, new QTableWidgetItem(QString::number(logObj["durationMs"].toInt())));
