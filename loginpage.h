@@ -8,6 +8,7 @@
 #include <QStackedWidget>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QCheckBox>
 
 class LoginPage : public QWidget
 {
@@ -33,6 +34,12 @@ private:
     void setupRegisterUI();
     void showError(const QString &message);
     void showSuccess(const QString &message);
+    void saveUserInfo(const QString &token, const QString &email, const QString &password);
+    void loadUserInfo(QString &token, QString &email, QString &password);
+    bool checkAutoLogin();
+    void clearUserInfo();
+    QString encryptPassword(const QString &password);
+    QString decryptPassword(const QString &encrypted);
 
     // 登录界面控件
     QLineEdit *m_loginEmail;
@@ -40,6 +47,7 @@ private:
     QPushButton *m_loginButton;
     QPushButton *m_switchToRegisterButton;
     QLabel *m_loginMessage;
+    QCheckBox *m_rememberPassword;
 
     // 注册界面控件
     QLineEdit *m_registerUsername;

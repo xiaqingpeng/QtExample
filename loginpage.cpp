@@ -7,6 +7,11 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QNetworkProxy>
+#include <QSettings>
+#include <QCheckBox>
+#include <QCryptographicHash>
+#include <QByteArray>
+#include <QDebug>
 
 LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
 {
@@ -26,6 +31,9 @@ LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
 
     // 默认显示登录页面
     m_pageStack->setCurrentIndex(0);
+    
+    // 检查是否有保存的登录信息，如果有则自动登录
+    checkAutoLogin();
 }
 
 LoginPage::~LoginPage()
@@ -145,6 +153,20 @@ void LoginPage::setupLoginUI()
         "}"
     );
     formLayout->addWidget(m_loginPassword);
+
+    // 记住密码复选框
+    m_rememberPassword = new QCheckBox("记住密码");
+    m_rememberPassword->setStyleSheet(
+        "QCheckBox {"
+        "    font-size: 13px;"
+        "    color: #666666;"
+        "}"
+        "QCheckBox::indicator {"
+        "    width: 16px;"
+        "    height: 16px;"
+        "}"
+    );
+    formLayout->addWidget(m_rememberPassword);
 
     cardLayout->addLayout(formLayout);
 
@@ -552,6 +574,10 @@ void LoginPage::onLoginReply()
 
             if (code == 0) {
                 QString token = rootObj["token"].toString();
+                // 保存用户信息用于自动登录
+                QString email = m_loginEmail->text().trimmed();
+                QString password = m_rememberPassword->isChecked() ? m_loginPassword->text() : "";
+                saveUserInfo(token, email, password);
                 showSuccess("登录成功！");
                 emit loginSuccess(token);
             } else {
@@ -627,4 +653,127 @@ void LoginPage::showSuccess(const QString &message)
     m_loginMessage->setStyleSheet("color: #28a745; font-size: 12px;");
     m_registerMessage->setText(message);
     m_registerMessage->setStyleSheet("color: #28a745; font-size: 12px;");
+}
+
+void LoginPage::saveUserInfo(const QString &token, const QString &email, const QString &password)
+{
+    QSettings settings("YourCompany", "QtApp");
+    settings.setValue("user/token", token);
+    settings.setValue("user/email", email);
+    
+    if (!password.isEmpty()) {
+        // 加密并保存密码
+        QString encryptedPassword = encryptPassword(password);
+        settings.setValue("user/password", encryptedPassword);
+        settings.setValue("user/remember", true);
+        qDebug() << "Password encrypted and saved for:" << email;
+    } else {
+        // 清除保存的密码
+        settings.remove("user/password");
+        settings.setValue("user/remember", false);
+        qDebug() << "Password cleared for:" << email;
+    }
+    
+    // 同步设置，确保立即写入
+    settings.sync();
+    
+    qDebug() << "=== User Info Saved ===";
+    qDebug() << "Email:" << email;
+    qDebug() << "Token:" << (token.isEmpty() ? "empty" : "exists");
+    qDebug() << "Password saved:" << !password.isEmpty();
+    qDebug() << "Settings file:" << settings.fileName();
+}
+
+void LoginPage::loadUserInfo(QString &token, QString &email, QString &password)
+{
+    QSettings settings("YourCompany", "QtApp");
+    token = settings.value("user/token", "").toString();
+    email = settings.value("user/email", "").toString();
+    
+    QString encryptedPassword = settings.value("user/password", "").toString();
+    if (!encryptedPassword.isEmpty()) {
+        password = decryptPassword(encryptedPassword);
+        qDebug() << "Password loaded and decrypted for:" << email;
+    } else {
+        password.clear();
+        qDebug() << "No password found for:" << email;
+    }
+    
+    qDebug() << "=== User Info Loaded ===";
+    qDebug() << "Settings file:" << settings.fileName();
+    qDebug() << "Email:" << email;
+    qDebug() << "Token:" << (token.isEmpty() ? "empty" : "exists");
+    qDebug() << "Password:" << (password.isEmpty() ? "empty" : "exists");
+}
+
+bool LoginPage::checkAutoLogin()
+{
+    QString token, email, password;
+    loadUserInfo(token, email, password);
+    
+    qDebug() << "=== Auto Login Check ===";
+    qDebug() << "Token:" << (token.isEmpty() ? "empty" : "exists");
+    qDebug() << "Email:" << (email.isEmpty() ? "empty" : email);
+    qDebug() << "Password:" << (password.isEmpty() ? "empty" : "exists");
+    
+    if (!email.isEmpty()) {
+        // 填充登录表单
+        m_loginEmail->setText(email);
+        
+        if (!password.isEmpty()) {
+            // 如果保存了密码，自动填充并触发登录
+            m_loginPassword->setText(password);
+            m_rememberPassword->setChecked(true);
+            showSuccess("正在自动登录...");
+            qDebug() << "Auto login triggered for:" << email;
+            // 延迟500ms后自动触发登录
+            QTimer::singleShot(500, this, &LoginPage::onLoginClicked);
+        } else {
+            // 没有保存密码，只填充邮箱
+            m_rememberPassword->setChecked(false);
+            showSuccess("检测到已登录用户，请输入密码继续");
+            qDebug() << "Email filled, but no password saved for:" << email;
+        }
+        return true;
+    }
+    qDebug() << "No saved login info found";
+    return false;
+}
+
+void LoginPage::clearUserInfo()
+{
+    QSettings settings("YourCompany", "QtApp");
+    settings.remove("user/token");
+    settings.remove("user/email");
+    settings.remove("user/password");
+    settings.remove("user/remember");
+    qDebug() << "User info cleared";
+}
+
+QString LoginPage::encryptPassword(const QString &password)
+{
+    // 使用简单的XOR加密，配合固定密钥
+    QString key = "QtAppSecretKey2024";
+    QByteArray data = password.toUtf8();
+    QByteArray keyData = key.toUtf8();
+    
+    for (int i = 0; i < data.size(); ++i) {
+        data[i] = data[i] ^ keyData[i % keyData.size()];
+    }
+    
+    // 转换为Base64字符串存储
+    return QString::fromLatin1(data.toBase64());
+}
+
+QString LoginPage::decryptPassword(const QString &encrypted)
+{
+    QString key = "QtAppSecretKey2024";
+    QByteArray data = QByteArray::fromBase64(encrypted.toLatin1());
+    QByteArray keyData = key.toUtf8();
+    
+    for (int i = 0; i < data.size(); ++i) {
+        data[i] = data[i] ^ keyData[i % keyData.size()];
+    }
+    
+    return QString::fromUtf8(data);
 }
