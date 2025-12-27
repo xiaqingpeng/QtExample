@@ -7,6 +7,7 @@
 #include "layoutexamples2/layoutexamplestab2.h"
 #include "layoutexamples3/layoutexamplestab3.h"
 #include "echarts/echartstab.h"
+#include "loginpage.h"
 #include <QFont>
 #include <QListWidgetItem>
 #include <QScrollArea>
@@ -16,14 +17,29 @@ MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
     setWindowTitle("Qt UI控件综合示例");
     resize(1200, 800);
 
-    setupUI();
+    // 创建主页面栈
+    mainStack = new QStackedWidget(this);
+
+    // 创建登录页面
+    loginPage = new LoginPage(this);
+    connect(loginPage, &LoginPage::loginSuccess, this, &MainUIWindow::onLoginSuccess);
+    mainStack->addWidget(loginPage);
+
+    // 创建主界面
+    QWidget *mainWidget = new QWidget();
+    mainLayout = new QGridLayout(mainWidget);
+    setupUI(mainWidget);
+    mainStack->addWidget(mainWidget);
+
+    // 默认显示登录页面
+    mainStack->setCurrentIndex(0);
+
+    QVBoxLayout *mainVBoxLayout = new QVBoxLayout(this);
+    mainVBoxLayout->addWidget(mainStack);
 }
 
-void MainUIWindow::setupUI()
+void MainUIWindow::setupUI(QWidget *parent)
 {
-    // 创建主布局（3列网格布局）
-    mainLayout = new QGridLayout(this);
-
     // 标题（横跨3列）
     titleLabel = new QLabel("Qt 常用 UI 控件全集示例");
     titleLabel->setAlignment(Qt::AlignCenter);
@@ -177,4 +193,11 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         contentStack->addWidget(scrollArea);
         contentStack->setCurrentWidget(scrollArea);
     }
+}
+
+void MainUIWindow::onLoginSuccess(const QString &token)
+{
+    // 登录成功，切换到主界面
+    mainStack->setCurrentIndex(1);
+    statusBar->showMessage("登录成功 | Qt版本: " + QString(qVersion()));
 }

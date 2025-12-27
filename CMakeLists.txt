@@ -121,11 +121,13 @@ target_link_libraries(ECharts PRIVATE
 set(SOURCES
     main.cpp
     mainuiwindow.cpp
+    loginpage.cpp
 )
 
 # 主应用程序头文件
 set(HEADERS
     mainuiwindow.h
+    loginpage.h
 )
 
 # UI文件列表
@@ -149,6 +151,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::WebEngineWidgets
+    Qt6::Network
     BasicControls
     DataDisplay
     AdvancedControls

@@ -9,6 +9,7 @@
 #include <QStatusBar>
 #include <QGridLayout>
 #include "echarts/echartstab.h"
+#include "loginpage.h"
 
 class MainUIWindow : public QWidget
 {
@@ -20,9 +21,10 @@ public:
 private slots:
     void onMainMenuClicked(QListWidgetItem *item);
     void onSubMenuClicked(QListWidgetItem *item);
+    void onLoginSuccess(const QString &token);
 
 private:
-    void setupUI();
+    void setupUI(QWidget *parent = nullptr);
     void setupMainMenu();
     void setupSubMenu(const QString &mainMenu);
     void setupContent();
@@ -33,6 +35,8 @@ private:
     QListWidget *subMenuList;
     QStackedWidget *contentStack;
     QStatusBar *statusBar;
+    LoginPage *loginPage;
+    QStackedWidget *mainStack;
 };
 
 #endif // MAINUIWINDOW_H

@@ -15,6 +15,7 @@ TEMPLATE = app
 SOURCES += \
     main.cpp \
     mainuiwindow.cpp \
+    loginpage.cpp \
     basiccontrols/basiccontrolstab.cpp \
     advancedcontrols/advancedcontrolstab.cpp \
     datadisplay/datadisplaytab.cpp \
@@ -26,6 +27,7 @@ SOURCES += \
 
 HEADERS += \
     mainuiwindow.h \
+    loginpage.h \
     basiccontrols/basiccontrolstab.h \
     advancedcontrols/advancedcontrolstab.h \
     datadisplay/datadisplaytab.h \

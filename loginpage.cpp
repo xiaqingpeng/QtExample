@@ -1,0 +1,630 @@
+#include "loginpage.h"
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QFormLayout>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QMessageBox>
+#include <QTimer>
+#include <QNetworkProxy>
+
+LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
+{
+    m_networkManager = new QNetworkAccessManager(this);
+    
+    // 禁用代理，避免认证问题
+    QNetworkProxyFactory::setUseSystemConfiguration(false);
+    m_networkManager->setProxy(QNetworkProxy::NoProxy);
+
+    m_pageStack = new QStackedWidget(this);
+
+    setupLoginUI();
+    setupRegisterUI();
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->addWidget(m_pageStack);
+
+    // 默认显示登录页面
+    m_pageStack->setCurrentIndex(0);
+}
+
+LoginPage::~LoginPage()
+{
+}
+
+void LoginPage::setupLoginUI()
+{
+    // 主容器
+    QWidget *loginWidget = new QWidget();
+    QVBoxLayout *mainLayout = new QVBoxLayout(loginWidget);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
+    
+    // 设置QQ风格背景
+    loginWidget->setStyleSheet(
+        "QWidget {"
+        "    background-color: #f5f5f5;"
+        "}"
+    );
+    
+    // 顶部装饰条
+    QWidget *topBar = new QWidget();
+    topBar->setFixedHeight(60);
+    topBar->setStyleSheet(
+        "QWidget {"
+        "    background-color: #0099FF;"
+        "}"
+    );
+    
+    QHBoxLayout *topBarLayout = new QHBoxLayout(topBar);
+    topBarLayout->setContentsMargins(20, 0, 20, 0);
+    
+    // Logo标签
+    QLabel *logoLabel = new QLabel("QT系统");
+    logoLabel->setStyleSheet(
+        "QLabel {"
+        "    color: white;"
+        "    font-size: 28px;"
+        "    font-weight: bold;"
+        "}"
+    );
+    topBarLayout->addStretch();
+    topBarLayout->addWidget(logoLabel);
+    topBarLayout->addStretch();
+    
+    mainLayout->addWidget(topBar);
+    
+    // 登录卡片
+    QWidget *cardWidget = new QWidget();
+    cardWidget->setStyleSheet(
+        "QWidget {"
+        "    background-color: white;"
+        "    border-radius: 8px;"
+        "}"
+    );
+    cardWidget->setMaximumWidth(380);
+    
+    QVBoxLayout *cardLayout = new QVBoxLayout(cardWidget);
+    cardLayout->setSpacing(20);
+    cardLayout->setContentsMargins(30, 30, 30, 30);
+
+    // 标题
+    QLabel *titleLabel = new QLabel("欢迎登录");
+    titleLabel->setAlignment(Qt::AlignLeft);
+    QFont titleFont("Helvetica Neue", 24, QFont::Bold);
+    titleLabel->setFont(titleFont);
+    titleLabel->setStyleSheet(
+        "color: #333333;"
+        "margin-bottom: 5px;"
+    );
+    cardLayout->addWidget(titleLabel);
+
+    // 表单
+    QVBoxLayout *formLayout = new QVBoxLayout();
+    formLayout->setSpacing(15);
+
+    // 邮箱输入
+    m_loginEmail = new QLineEdit();
+    m_loginEmail->setPlaceholderText("邮箱/手机号");
+    m_loginEmail->setStyleSheet(
+        "QLineEdit {"
+        "    padding: 10px;"
+        "    border: 1px solid #e0e0e0;"
+        "    border-radius: 4px;"
+        "    font-size: 14px;"
+        "    background-color: #ffffff;"
+        "    color: #333333;"
+        "}"
+        "QLineEdit:focus {"
+        "    border: 1px solid #0099FF;"
+        "}"
+        "QLineEdit:hover {"
+        "    border: 1px solid #0099FF;"
+        "}"
+    );
+    formLayout->addWidget(m_loginEmail);
+
+    // 密码输入
+    m_loginPassword = new QLineEdit();
+    m_loginPassword->setPlaceholderText("密码");
+    m_loginPassword->setEchoMode(QLineEdit::Password);
+    m_loginPassword->setStyleSheet(
+        "QLineEdit {"
+        "    padding: 10px;"
+        "    border: 1px solid #e0e0e0;"
+        "    border-radius: 4px;"
+        "    font-size: 14px;"
+        "    background-color: #ffffff;"
+        "    color: #333333;"
+        "}"
+        "QLineEdit:focus {"
+        "    border: 1px solid #0099FF;"
+        "}"
+        "QLineEdit:hover {"
+        "    border: 1px solid #0099FF;"
+        "}"
+    );
+    formLayout->addWidget(m_loginPassword);
+
+    cardLayout->addLayout(formLayout);
+
+    // 登录按钮
+    m_loginButton = new QPushButton("登录");
+    m_loginButton->setStyleSheet(
+        "QPushButton {"
+        "    background-color: #0099FF;"
+        "    color: white;"
+        "    border: none;"
+        "    padding: 12px;"
+        "    border-radius: 4px;"
+        "    font-size: 16px;"
+        "    font-weight: bold;"
+        "}"
+        "QPushButton:hover {"
+        "    background-color: #0088EE;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: #0077DD;"
+        "}"
+        "QPushButton:disabled {"
+        "    background-color: #cccccc;"
+        "}"
+    );
+    connect(m_loginButton, &QPushButton::clicked, this, &LoginPage::onLoginClicked);
+    cardLayout->addWidget(m_loginButton);
+
+    // 切换到注册按钮
+    m_switchToRegisterButton = new QPushButton("注册账号");
+    m_switchToRegisterButton->setStyleSheet(
+        "QPushButton {"
+        "    background-color: transparent;"
+        "    color: #0099FF;"
+        "    border: none;"
+        "    padding: 8px;"
+        "    font-size: 13px;"
+        "}"
+        "QPushButton:hover {"
+        "    color: #0088EE;"
+        "    text-decoration: underline;"
+        "}"
+    );
+    connect(m_switchToRegisterButton, &QPushButton::clicked, this, &LoginPage::onSwitchToRegister);
+    cardLayout->addWidget(m_switchToRegisterButton);
+
+    // 消息提示
+    m_loginMessage = new QLabel();
+    m_loginMessage->setAlignment(Qt::AlignCenter);
+    m_loginMessage->setWordWrap(true);
+    m_loginMessage->setStyleSheet(
+        "QLabel {"
+        "    padding: 8px;"
+        "    border-radius: 4px;"
+        "    font-size: 13px;"
+        "}"
+    );
+    cardLayout->addWidget(m_loginMessage);
+
+    cardLayout->addStretch();
+
+    // 居中显示卡片
+    QHBoxLayout *centerLayout = new QHBoxLayout();
+    centerLayout->addStretch();
+    centerLayout->addWidget(cardWidget);
+    centerLayout->addStretch();
+    
+    mainLayout->addStretch();
+    mainLayout->addLayout(centerLayout);
+    mainLayout->addStretch();
+
+    m_pageStack->addWidget(loginWidget);
+}
+
+void LoginPage::setupRegisterUI()
+{
+    // 主容器
+    QWidget *registerWidget = new QWidget();
+    QVBoxLayout *mainLayout = new QVBoxLayout(registerWidget);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
+    
+    // 设置QQ风格背景
+    registerWidget->setStyleSheet(
+        "QWidget {"
+        "    background-color: #f5f5f5;"
+        "}"
+    );
+    
+    // 顶部装饰条
+    QWidget *topBar = new QWidget();
+    topBar->setFixedHeight(60);
+    topBar->setStyleSheet(
+        "QWidget {"
+        "    background-color: #0099FF;"
+        "}"
+    );
+    
+    QHBoxLayout *topBarLayout = new QHBoxLayout(topBar);
+    topBarLayout->setContentsMargins(20, 0, 20, 0);
+    
+    // Logo标签
+    QLabel *logoLabel = new QLabel("QQ");
+    logoLabel->setStyleSheet(
+        "QLabel {"
+        "    color: white;"
+        "    font-size: 28px;"
+        "    font-weight: bold;"
+        "}"
+    );
+    topBarLayout->addStretch();
+    topBarLayout->addWidget(logoLabel);
+    topBarLayout->addStretch();
+    
+    mainLayout->addWidget(topBar);
+    
+    // 注册卡片
+    QWidget *cardWidget = new QWidget();
+    cardWidget->setStyleSheet(
+        "QWidget {"
+        "    background-color: white;"
+        "    border-radius: 8px;"
+        "}"
+    );
+    cardWidget->setMaximumWidth(380);
+    
+    QVBoxLayout *cardLayout = new QVBoxLayout(cardWidget);
+    cardLayout->setSpacing(15);
+    cardLayout->setContentsMargins(30, 30, 30, 30);
+
+    // 标题
+    QLabel *titleLabel = new QLabel("注册账号");
+    titleLabel->setAlignment(Qt::AlignLeft);
+    QFont titleFont("Microsoft YaHei", 24, QFont::Bold);
+    titleLabel->setFont(titleFont);
+    titleLabel->setStyleSheet(
+        "color: #333333;"
+        "margin-bottom: 5px;"
+    );
+    cardLayout->addWidget(titleLabel);
+
+    // 表单
+    QVBoxLayout *formLayout = new QVBoxLayout();
+    formLayout->setSpacing(12);
+
+    // 用户名输入
+    m_registerUsername = new QLineEdit();
+    m_registerUsername->setPlaceholderText("昵称");
+    m_registerUsername->setStyleSheet(
+        "QLineEdit {"
+        "    padding: 10px;"
+        "    border: 1px solid #e0e0e0;"
+        "    border-radius: 4px;"
+        "    font-size: 14px;"
+        "    background-color: #ffffff;"
+        "    color: #333333;"
+        "}"
+        "QLineEdit:focus {"
+        "    border: 1px solid #0099FF;"
+        "}"
+        "QLineEdit:hover {"
+        "    border: 1px solid #0099FF;"
+        "}"
+    );
+    formLayout->addWidget(m_registerUsername);
+
+    // 邮箱输入
+    m_registerEmail = new QLineEdit();
+    m_registerEmail->setPlaceholderText("邮箱/手机号");
+    m_registerEmail->setStyleSheet(
+        "QLineEdit {"
+        "    padding: 10px;"
+        "    border: 1px solid #e0e0e0;"
+        "    border-radius: 4px;"
+        "    font-size: 14px;"
+        "    background-color: #ffffff;"
+        "    color: #333333;"
+        "}"
+        "QLineEdit:focus {"
+        "    border: 1px solid #0099FF;"
+        "}"
+        "QLineEdit:hover {"
+        "    border: 1px solid #0099FF;"
+        "}"
+    );
+    formLayout->addWidget(m_registerEmail);
+
+    // 密码输入
+    m_registerPassword = new QLineEdit();
+    m_registerPassword->setPlaceholderText("密码（6-16位）");
+    m_registerPassword->setEchoMode(QLineEdit::Password);
+    m_registerPassword->setStyleSheet(
+        "QLineEdit {"
+        "    padding: 10px;"
+        "    border: 1px solid #e0e0e0;"
+        "    border-radius: 4px;"
+        "    font-size: 14px;"
+        "    background-color: #ffffff;"
+        "    color: #333333;"
+        "}"
+        "QLineEdit:focus {"
+        "    border: 1px solid #0099FF;"
+        "}"
+        "QLineEdit:hover {"
+        "    border: 1px solid #0099FF;"
+        "}"
+    );
+    formLayout->addWidget(m_registerPassword);
+
+    // 确认密码输入
+    m_registerConfirmPassword = new QLineEdit();
+    m_registerConfirmPassword->setPlaceholderText("确认密码");
+    m_registerConfirmPassword->setEchoMode(QLineEdit::Password);
+    m_registerConfirmPassword->setStyleSheet(
+        "QLineEdit {"
+        "    padding: 10px;"
+        "    border: 1px solid #e0e0e0;"
+        "    border-radius: 4px;"
+        "    font-size: 14px;"
+        "    background-color: #ffffff;"
+        "    color: #333333;"
+        "}"
+        "QLineEdit:focus {"
+        "    border: 1px solid #0099FF;"
+        "}"
+        "QLineEdit:hover {"
+        "    border: 1px solid #0099FF;"
+        "}"
+    );
+    formLayout->addWidget(m_registerConfirmPassword);
+
+    cardLayout->addLayout(formLayout);
+
+    // 注册按钮
+    m_registerButton = new QPushButton("注册");
+    m_registerButton->setStyleSheet(
+        "QPushButton {"
+        "    background-color: #0099FF;"
+        "    color: white;"
+        "    border: none;"
+        "    padding: 12px;"
+        "    border-radius: 4px;"
+        "    font-size: 16px;"
+        "    font-weight: bold;"
+        "}"
+        "QPushButton:hover {"
+        "    background-color: #0088EE;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: #0077DD;"
+        "}"
+        "QPushButton:disabled {"
+        "    background-color: #cccccc;"
+        "}"
+    );
+    connect(m_registerButton, &QPushButton::clicked, this, &LoginPage::onRegisterClicked);
+    cardLayout->addWidget(m_registerButton);
+
+    // 切换到登录按钮
+    m_switchToLoginButton = new QPushButton("已有账号？登录");
+    m_switchToLoginButton->setStyleSheet(
+        "QPushButton {"
+        "    background-color: transparent;"
+        "    color: #0099FF;"
+        "    border: none;"
+        "    padding: 8px;"
+        "    font-size: 13px;"
+        "}"
+        "QPushButton:hover {"
+        "    color: #0088EE;"
+        "    text-decoration: underline;"
+        "}"
+    );
+    connect(m_switchToLoginButton, &QPushButton::clicked, this, &LoginPage::onSwitchToLogin);
+    cardLayout->addWidget(m_switchToLoginButton);
+
+    // 消息提示
+    m_registerMessage = new QLabel();
+    m_registerMessage->setAlignment(Qt::AlignCenter);
+    m_registerMessage->setWordWrap(true);
+    m_registerMessage->setStyleSheet(
+        "QLabel {"
+        "    padding: 8px;"
+        "    border-radius: 4px;"
+        "    font-size: 13px;"
+        "}"
+    );
+    cardLayout->addWidget(m_registerMessage);
+
+    cardLayout->addStretch();
+
+    // 居中显示卡片
+    QHBoxLayout *centerLayout = new QHBoxLayout();
+    centerLayout->addStretch();
+    centerLayout->addWidget(cardWidget);
+    centerLayout->addStretch();
+    
+    mainLayout->addStretch();
+    mainLayout->addLayout(centerLayout);
+    mainLayout->addStretch();
+
+    m_pageStack->addWidget(registerWidget);
+}
+
+void LoginPage::onLoginClicked()
+{
+    QString email = m_loginEmail->text().trimmed();
+    QString password = m_loginPassword->text();
+
+    qDebug() << "Login Input - Email:" << email;
+    qDebug() << "Login Input - Password length:" << password.length();
+    qDebug() << "Login Input - Email trimmed:" << email.trimmed();
+    
+
+    if (email.isEmpty() || password.isEmpty()) {
+        showError("邮箱和密码不能为空");
+        return;
+    }
+
+    m_loginButton->setEnabled(false);
+    m_loginButton->setText("登录中...");
+
+    QJsonObject json;
+    json["email"] = email;
+    json["password"] = password;
+
+    QJsonDocument doc(json);
+    QByteArray data = doc.toJson();
+
+    QNetworkRequest request(QUrl("http://120.48.95.51:7001/login"));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Accept", "application/json");
+    request.setRawHeader("User-Agent", "QtApp/1.0");
+
+    QNetworkReply *reply = m_networkManager->post(request, data);
+    connect(reply, &QNetworkReply::finished, this, &LoginPage::onLoginReply);
+}
+
+void LoginPage::onRegisterClicked()
+{
+    QString username = m_registerUsername->text().trimmed();
+    QString email = m_registerEmail->text().trimmed();
+    QString password = m_registerPassword->text();
+    QString confirmPassword = m_registerConfirmPassword->text();
+
+    if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+        showError("用户名、邮箱和密码不能为空");
+        return;
+    }
+
+    if (password != confirmPassword) {
+        showError("两次输入的密码不一致");
+        return;
+    }
+
+    m_registerButton->setEnabled(false);
+    m_registerButton->setText("注册中...");
+
+    QJsonObject json;
+    json["username"] = username;
+    json["email"] = email;
+    json["password"] = password;
+    json["confirmPassword"] = confirmPassword;
+
+    QJsonDocument doc(json);
+    QByteArray data = doc.toJson();
+
+    QNetworkRequest request(QUrl("http://120.48.95.51:7001/register"));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Accept", "application/json");
+    request.setRawHeader("User-Agent", "QtApp/1.0");
+
+    QNetworkReply *reply = m_networkManager->post(request, data);
+    connect(reply, &QNetworkReply::finished, this, &LoginPage::onRegisterReply);
+}
+
+void LoginPage::onSwitchToLogin()
+{
+    m_pageStack->setCurrentIndex(0);
+    m_registerMessage->clear();
+}
+
+void LoginPage::onSwitchToRegister()
+{
+    m_pageStack->setCurrentIndex(1);
+    m_loginMessage->clear();
+}
+
+void LoginPage::onLoginReply()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    if (!reply) return;
+
+    m_loginButton->setEnabled(true);
+    m_loginButton->setText("登录");
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray data = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+
+        if (doc.isObject()) {
+            QJsonObject rootObj = doc.object();
+            int code = rootObj["code"].toInt();
+            QString msg = rootObj["msg"].toString();
+
+            if (code == 0) {
+                QString token = rootObj["token"].toString();
+                showSuccess("登录成功！");
+                emit loginSuccess(token);
+            } else {
+                showError(msg);
+            }
+        } else {
+            showError("服务器返回数据格式错误");
+        }
+    } else {
+        // 输出详细的错误信息
+        qDebug() << "Login Error:" << reply->error();
+        qDebug() << "Error String:" << reply->errorString();
+        qDebug() << "HTTP Status Code:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        qDebug() << "Response Data:" << reply->readAll();
+        
+        showError("网络错误：" + reply->errorString());
+    }
+
+    reply->deleteLater();
+}
+
+void LoginPage::onRegisterReply()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    if (!reply) return;
+
+    m_registerButton->setEnabled(true);
+    m_registerButton->setText("注册");
+
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray data = reply->readAll();
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+
+        if (doc.isObject()) {
+            QJsonObject rootObj = doc.object();
+            int code = rootObj["code"].toInt();
+            QString msg = rootObj["msg"].toString();
+
+            if (code == 0) {
+                showSuccess("注册成功！请登录");
+                // 延迟1秒后切换到登录页面
+                QTimer::singleShot(1000, this, &LoginPage::onSwitchToLogin);
+            } else {
+                showError(msg);
+            }
+        } else {
+            showError("服务器返回数据格式错误");
+        }
+    } else {
+        // 输出详细的错误信息
+        qDebug() << "Register Error:" << reply->error();
+        qDebug() << "Error String:" << reply->errorString();
+        qDebug() << "HTTP Status Code:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        qDebug() << "Response Data:" << reply->readAll();
+        
+        showError("网络错误：" + reply->errorString());
+    }
+
+    reply->deleteLater();
+}
+
+void LoginPage::showError(const QString &message)
+{
+    m_loginMessage->setText(message);
+    m_loginMessage->setStyleSheet("color: #dc3545; font-size: 12px;");
+    m_registerMessage->setText(message);
+    m_registerMessage->setStyleSheet("color: #dc3545; font-size: 12px;");
+}
+
+void LoginPage::showSuccess(const QString &message)
+{
+    m_loginMessage->setText(message);
+    m_loginMessage->setStyleSheet("color: #28a745; font-size: 12px;");
+    m_registerMessage->setText(message);
+    m_registerMessage->setStyleSheet("color: #28a745; font-size: 12px;");
+}
