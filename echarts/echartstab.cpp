@@ -18,6 +18,8 @@
 #include <QLabel>
 #include <QHBoxLayout>
 #include <QList>
+#include <QDateTimeEdit>
+#include <QDate>
 
 EChartsTab::EChartsTab(QWidget *parent)
     : QMainWindow(parent)
@@ -82,6 +84,55 @@ EChartsTab::EChartsTab(QWidget *parent)
     
     layout->addLayout(filterLayout);
     
+    // 6.1 创建时间筛选控件
+    QHBoxLayout *timeFilterLayout = new QHBoxLayout();
+    
+    // 开始时间选择器
+    timeFilterLayout->addWidget(new QLabel("开始时间:"));
+    m_startTimeEdit = new QDateTimeEdit(this);
+    m_startTimeEdit->setDisplayFormat("yyyy-MM-dd HH:mm:ss");
+    m_startTimeEdit->setCalendarPopup(true);
+    m_startTimeEdit->setDateTime(QDateTime::currentDateTime().addDays(-7));  // 默认7天前
+    timeFilterLayout->addWidget(m_startTimeEdit);
+    
+    // 结束时间选择器
+    timeFilterLayout->addWidget(new QLabel("结束时间:"));
+    m_endTimeEdit = new QDateTimeEdit(this);
+    m_endTimeEdit->setDisplayFormat("yyyy-MM-dd HH:mm:ss");
+    m_endTimeEdit->setCalendarPopup(true);
+    m_endTimeEdit->setDateTime(QDateTime::currentDateTime());  // 默认当前时间
+    timeFilterLayout->addWidget(m_endTimeEdit);
+    
+    layout->addLayout(timeFilterLayout);
+    
+    // 6.2 创建快捷时间按钮
+    QHBoxLayout *shortcutLayout = new QHBoxLayout();
+    
+    m_btnToday = new QPushButton("今天", this);
+    m_btnYesterday = new QPushButton("昨天", this);
+    m_btnLast7Days = new QPushButton("最近7天", this);
+    m_btnLast30Days = new QPushButton("最近30天", this);
+    m_btnClearTime = new QPushButton("清除时间", this);
+    
+    shortcutLayout->addWidget(m_btnToday);
+    shortcutLayout->addWidget(m_btnYesterday);
+    shortcutLayout->addWidget(m_btnLast7Days);
+    shortcutLayout->addWidget(m_btnLast30Days);
+    shortcutLayout->addWidget(m_btnClearTime);
+    
+    layout->addLayout(shortcutLayout);
+    
+    // 连接快捷按钮信号
+    connect(m_btnToday, &QPushButton::clicked, [this]() { onTimeShortcutClicked(0); });
+    connect(m_btnYesterday, &QPushButton::clicked, [this]() { onTimeShortcutClicked(1); });
+    connect(m_btnLast7Days, &QPushButton::clicked, [this]() { onTimeShortcutClicked(7); });
+    connect(m_btnLast30Days, &QPushButton::clicked, [this]() { onTimeShortcutClicked(30); });
+    connect(m_btnClearTime, &QPushButton::clicked, [this]() { onTimeShortcutClicked(-1); });
+    
+    // 连接时间选择器变化信号
+    connect(m_startTimeEdit, &QDateTimeEdit::dateTimeChanged, this, &EChartsTab::onTimeFilterChanged);
+    connect(m_endTimeEdit, &QDateTimeEdit::dateTimeChanged, this, &EChartsTab::onTimeFilterChanged);
+    
     // 7. 创建API数据获取按钮
     QPushButton *btnFetchApi = new QPushButton("获取API数据", this);
     layout->addWidget(btnFetchApi);
@@ -97,6 +148,9 @@ EChartsTab::EChartsTab(QWidget *parent)
     // 创建定时器（但不启动，等待首次手动获取数据后才启动）
     m_apiTimer = new QTimer(this);
     connect(m_apiTimer, &QTimer::timeout, this, &EChartsTab::fetchApiData);
+    
+    // 初始化默认选择"今天"
+    onTimeShortcutClicked(0);
 }
 
 EChartsTab::~EChartsTab()
@@ -108,6 +162,92 @@ void EChartsTab::onFilterChanged()
     // 当筛选条件改变时，自动重新获取数据
     qDebug() << "筛选条件已改变，重新获取数据...";
     fetchApiData();
+}
+
+void EChartsTab::onTimeFilterChanged()
+{
+    // 当时间筛选条件改变时，自动重新获取数据
+    qDebug() << "时间筛选条件已改变，重新获取数据...";
+    fetchApiData();
+}
+
+void EChartsTab::onTimeShortcutClicked(int days)
+{
+    QDateTime now = QDateTime::currentDateTime();
+    
+    // 清除所有按钮的高亮
+    updateButtonHighlight(-1);
+    
+    if (days == 0) {
+        // 今天
+        m_startTimeEdit->setDateTime(QDateTime(now.date(), QTime(0, 0, 0)));
+        m_endTimeEdit->setDateTime(QDateTime(now.date(), QTime(23, 59, 59)));
+        qDebug() << "选择今天";
+        // 高亮"今天"按钮
+        updateButtonHighlight(0);
+    } else if (days == 1) {
+        // 昨天
+        QDateTime yesterday = now.addDays(-1);
+        m_startTimeEdit->setDateTime(QDateTime(yesterday.date(), QTime(0, 0, 0)));
+        m_endTimeEdit->setDateTime(QDateTime(yesterday.date(), QTime(23, 59, 59)));
+        qDebug() << "选择昨天";
+        // 高亮"昨天"按钮
+        updateButtonHighlight(1);
+    } else if (days > 0) {
+        // 最近N天：从N天前的00:00:00到今天的23:59:59
+        QDateTime startTime = QDateTime(now.addDays(-days).date(), QTime(0, 0, 0));
+        QDateTime endTime = QDateTime(now.date(), QTime(23, 59, 59));
+        m_startTimeEdit->setDateTime(startTime);
+        m_endTimeEdit->setDateTime(endTime);
+        qDebug() << "选择最近" << days << "天";
+        // 高亮对应的按钮
+        updateButtonHighlight(days);
+    } else if (days == -1) {
+        // 清除时间
+        m_startTimeEdit->clear();
+        m_endTimeEdit->clear();
+        qDebug() << "清除时间筛选";
+        // 高亮"清除时间"按钮
+        updateButtonHighlight(-1);
+    }
+    
+    // 自动重新获取数据
+    fetchApiData();
+}
+
+void EChartsTab::updateButtonHighlight(int days)
+{
+    // 定义按钮样式
+    QString normalStyle = "QPushButton { background-color: #f0f0f0; border: 1px solid #ccc; padding: 5px 15px; border-radius: 3px; }"
+                       "QPushButton:hover { background-color: #e0e0e0; }";
+    QString highlightStyle = "QPushButton { background-color: #0078d4; color: white; border: 1px solid #005a9e; padding: 5px 15px; border-radius: 3px; }"
+                          "QPushButton:hover { background-color: #106ebe; }";
+    
+    // 重置所有按钮为普通样式
+    m_btnToday->setStyleSheet(normalStyle);
+    m_btnYesterday->setStyleSheet(normalStyle);
+    m_btnLast7Days->setStyleSheet(normalStyle);
+    m_btnLast30Days->setStyleSheet(normalStyle);
+    m_btnClearTime->setStyleSheet(normalStyle);
+    
+    // 根据days参数高亮对应按钮
+    switch (days) {
+        case 0:
+            m_btnToday->setStyleSheet(highlightStyle);
+            break;
+        case 1:
+            m_btnYesterday->setStyleSheet(highlightStyle);
+            break;
+        case 7:
+            m_btnLast7Days->setStyleSheet(highlightStyle);
+            break;
+        case 30:
+            m_btnLast30Days->setStyleSheet(highlightStyle);
+            break;
+        case -1:
+            m_btnClearTime->setStyleSheet(highlightStyle);
+            break;
+    }
 }
 
 void EChartsTab::onPageLoaded(bool ok)
@@ -135,6 +275,16 @@ void EChartsTab::fetchApiData()
     QString method = m_methodCombo->currentData().toString();
     QString platform = m_platformCombo->currentData().toString();
     
+    // 从时间选择器获取时间筛选条件
+    QString startTime;
+    QString endTime;
+    if (m_startTimeEdit->dateTime().isValid()) {
+        startTime = m_startTimeEdit->dateTime().toString(Qt::ISODate) + "Z";
+    }
+    if (m_endTimeEdit->dateTime().isValid()) {
+        endTime = m_endTimeEdit->dateTime().toString(Qt::ISODate) + "Z";
+    }
+    
     // 构建带筛选条件的API URL
     QString apiUrl = "http://120.48.95.51:7001/system/logs/stats";
     
@@ -146,12 +296,29 @@ void EChartsTab::fetchApiData()
     if (!platform.isEmpty()) {
         params.append(QString("platform=%1").arg(platform));
     }
+    if (!startTime.isEmpty()) {
+        params.append(QString("startTime=%1").arg(startTime));
+    }
+    if (!endTime.isEmpty()) {
+        params.append(QString("endTime=%1").arg(endTime));
+    }
+    
+    // 添加分页参数（获取更多数据）
+    params.append(QString("pageNum=%1").arg(1));
+    params.append(QString("pageSize=%1").arg(1000));
     
     if (!params.isEmpty()) {
         apiUrl += "?" + params.join("&");
     }
     
     qDebug() << "API URL:" << apiUrl;
+    qDebug() << "请求参数:";
+    qDebug() << "  - Method:" << (method.isEmpty() ? "All" : method);
+    qDebug() << "  - Platform:" << (platform.isEmpty() ? "All" : platform);
+    qDebug() << "  - StartTime:" << (startTime.isEmpty() ? "None" : startTime);
+    qDebug() << "  - EndTime:" << (endTime.isEmpty() ? "None" : endTime);
+    qDebug() << "  - PageNum: 1";
+    qDebug() << "  - PageSize: 1000";
     
     QNetworkRequest request{QUrl(apiUrl)};
     request.setRawHeader("Content-Type", "application/json");
@@ -180,9 +347,18 @@ void EChartsTab::onApiDataReceived()
             if (rootObj["code"].toInt() == 0) {
                 QJsonArray rows = rootObj["rows"].toArray();
                 
+                qDebug() << "API返回数据条数:" << rows.size();
+                
                 // 统计各路径的访问次数和响应时间
                 QMap<QString, int> pathCounts;
                 QMap<QString, QList<int>> pathDurations;
+                
+                // 输出数据的时间范围
+                if (!rows.isEmpty()) {
+                    QString firstTime = rows.first().toObject()["requestTime"].toString();
+                    QString lastTime = rows.last().toObject()["requestTime"].toString();
+                    qDebug() << "数据时间范围:" << firstTime << "至" << lastTime;
+                }
                 
                 for (const QJsonValue &rowValue : rows) {
                     QJsonObject rowObj = rowValue.toObject();

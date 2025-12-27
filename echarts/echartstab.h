@@ -9,6 +9,8 @@
 #include <QNetworkReply>
 #include <QTimer>
 #include <QComboBox>
+#include <QDateTimeEdit>
+#include <QPushButton>
 
 // 用于JS与Qt交互的类（必须继承QObject）
 class ChartBridge : public QObject
@@ -37,6 +39,10 @@ private slots:
     void onApiDataReceived();
     // 当筛选条件改变时重新获取数据
     void onFilterChanged();
+    // 当时间筛选条件改变时重新获取数据
+    void onTimeFilterChanged();
+    // 快捷时间按钮点击事件
+    void onTimeShortcutClicked(int days);
     // WebView页面加载完成后获取API数据
     void onPageLoaded(bool ok);
 
@@ -50,9 +56,20 @@ private:
     // 筛选控件
     QComboBox *m_methodCombo;   // 方法选择下拉框
     QComboBox *m_platformCombo; // 平台选择下拉框
+    QDateTimeEdit *m_startTimeEdit; // 开始时间选择器
+    QDateTimeEdit *m_endTimeEdit;   // 结束时间选择器
+    
+    // 快捷时间按钮
+    QPushButton *m_btnToday;
+    QPushButton *m_btnYesterday;
+    QPushButton *m_btnLast7Days;
+    QPushButton *m_btnLast30Days;
+    QPushButton *m_btnClearTime;
     
     // API请求方法
     void fetchApiData();
+    // 更新按钮高亮状态
+    void updateButtonHighlight(int days);
     
     // JSON数据转换方法
     QString jsonArrayToString(const QStringList &list);
