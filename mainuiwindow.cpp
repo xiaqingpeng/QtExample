@@ -12,6 +12,8 @@
 #include <QFont>
 #include <QListWidgetItem>
 #include <QScrollArea>
+#include <QSettings>
+#include <QHBoxLayout>
 
 MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
 {
@@ -47,7 +49,25 @@ void MainUIWindow::setupUI(QWidget *parent)
     QFont titleFont("Arial", 18, QFont::Bold);
     titleLabel->setFont(titleFont);
     titleLabel->setStyleSheet("color: #2c3e50; margin: 15px;");
-    mainLayout->addWidget(titleLabel, 0, 0, 1, 3);
+    
+    // 登出按钮
+    logoutButton = new QPushButton("登出");
+    logoutButton->setStyleSheet(
+        "QPushButton { background-color: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 14px; }"
+        "QPushButton:hover { background-color: #c82333; }"
+        "QPushButton:pressed { background-color: #bd2130; }"
+    );
+    connect(logoutButton, &QPushButton::clicked, this, &MainUIWindow::onLogoutClicked);
+    
+    // 创建标题栏布局容器
+    QWidget *titleBarWidget = new QWidget();
+    QHBoxLayout *titleBarLayout = new QHBoxLayout(titleBarWidget);
+    titleBarLayout->addWidget(titleLabel);
+    titleBarLayout->addStretch();
+    titleBarLayout->addWidget(logoutButton);
+    titleBarLayout->setContentsMargins(0, 0, 0, 0);
+    
+    mainLayout->addWidget(titleBarWidget, 0, 0, 1, 3);
 
     // 一级菜单（左侧）
     setupMainMenu();
@@ -208,4 +228,26 @@ void MainUIWindow::onLoginSuccess(const QString &token)
     // 登录成功，切换到主界面
     mainStack->setCurrentIndex(1);
     statusBar->showMessage("登录成功 | Qt版本: " + QString(qVersion()));
+}
+
+void MainUIWindow::onLogoutClicked()
+{
+    // 清除用户信息
+    QSettings settings("YourCompany", "QtApp");
+    settings.remove("user/token");
+    settings.remove("user/email");
+    settings.remove("user/password");
+    settings.remove("user/remember");
+    settings.sync();
+    
+    qDebug() << "User logged out, user info cleared";
+    
+    // 清除登录页面的输入
+    if (loginPage) {
+        loginPage->clearUserInfo();
+    }
+    
+    // 返回登录页面
+    mainStack->setCurrentIndex(0);
+    statusBar->showMessage("已登出 | Qt版本: " + QString(qVersion()));
 }

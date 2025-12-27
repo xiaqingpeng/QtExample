@@ -8,6 +8,7 @@
 #include <QStackedWidget>
 #include <QStatusBar>
 #include <QGridLayout>
+#include <QPushButton>
 #include "echarts/echartstab.h"
 #include "loginpage.h"
 #include "changepasswordpage.h"
@@ -23,6 +24,7 @@ private slots:
     void onMainMenuClicked(QListWidgetItem *item);
     void onSubMenuClicked(QListWidgetItem *item);
     void onLoginSuccess(const QString &token);
+    void onLogoutClicked();
 
 private:
     void setupUI(QWidget *parent = nullptr);
@@ -32,6 +34,7 @@ private:
 
     QGridLayout *mainLayout;
     QLabel *titleLabel;
+    QPushButton *logoutButton;
     QListWidget *mainMenuList;
     QListWidget *subMenuList;
     QStackedWidget *contentStack;

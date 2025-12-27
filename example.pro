@@ -1,4 +1,4 @@
-QT       += core gui webenginewidgets
+QT       += core gui webenginewidgets network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -16,6 +16,7 @@ SOURCES += \
     main.cpp \
     mainuiwindow.cpp \
     loginpage.cpp \
+    changepasswordpage.cpp \
     basiccontrols/basiccontrolstab.cpp \
     advancedcontrols/advancedcontrolstab.cpp \
     datadisplay/datadisplaytab.cpp \
@@ -28,6 +29,7 @@ SOURCES += \
 HEADERS += \
     mainuiwindow.h \
     loginpage.h \
+    changepasswordpage.h \
     basiccontrols/basiccontrolstab.h \
     advancedcontrols/advancedcontrolstab.h \
     datadisplay/datadisplaytab.h \
@@ -44,7 +46,15 @@ FORMS += \
 RESOURCES += layoutexamplestab.qrc
 
 # 头文件路径
-INCLUDEPATH += ./layoutexamples1 ./layoutexamples2 ./layoutexamples3
+INCLUDEPATH += \
+    ./advancedcontrols \
+    ./basiccontrols \
+    ./datadisplay \
+    ./dialogs \
+    ./layoutexamples1 \
+    ./layoutexamples2 \
+    ./layoutexamples3 \
+    ./echarts
 
 # 默认部署规则
 qnx: target.path = /tmp/${TARGET}/bin

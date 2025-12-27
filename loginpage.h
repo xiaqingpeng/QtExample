@@ -17,6 +17,7 @@ class LoginPage : public QWidget
 public:
     explicit LoginPage(QWidget *parent = nullptr);
     ~LoginPage();
+    void clearUserInfo();
 
 signals:
     void loginSuccess(const QString &token);
@@ -37,7 +38,6 @@ private:
     void saveUserInfo(const QString &token, const QString &email, const QString &password);
     void loadUserInfo(QString &token, QString &email, QString &password);
     bool checkAutoLogin();
-    void clearUserInfo();
     QString encryptPassword(const QString &password);
     QString decryptPassword(const QString &encrypted);
 

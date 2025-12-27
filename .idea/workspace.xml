@@ -39,11 +39,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4809be23-3e22-465c-be5f-cbe61f5162ed" name="更改" comment="更改">
-      <change afterPath="$PROJECT_DIR$/changepasswordpage.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/changepasswordpage.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loginpage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/loginpage.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loginpage.h" beforeDir="false" afterPath="$PROJECT_DIR$/loginpage.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mainuiwindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mainuiwindow.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mainuiwindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/mainuiwindow.h" afterDir="false" />
     </list>
@@ -207,7 +204,7 @@
       <workItem from="1766225217012" duration="419000" />
       <workItem from="1766227585002" duration="1152000" />
       <workItem from="1766376716334" duration="9000" />
-      <workItem from="1766807614308" duration="7843000" />
+      <workItem from="1766807614308" duration="8808000" />
     </task>
     <task id="LOCAL-00001" summary="更改">
       <option name="closed" value="true" />
