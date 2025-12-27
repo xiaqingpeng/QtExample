@@ -25,7 +25,8 @@ SOURCES += \
     layoutexamples1/layoutexamplestab1.cpp \
     layoutexamples2/layoutexamplestab2.cpp \
     layoutexamples3/layoutexamplestab3.cpp \
-    echarts/echartstab.cpp
+    echarts/echartstab.cpp \
+    echarts/logstatstab.cpp
 
 HEADERS += \
     mainuiwindow.h \
@@ -39,7 +40,8 @@ HEADERS += \
     layoutexamples1/layoutexamplestab1.h \
     layoutexamples2/layoutexamplestab2.h \
     layoutexamples3/layoutexamplestab3.h \
-    echarts/echartstab.h
+    echarts/echartstab.h \
+    echarts/logstatstab.h
 
 FORMS += \
     mainuiwindow.ui

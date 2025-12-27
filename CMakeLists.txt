@@ -120,6 +120,8 @@ target_link_libraries(LayoutExamplesTab3 PRIVATE
 qt_add_library(ECharts STATIC
     echarts/echartstab.cpp
     echarts/echartstab.h
+    echarts/logstatstab.cpp
+    echarts/logstatstab.h
 )
 target_link_libraries(ECharts PRIVATE
     Qt6::Core

@@ -7,6 +7,7 @@
 #include "layoutexamples2/layoutexamplestab2.h"
 #include "layoutexamples3/layoutexamplestab3.h"
 #include "echarts/echartstab.h"
+#include "echarts/logstatstab.h"
 #include "loginpage.h"
 #include "changepasswordpage.h"
 #include <QFont>
@@ -142,6 +143,7 @@ void MainUIWindow::setupSubMenu(const QString &mainMenu)
         new QListWidgetItem("对话框", subMenuList);
     } else if (mainMenu == "图表示例") {
         new QListWidgetItem("ECharts示例", subMenuList);
+        new QListWidgetItem("日志统计", subMenuList);
     } else if (mainMenu == "个人中心") {
         new QListWidgetItem("修改密码", subMenuList);
     } else if (mainMenu == "个人中心") {
@@ -199,12 +201,12 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
 
     else if (subMenu == "布局示例3") {
         contentWidget = new LayoutExamplesTab3();
-    } 
-    
-    else if (subMenu == "对话框") {
+    } else if (subMenu == "对话框") {
         contentWidget = new DialogsTab();
     } else if (subMenu == "ECharts示例") {
         contentWidget = new EChartsTab();
+    } else if (subMenu == "日志统计") {
+        contentWidget = new LogStatsTab();
     } else if (subMenu == "修改密码") {
         contentWidget = new ChangePasswordPage();
     }

@@ -10,6 +10,7 @@
 #include <QGridLayout>
 #include <QPushButton>
 #include "echarts/echartstab.h"
+#include "echarts/logstatstab.h"
 #include "loginpage.h"
 #include "changepasswordpage.h"
 
