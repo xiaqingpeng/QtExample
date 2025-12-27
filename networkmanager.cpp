@@ -143,7 +143,7 @@ void NetworkManager::handleResponse(QNetworkReply *reply,
         QByteArray data = reply->readAll();
         QJsonDocument doc = QJsonDocument::fromJson(data);
         
-        qDebug() << "NetworkManager - Response:" << doc.toJson(QJsonDocument::Compact);
+        // qDebug() << "NetworkManager - Response:" << doc.toJson(QJsonDocument::Compact);
         
         if (doc.isObject()) {
             QJsonObject rootObj = doc.object();
@@ -162,7 +162,7 @@ void NetworkManager::handleResponse(QNetworkReply *reply,
         
         qDebug() << "NetworkManager - Error:" << errorMsg;
         qDebug() << "NetworkManager - HTTP Status:" << statusCode;
-        qDebug() << "NetworkManager - Response Data:" << reply->readAll();
+        // qDebug() << "NetworkManager - Response Data:" << reply->readAll();
         
         if (errorCallback) {
             errorCallback(QString("%1 (HTTP %2)").arg(errorMsg).arg(statusCode));

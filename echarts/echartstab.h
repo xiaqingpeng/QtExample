@@ -21,7 +21,7 @@ public:
 public slots:
     // 接收ECharts的点击事件（供JS调用）
     void onChartClicked(const QString& name, const QVariant& value) {
-        qDebug() << "ECharts点击：" << name << "=" << value;
+        qDebug() << "[" << __FILE__ << ":" << __LINE__ << "]" << "ECharts点击：" << name << "=" << value;
     }
 };
 
