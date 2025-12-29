@@ -109,12 +109,12 @@ void UserInfoPage::setupUI()
     
     // 头像容器（带渐变边框和阴影）
     QWidget *avatarContainer = new QWidget();
-    avatarContainer->setFixedSize(150, 150);
+    avatarContainer->setFixedSize(160, 160);
     avatarContainer->setStyleSheet(
         "QWidget { "
         "    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, "
         "    stop:0 #667eea, stop:1 #764ba2); "
-        "    border-radius: 75px; "
+        "    border-radius: 80px; "
         "}"
     );
     
@@ -123,14 +123,29 @@ void UserInfoPage::setupUI()
     
     m_avatarLabel = new QLabel();
     m_avatarLabel->setAlignment(Qt::AlignCenter);
-    m_avatarLabel->setFixedSize(140, 140);
+    m_avatarLabel->setFixedSize(150, 150);
     m_avatarLabel->setStyleSheet(
         "QLabel { "
         "    background-color: white; "
-        "    border-radius: 70px; "
+        "    border-radius: 75px; "
         "    border: 3px solid rgba(255,255,255,0.9); "
         "}"
     );
+    
+    // 在线状态指示器
+    QLabel *onlineIndicator = new QLabel();
+    onlineIndicator->setFixedSize(20, 20);
+    onlineIndicator->setStyleSheet(
+        "QLabel { "
+        "    background-color: #28a745; "
+        "    border-radius: 10px; "
+        "    border: 3px solid white; "
+        "}"
+    );
+    
+    // 使用绝对定位将状态指示器放在头像右下角
+    onlineIndicator->setParent(avatarContainer);
+    onlineIndicator->move(135, 135);
     
     // 设置默认头像（使用更美观的渐变和用户图标）
     QPixmap defaultAvatar(140, 140);
@@ -228,6 +243,18 @@ void UserInfoPage::setupUI()
     m_createTimeLabel = timeWidget->findChild<QLabel*>("valueLabel");
     infoItemsLayout->addWidget(timeWidget);
     
+    // 用户状态
+    QWidget *statusWidget = createInfoItem("账户状态", "正常");
+    m_statusLabel = statusWidget->findChild<QLabel*>("valueLabel");
+    m_statusLabel->setStyleSheet(
+        "QLabel { "
+        "    font-size: 15px; "
+        "    color: #28a745; "
+        "    font-weight: bold; "
+        "}"
+    );
+    infoItemsLayout->addWidget(statusWidget);
+    
     cardLayout->addWidget(infoItemsWidget);
     cardLayout->addStretch();
     contentLayout->addWidget(infoCard);
@@ -287,8 +314,9 @@ void UserInfoPage::loadUserInfo()
                 QByteArray imageData = reply->readAll();
                 QPixmap pixmap;
                 if (pixmap.loadFromData(imageData)) {
-                    QPixmap scaledPixmap = pixmap.scaled(120, 120, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-                    m_avatarLabel->setPixmap(scaledPixmap);
+                    // 创建圆形头像（150px大小以匹配头像标签尺寸）
+                    QPixmap circularPixmap = createCircularPixmap(pixmap, 150);
+                    m_avatarLabel->setPixmap(circularPixmap);
                 }
             }
             reply->deleteLater();
@@ -301,20 +329,82 @@ void UserInfoPage::showError(const QString &message)
     QMessageBox::warning(this, "错误", message);
 }
 
+QPixmap UserInfoPage::createCircularPixmap(const QPixmap &pixmap, int size)
+{
+    // 创建指定大小的圆形图片
+    QPixmap circularPixmap(size, size);
+    circularPixmap.fill(Qt::transparent);
+    
+    // 缩放原始图片以适应圆形
+    QPixmap scaledPixmap = pixmap.scaled(size, size, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    
+    // 创建圆形遮罩
+    QBitmap mask(size, size);
+    mask.fill(Qt::transparent);
+    
+    QPainter painter(&mask);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setBrush(Qt::black);
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(0, 0, size, size);
+    painter.end();
+    
+    // 应用遮罩
+    scaledPixmap.setMask(mask);
+    
+    // 将遮罩后的图片绘制到透明背景上
+    QPainter finalPainter(&circularPixmap);
+    finalPainter.setRenderHint(QPainter::Antialiasing);
+    finalPainter.drawPixmap(0, 0, scaledPixmap);
+    finalPainter.end();
+    
+    return circularPixmap;
+}
+
 QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value)
 {
     QWidget *widget = new QWidget();
     widget->setStyleSheet(
         "QWidget { "
-        "    background-color: #f8f9fa; "
-        "    border-radius: 10px; "
-        "    padding: 15px; "
+        "    background-color: #ffffff; "
+        "    border-radius: 12px; "
+        "    border: 1px solid #e9ecef; "
         "}"
     );
     
     QHBoxLayout *layout = new QHBoxLayout(widget);
-    layout->setContentsMargins(15, 10, 15, 10);
+    layout->setContentsMargins(20, 15, 20, 15);
     layout->setSpacing(15);
+    
+    // 图标容器
+    QLabel *iconLabel = new QLabel();
+    iconLabel->setFixedSize(40, 40);
+    iconLabel->setStyleSheet(
+        "QLabel { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, "
+        "    stop:0 #667eea, stop:1 #764ba2); "
+        "    border-radius: 20px; "
+        "}"
+    );
+    
+    // 根据不同的标签显示不同的图标
+    QString iconText = "👤";
+    if (label == "邮箱") iconText = "📧";
+    else if (label == "用户ID") iconText = "🆔";
+    else if (label == "注册时间") iconText = "📅";
+    else if (label == "账户状态") iconText = "✓";
+    
+    QLabel *iconTextWidget = new QLabel(iconText);
+    iconTextWidget->setAlignment(Qt::AlignCenter);
+    iconTextWidget->setStyleSheet(
+        "QLabel { "
+        "    font-size: 18px; "
+        "}"
+    );
+    
+    QVBoxLayout *iconLayout = new QVBoxLayout(iconLabel);
+    iconLayout->setContentsMargins(0, 0, 0, 0);
+    iconLayout->addWidget(iconTextWidget, 0, Qt::AlignCenter);
     
     // 标签
     QLabel *labelWidget = new QLabel(label);
@@ -339,6 +429,7 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
     );
     valueLabel->setWordWrap(true);
     
+    layout->addWidget(iconLabel);
     layout->addWidget(labelWidget);
     layout->addWidget(valueLabel, 1);
     

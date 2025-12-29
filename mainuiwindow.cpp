@@ -177,10 +177,100 @@ void MainUIWindow::setupUI(QWidget *parent)
     setupContent();
     mainLayout->addWidget(contentStack, 1, 2);
 
-    // 状态栏（横跨3列）
-    statusBar = new QStatusBar();
-    statusBar->showMessage("就绪 | Qt版本: " + QString(qVersion()));
-    mainLayout->addWidget(statusBar, 2, 0, 1, 3);
+    // 状态栏容器（横跨3列）
+    QWidget *statusBarWidget = new QWidget();
+    statusBarWidget->setFixedHeight(40);
+    statusBarWidget->setStyleSheet(
+        "QWidget { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 #f8f9fa, stop:1 #e9ecef); "
+        "    border-top: 1px solid #dee2e6; "
+        "}"
+    );
+    
+    QHBoxLayout *statusBarLayout = new QHBoxLayout(statusBarWidget);
+    statusBarLayout->setContentsMargins(15, 5, 15, 5);
+    statusBarLayout->setSpacing(20);
+    
+    // 状态指示器
+    statusIndicator = new QLabel();
+    statusIndicator->setFixedSize(12, 12);
+    statusIndicator->setStyleSheet(
+        "QLabel { "
+        "    background-color: #28a745; "
+        "    border-radius: 6px; "
+        "}"
+    );
+    
+    // 状态文本
+    statusText = new QLabel("在线");
+    statusText->setStyleSheet(
+        "QLabel { "
+        "    font-size: 12px; "
+        "    color: #495057; "
+        "    font-weight: 500; "
+        "}"
+    );
+    
+    // 分隔线
+    QFrame *statusLine1 = new QFrame();
+    statusLine1->setFrameShape(QFrame::VLine);
+    statusLine1->setStyleSheet("QFrame { background-color: #dee2e6; }");
+    
+    // 网络状态
+    networkStatus = new QLabel("网络: 已连接");
+    networkStatus->setStyleSheet(
+        "QLabel { "
+        "    font-size: 12px; "
+        "    color: #6c757d; "
+        "}"
+    );
+    
+    // 分隔线
+    QFrame *statusLine2 = new QFrame();
+    statusLine2->setFrameShape(QFrame::VLine);
+    statusLine2->setStyleSheet("QFrame { background-color: #dee2e6; }");
+    
+    // 时间显示
+    timeLabel = new QLabel();
+    timeLabel->setStyleSheet(
+        "QLabel { "
+        "    font-size: 12px; "
+        "    color: #6c757d; "
+        "    font-family: 'Monaco', 'Menlo', monospace; "
+        "}"
+    );
+    
+    // 更新时间的定时器
+    QTimer *timeTimer = new QTimer(this);
+    connect(timeTimer, &QTimer::timeout, [this]() {
+        QDateTime currentTime = QDateTime::currentDateTime();
+        timeLabel->setText(currentTime.toString("HH:mm:ss"));
+    });
+    timeTimer->start(1000);
+    
+    // 弹性空间
+    statusBarLayout->addStretch();
+    
+    // 状态信息
+    statusMessage = new QLabel("就绪");
+    statusMessage->setStyleSheet(
+        "QLabel { "
+        "    font-size: 12px; "
+        "    color: #6c757d; "
+        "}"
+    );
+    
+    statusBarLayout->addWidget(statusIndicator);
+    statusBarLayout->addWidget(statusText);
+    statusBarLayout->addWidget(statusLine1);
+    statusBarLayout->addWidget(networkStatus);
+    statusBarLayout->addWidget(statusLine2);
+    statusBarLayout->addWidget(timeLabel);
+    statusBarLayout->addStretch();
+    statusBarLayout->addWidget(statusMessage);
+    
+    mainLayout->addWidget(statusBarWidget, 2, 0, 1, 3);
 
     // 设置布局间距
     mainLayout->setColumnStretch(0, 1);
@@ -326,7 +416,16 @@ void MainUIWindow::onLoginSuccess(const QString &token)
 {
     // 登录成功，切换到主界面
     mainStack->setCurrentIndex(1);
-    statusBar->showMessage("登录成功 | Qt版本:" + QString(qVersion()));
+    
+    // 更新状态栏
+    statusIndicator->setStyleSheet(
+        "QLabel { "
+        "    background-color: #28a745; "
+        "    border-radius: 6px; "
+        "}"
+    );
+    statusText->setText("在线");
+    statusMessage->setText("登录成功");
     
     // 延迟100ms后更新用户信息显示，确保QSettings完全同步
     QTimer::singleShot(100, this, [this]() {
@@ -359,9 +458,18 @@ void MainUIWindow::onLogoutClicked()
     usernameLabel->setText("未登录");
     avatarLabel->clear();
     
+    // 更新状态栏
+    statusIndicator->setStyleSheet(
+        "QLabel { "
+        "    background-color: #dc3545; "
+        "    border-radius: 6px; "
+        "}"
+    );
+    statusText->setText("离线");
+    statusMessage->setText("已登出");
+    
     // 返回登录页面
     mainStack->setCurrentIndex(0);
-    statusBar->showMessage("已登出 | Qt版本: " + QString(qVersion()));
 }
 
 void MainUIWindow::updateUserInfo()

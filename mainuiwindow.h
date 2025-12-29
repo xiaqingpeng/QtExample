@@ -46,6 +46,13 @@ private:
     QStatusBar *statusBar;
     LoginPage *loginPage;
     QStackedWidget *mainStack;
+    
+    // 状态栏元素
+    QLabel *statusIndicator;
+    QLabel *statusText;
+    QLabel *networkStatus;
+    QLabel *timeLabel;
+    QLabel *statusMessage;
 };
 
 #endif // MAINUIWINDOW_H

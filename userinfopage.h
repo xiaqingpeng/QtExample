@@ -28,6 +28,7 @@ private:
     void onUploadAvatarClicked();
     void uploadAvatar(const QString &filePath);
     void onAvatarUploadFinished(QNetworkReply *reply);
+    QPixmap createCircularPixmap(const QPixmap &pixmap, int size);
     
     // UI控件
     QLabel *m_avatarLabel;
@@ -35,6 +36,7 @@ private:
     QLabel *m_emailLabel;
     QLabel *m_idLabel;
     QLabel *m_createTimeLabel;
+    QLabel *m_statusLabel;
     QPushButton *m_uploadAvatarButton;
     
     // 网络请求
