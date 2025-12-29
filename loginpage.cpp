@@ -514,10 +514,18 @@ void LoginPage::onLoginClicked()
 
             qDebug() << "Cookie received:" << cookie;
 
-            // 保存用户信息用于自动登录
-            QString email = m_loginEmail->text().trimmed();
+            // 获取用户信息
+            QJsonObject data = response["data"].toObject();
+            QString userId = QString::number(data["id"].toInt());
+            QString username = data["username"].toString();
+            QString email = data["email"].toString();
+            QString avatar = data["avatar"].toString();
+            QString createTime = data["createTime"].toString();
+
+            // 保存用户信息用于自动登录和用户信息页面
+            QString emailInput = m_loginEmail->text().trimmed();
             QString password = m_rememberPassword->isChecked() ? m_loginPassword->text() : "";
-            saveUserInfo(cookie, email, password);
+            saveUserInfo(cookie, emailInput, password, userId, username, avatar, createTime);
             showSuccess("登录成功！");
             emit loginSuccess(cookie);
         } else {
@@ -620,7 +628,9 @@ void LoginPage::showSuccess(const QString &message)
     m_registerMessage->setStyleSheet("color: #28a745; font-size: 12px;");
 }
 
-void LoginPage::saveUserInfo(const QString &token, const QString &email, const QString &password)
+void LoginPage::saveUserInfo(const QString &token, const QString &email, const QString &password,
+                                    const QString &userId, const QString &username,
+                                    const QString &avatar, const QString &createTime)
 {
     QSettings settings("YourCompany", "QtApp");
     
@@ -628,9 +638,19 @@ void LoginPage::saveUserInfo(const QString &token, const QString &email, const Q
     qDebug() << "Token to save:" << token;
     qDebug() << "Email to save:" << email;
     qDebug() << "Password to save:" << (password.isEmpty() ? "empty" : "exists");
+    qDebug() << "User ID to save:" << userId;
+    qDebug() << "Username to save:" << username;
+    qDebug() << "Avatar to save:" << avatar;
+    qDebug() << "Create time to save:" << createTime;
     
     settings.setValue("user/token", token);
     settings.setValue("user/email", email);
+    
+    // 保存用户详细信息
+    settings.setValue("user/id", userId);
+    settings.setValue("user/username", username);
+    settings.setValue("user/avatar", avatar);
+    settings.setValue("user/createTime", createTime);
     
     if (!password.isEmpty()) {
         // 加密并保存密码

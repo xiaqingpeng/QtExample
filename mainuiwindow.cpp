@@ -10,6 +10,7 @@
 #include "echarts/logstatstab.h"
 #include "loginpage.h"
 #include "changepasswordpage.h"
+#include "userinfopage.h"
 #include <QFont>
 #include <QListWidgetItem>
 #include <QScrollArea>
@@ -145,8 +146,7 @@ void MainUIWindow::setupSubMenu(const QString &mainMenu)
         new QListWidgetItem("ECharts示例", subMenuList);
         new QListWidgetItem("日志统计", subMenuList);
     } else if (mainMenu == "个人中心") {
-        new QListWidgetItem("修改密码", subMenuList);
-    } else if (mainMenu == "个人中心") {
+        new QListWidgetItem("用户信息", subMenuList);
         new QListWidgetItem("修改密码", subMenuList);
     }
 
@@ -207,6 +207,8 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         contentWidget = new EChartsTab();
     } else if (subMenu == "日志统计") {
         contentWidget = new LogStatsTab();
+    } else if (subMenu == "用户信息") {
+        contentWidget = new UserInfoPage();
     } else if (subMenu == "修改密码") {
         contentWidget = new ChangePasswordPage();
     }

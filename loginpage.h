@@ -33,7 +33,9 @@ private:
     void setupRegisterUI();
     void showError(const QString &message);
     void showSuccess(const QString &message);
-    void saveUserInfo(const QString &token, const QString &email, const QString &password);
+    void saveUserInfo(const QString &token, const QString &email, const QString &password,
+                       const QString &userId = "", const QString &username = "",
+                       const QString &avatar = "", const QString &createTime = "");
     void loadUserInfo(QString &token, QString &email, QString &password);
     bool checkAutoLogin();
     QString encryptPassword(const QString &password);
