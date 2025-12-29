@@ -16,6 +16,13 @@
 #include <QScrollArea>
 #include <QSettings>
 #include <QHBoxLayout>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QPixmap>
+#include <QBitmap>
+#include <QPainter>
+#include <QDebug>
 
 MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
 {
@@ -45,29 +52,91 @@ MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
 
 void MainUIWindow::setupUI(QWidget *parent)
 {
-    // 标题（横跨3列）
-    titleLabel = new QLabel("Qt 常用 UI 控件全集示例");
-    titleLabel->setAlignment(Qt::AlignCenter);
-    QFont titleFont("Arial", 18, QFont::Bold);
-    titleLabel->setFont(titleFont);
-    titleLabel->setStyleSheet("color: #2c3e50; margin: 15px;");
+    // 创建标题栏容器（带渐变背景）
+    QWidget *titleBarWidget = new QWidget();
+    titleBarWidget->setFixedHeight(80);
+    titleBarWidget->setStyleSheet(
+        "QWidget { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 #667eea, stop:1 #764ba2); "
+        "}"
+    );
+    
+    QHBoxLayout *titleBarLayout = new QHBoxLayout(titleBarWidget);
+    titleBarLayout->setContentsMargins(20, 10, 20, 10);
+    titleBarLayout->setSpacing(15);
+    
+    // 用户头像容器（带渐变边框）
+    QWidget *avatarContainer = new QWidget();
+    avatarContainer->setFixedSize(60, 60);
+    avatarContainer->setStyleSheet(
+        "QWidget { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, "
+        "    stop:0 rgba(255,255,255,0.3), stop:1 rgba(255,255,255,0.1)); "
+        "    border-radius: 30px; "
+        "}"
+    );
+    
+    QVBoxLayout *avatarLayout = new QVBoxLayout(avatarContainer);
+    avatarLayout->setContentsMargins(0, 0, 0, 0);
+    
+    // 用户头像
+    avatarLabel = new QLabel();
+    avatarLabel->setAlignment(Qt::AlignCenter);
+    avatarLabel->setFixedSize(54, 54);
+    avatarLabel->setStyleSheet(
+        "QLabel { "
+        "    background-color: white; "
+        "    border-radius: 27px; "
+        "    border: 3px solid rgba(255,255,255,0.4); "
+        "}"
+    );
+    
+    // 设置默认头像
+    QPixmap defaultAvatar(54, 54);
+    defaultAvatar.fill(QColor("#e9ecef"));
+    avatarLabel->setPixmap(defaultAvatar);
+    
+    avatarLayout->addWidget(avatarLabel, 0, Qt::AlignCenter);
+    
+    // 用户名
+    usernameLabel = new QLabel("未登录");
+    usernameLabel->setStyleSheet(
+        "QLabel { "
+        "    font-size: 18px; "
+        "    font-weight: bold; "
+        "    color: white; "
+        "    padding: 5px 10px; "
+        "}"
+    );
+    
+    titleBarLayout->addWidget(avatarContainer);
+    titleBarLayout->addWidget(usernameLabel);
+    titleBarLayout->addStretch();
     
     // 登出按钮
     logoutButton = new QPushButton("登出");
     logoutButton->setStyleSheet(
-        "QPushButton { background-color: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 14px; }"
-        "QPushButton:hover { background-color: #c82333; }"
-        "QPushButton:pressed { background-color: #bd2130; }"
+        "QPushButton { "
+        "    background-color: rgba(255,255,255,0.2); "
+        "    color: white; "
+        "    border: 2px solid rgba(255,255,255,0.5); "
+        "    padding: 8px 20px; "
+        "    border-radius: 20px; "
+        "    font-size: 14px; "
+        "    font-weight: bold; "
+        "}"
+        "QPushButton:hover { "
+        "    background-color: rgba(255,255,255,0.3); "
+        "    border-color: rgba(255,255,255,0.8); "
+        "}"
+        "QPushButton:pressed { "
+        "    background-color: rgba(255,255,255,0.4); "
+        "}"
     );
     connect(logoutButton, &QPushButton::clicked, this, &MainUIWindow::onLogoutClicked);
     
-    // 创建标题栏布局容器
-    QWidget *titleBarWidget = new QWidget();
-    QHBoxLayout *titleBarLayout = new QHBoxLayout(titleBarWidget);
-    titleBarLayout->addWidget(titleLabel);
-    titleBarLayout->addStretch();
     titleBarLayout->addWidget(logoutButton);
-    titleBarLayout->setContentsMargins(0, 0, 0, 0);
     
     mainLayout->addWidget(titleBarWidget, 0, 0, 1, 3);
 
@@ -232,6 +301,9 @@ void MainUIWindow::onLoginSuccess(const QString &token)
     // 登录成功，切换到主界面
     mainStack->setCurrentIndex(1);
     statusBar->showMessage("登录成功 | Qt版本: " + QString(qVersion()));
+    
+    // 更新用户信息显示
+    updateUserInfo();
 }
 
 void MainUIWindow::onLogoutClicked()
@@ -242,6 +314,10 @@ void MainUIWindow::onLogoutClicked()
     settings.remove("user/email");
     settings.remove("user/password");
     settings.remove("user/remember");
+    settings.remove("user/id");
+    settings.remove("user/username");
+    settings.remove("user/avatar");
+    settings.remove("user/createTime");
     settings.sync();
     
     qDebug() << "User logged out, user info cleared";
@@ -251,7 +327,82 @@ void MainUIWindow::onLogoutClicked()
         loginPage->clearUserInfo();
     }
     
+    // 重置用户信息显示
+    usernameLabel->setText("未登录");
+    avatarLabel->clear();
+    
     // 返回登录页面
     mainStack->setCurrentIndex(0);
     statusBar->showMessage("已登出 | Qt版本: " + QString(qVersion()));
+}
+
+void MainUIWindow::updateUserInfo()
+{
+    // 从设置中获取用户信息
+    QSettings settings("YourCompany", "QtApp");
+    QString username = settings.value("user/username", "").toString();
+    QString avatar = settings.value("user/avatar", "").toString();
+    
+    qDebug() << "=== Updating User Info in Main Window ===";
+    qDebug() << "Username:" << username;
+    qDebug() << "Avatar:" << avatar;
+    
+    // 更新用户名
+    if (!username.isEmpty()) {
+        usernameLabel->setText(username);
+    } else {
+        usernameLabel->setText("未知用户");
+    }
+    
+    // 加载头像
+    if (!avatar.isEmpty()) {
+        QNetworkAccessManager *networkMgr = new QNetworkAccessManager(this);
+        QNetworkRequest request{QUrl(avatar)};
+        QNetworkReply *reply = networkMgr->get(request);
+        
+        connect(reply, &QNetworkReply::finished, [this, reply]() {
+            if (reply->error() == QNetworkReply::NoError) {
+                QByteArray imageData = reply->readAll();
+                QPixmap pixmap;
+                if (pixmap.loadFromData(imageData)) {
+                    // 创建圆形头像（54px大小以匹配新的头像标签尺寸）
+                    QPixmap circularPixmap = createCircularPixmap(pixmap, 54);
+                    avatarLabel->setPixmap(circularPixmap);
+                }
+            }
+            reply->deleteLater();
+        });
+    }
+}
+
+QPixmap MainUIWindow::createCircularPixmap(const QPixmap &pixmap, int size)
+{
+    // 创建指定大小的圆形图片
+    QPixmap circularPixmap(size, size);
+    circularPixmap.fill(Qt::transparent);
+    
+    // 缩放原始图片以适应圆形
+    QPixmap scaledPixmap = pixmap.scaled(size, size, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    
+    // 创建圆形遮罩
+    QBitmap mask(size, size);
+    mask.fill(Qt::transparent);
+    
+    QPainter painter(&mask);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setBrush(Qt::black);
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(0, 0, size, size);
+    painter.end();
+    
+    // 应用遮罩
+    scaledPixmap.setMask(mask);
+    
+    // 将遮罩后的图片绘制到透明背景上
+    QPainter finalPainter(&circularPixmap);
+    finalPainter.setRenderHint(QPainter::Antialiasing);
+    finalPainter.drawPixmap(0, 0, scaledPixmap);
+    finalPainter.end();
+    
+    return circularPixmap;
 }

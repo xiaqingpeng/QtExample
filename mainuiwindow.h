@@ -32,9 +32,13 @@ private:
     void setupMainMenu();
     void setupSubMenu(const QString &mainMenu);
     void setupContent();
+    void updateUserInfo();
+    QPixmap createCircularPixmap(const QPixmap &pixmap, int size);
 
     QGridLayout *mainLayout;
     QLabel *titleLabel;
+    QLabel *avatarLabel;
+    QLabel *usernameLabel;
     QPushButton *logoutButton;
     QListWidget *mainMenuList;
     QListWidget *subMenuList;
