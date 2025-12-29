@@ -14,6 +14,9 @@
 #include <QHttpPart>
 #include <QFile>
 #include <QJsonParseError>
+#include <QPainter>
+#include <QBrush>
+#include <QRadialGradient>
 
 UserInfoPage::UserInfoPage(QWidget *parent)
     : QWidget(parent)
@@ -104,34 +107,50 @@ void UserInfoPage::setupUI()
     QVBoxLayout *cardLayout = new QVBoxLayout(infoCard);
     cardLayout->setSpacing(25);
     
-    // 头像容器
+    // 头像容器（带渐变边框和阴影）
     QWidget *avatarContainer = new QWidget();
-    avatarContainer->setFixedSize(140, 140);
+    avatarContainer->setFixedSize(150, 150);
     avatarContainer->setStyleSheet(
         "QWidget { "
         "    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, "
         "    stop:0 #667eea, stop:1 #764ba2); "
-        "    border-radius: 70px; "
+        "    border-radius: 75px; "
         "}"
     );
     
     QVBoxLayout *avatarLayout = new QVBoxLayout(avatarContainer);
-    avatarLayout->setContentsMargins(0, 0, 0, 0);
+    avatarLayout->setContentsMargins(5, 5, 5, 5);
     
     m_avatarLabel = new QLabel();
     m_avatarLabel->setAlignment(Qt::AlignCenter);
-    m_avatarLabel->setFixedSize(120, 120);
+    m_avatarLabel->setFixedSize(140, 140);
     m_avatarLabel->setStyleSheet(
         "QLabel { "
         "    background-color: white; "
-        "    border-radius: 60px; "
-        "    border: 4px solid rgba(255,255,255,0.3); "
+        "    border-radius: 70px; "
+        "    border: 3px solid rgba(255,255,255,0.9); "
         "}"
     );
     
-    // 设置默认头像
-    QPixmap defaultAvatar(120, 120);
-    defaultAvatar.fill(QColor("#e9ecef"));
+    // 设置默认头像（使用更美观的渐变和用户图标）
+    QPixmap defaultAvatar(140, 140);
+    defaultAvatar.fill(Qt::transparent);
+    QPainter painter(&defaultAvatar);
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    // 创建圆形渐变背景
+    QRadialGradient gradient(70, 70, 70);
+    gradient.setColorAt(0, QColor("#f8f9fa"));
+    gradient.setColorAt(1, QColor("#e9ecef"));
+    painter.setBrush(QBrush(gradient));
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(0, 0, 140, 140);
+    
+    // 绘制用户图标
+    painter.setBrush(QBrush(QColor("#adb5bd")));
+    painter.drawEllipse(42, 35, 56, 56); // 头部
+    painter.drawEllipse(20, 100, 100, 56); // 身体
+    
     m_avatarLabel->setPixmap(defaultAvatar);
     
     avatarLayout->addWidget(m_avatarLabel, 0, Qt::AlignCenter);

@@ -67,35 +67,51 @@ void MainUIWindow::setupUI(QWidget *parent)
     titleBarLayout->setContentsMargins(20, 10, 20, 10);
     titleBarLayout->setSpacing(15);
     
-    // 用户头像容器（带渐变边框）
+    // 用户头像容器（带渐变边框和阴影）
     QWidget *avatarContainer = new QWidget();
-    avatarContainer->setFixedSize(60, 60);
+    avatarContainer->setFixedSize(64, 64);
     avatarContainer->setStyleSheet(
         "QWidget { "
         "    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, "
-        "    stop:0 rgba(255,255,255,0.3), stop:1 rgba(255,255,255,0.1)); "
-        "    border-radius: 30px; "
+        "    stop:0 #667eea, stop:1 #764ba2); "
+        "    border-radius: 32px; "
         "}"
     );
     
     QVBoxLayout *avatarLayout = new QVBoxLayout(avatarContainer);
-    avatarLayout->setContentsMargins(0, 0, 0, 0);
+    avatarLayout->setContentsMargins(3, 3, 3, 3);
     
     // 用户头像
     avatarLabel = new QLabel();
     avatarLabel->setAlignment(Qt::AlignCenter);
-    avatarLabel->setFixedSize(54, 54);
+    avatarLabel->setFixedSize(58, 58);
     avatarLabel->setStyleSheet(
         "QLabel { "
         "    background-color: white; "
-        "    border-radius: 27px; "
-        "    border: 3px solid rgba(255,255,255,0.4); "
+        "    border-radius: 29px; "
+        "    border: 2px solid rgba(255,255,255,0.8); "
         "}"
     );
     
-    // 设置默认头像
-    QPixmap defaultAvatar(54, 54);
-    defaultAvatar.fill(QColor("#e9ecef"));
+    // 设置默认头像（使用更美观的渐变）
+    QPixmap defaultAvatar(58, 58);
+    defaultAvatar.fill(Qt::transparent);
+    QPainter painter(&defaultAvatar);
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    // 创建圆形渐变背景
+    QRadialGradient gradient(29, 29, 29);
+    gradient.setColorAt(0, QColor("#f8f9fa"));
+    gradient.setColorAt(1, QColor("#e9ecef"));
+    painter.setBrush(QBrush(gradient));
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(0, 0, 58, 58);
+    
+    // 绘制用户图标
+    painter.setBrush(QBrush(QColor("#adb5bd")));
+    painter.drawEllipse(17, 15, 24, 24); // 头部
+    painter.drawEllipse(8, 42, 42, 24); // 身体
+    
     avatarLabel->setPixmap(defaultAvatar);
     
     avatarLayout->addWidget(avatarLabel, 0, Qt::AlignCenter);
