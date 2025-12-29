@@ -24,6 +24,7 @@
 #include <QPainter>
 #include <QTimer>
 #include <QDebug>
+#include <QGraphicsDropShadowEffect>
 
 MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
 {
@@ -85,32 +86,60 @@ void MainUIWindow::setupUI(QWidget *parent)
     avatarLabel = new QLabel();
     avatarLabel->setAlignment(Qt::AlignCenter);
     avatarLabel->setFixedSize(58, 58);
+    // QQ风格头像：白色边框
     avatarLabel->setStyleSheet(
         "QLabel { "
         "    background-color: white; "
         "    border-radius: 29px; "
-        "    border: 2px solid rgba(255,255,255,0.8); "
+        "    border: 4px solid white; "
         "}"
     );
+    // 添加阴影效果
+    QGraphicsDropShadowEffect *avatarShadow = new QGraphicsDropShadowEffect(this);
+    avatarShadow->setBlurRadius(10);
+    avatarShadow->setColor(QColor(0, 0, 0, 60));
+    avatarShadow->setOffset(0, 2);
+    avatarLabel->setGraphicsEffect(avatarShadow);
+    
+    // QQ风格在线状态指示器
+    QLabel *onlineIndicator = new QLabel();
+    onlineIndicator->setFixedSize(16, 16);
+    onlineIndicator->setStyleSheet(
+        "QLabel { "
+        "    background-color: #12B7F5; "
+        "    border-radius: 8px; "
+        "    border: 2px solid white; "
+        "}"
+    );
+    // 添加阴影效果
+    QGraphicsDropShadowEffect *indicatorShadow = new QGraphicsDropShadowEffect(this);
+    indicatorShadow->setBlurRadius(6);
+    indicatorShadow->setColor(QColor(0, 0, 0, 50));
+    indicatorShadow->setOffset(0, 1);
+    onlineIndicator->setGraphicsEffect(indicatorShadow);
+    
+    // 使用绝对定位将状态指示器放在头像右下角
+    onlineIndicator->setParent(avatarContainer);
+    onlineIndicator->move(48, 48);
     
     // 设置默认头像（使用更美观的渐变）
-    QPixmap defaultAvatar(58, 58);
+    QPixmap defaultAvatar(50, 50);
     defaultAvatar.fill(Qt::transparent);
     QPainter painter(&defaultAvatar);
     painter.setRenderHint(QPainter::Antialiasing);
     
     // 创建圆形渐变背景
-    QRadialGradient gradient(29, 29, 29);
+    QRadialGradient gradient(25, 25, 25);
     gradient.setColorAt(0, QColor("#f8f9fa"));
     gradient.setColorAt(1, QColor("#e9ecef"));
     painter.setBrush(QBrush(gradient));
     painter.setPen(Qt::NoPen);
-    painter.drawEllipse(0, 0, 58, 58);
+    painter.drawEllipse(0, 0, 50, 50);
     
     // 绘制用户图标
     painter.setBrush(QBrush(QColor("#adb5bd")));
-    painter.drawEllipse(17, 15, 24, 24); // 头部
-    painter.drawEllipse(8, 42, 42, 24); // 身体
+    painter.drawEllipse(15, 13, 20, 20); // 头部
+    painter.drawEllipse(7, 36, 36, 20); // 身体
     
     avatarLabel->setPixmap(defaultAvatar);
     
@@ -501,8 +530,8 @@ void MainUIWindow::updateUserInfo()
                 QByteArray imageData = reply->readAll();
                 QPixmap pixmap;
                 if (pixmap.loadFromData(imageData)) {
-                    // 创建圆形头像（54px大小以匹配新的头像标签尺寸）
-                    QPixmap circularPixmap = createCircularPixmap(pixmap, 54);
+                    // 创建圆形头像（50px大小以匹配头像标签尺寸）
+                    QPixmap circularPixmap = createCircularPixmap(pixmap, 50);
                     avatarLabel->setPixmap(circularPixmap);
                 }
             }

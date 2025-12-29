@@ -9,6 +9,7 @@
 #include <QStatusBar>
 #include <QGridLayout>
 #include <QPushButton>
+#include <QGraphicsDropShadowEffect>
 #include "echarts/echartstab.h"
 #include "echarts/logstatstab.h"
 #include "loginpage.h"
