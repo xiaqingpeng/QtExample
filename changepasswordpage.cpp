@@ -106,15 +106,6 @@ void ChangePasswordPage::onChangePasswordClicked()
         return;
     }
 
-    // 从QSettings获取cookie
-    QSettings settings("YourCompany", "QtApp");
-    QString cookie = settings.value("user/token", "").toString();
-
-    if (cookie.isEmpty()) {
-        QMessageBox::warning(this, "错误", "未找到登录凭证，请重新登录");
-        return;
-    }
-
     // 构建请求体
     QJsonObject json;
     json["oldPassword"] = oldPassword;
@@ -122,10 +113,8 @@ void ChangePasswordPage::onChangePasswordClicked()
     json["confirmPassword"] = confirmPassword;
 
     qDebug() << "发送修改密码请求...";
-    qDebug() << "Cookie:" << cookie;
 
-    // 使用NetworkManager发送POST请求，自动添加平台识别头
-    // 注意：这里需要手动添加Cookie头，因为NetworkManager不自动处理Cookie
+    // 使用NetworkManager发送POST请求，自动添加平台识别头、Token和Cookie
     m_networkManager->post("http://120.48.95.51:7001/user/change-password",
                            json,
                            [this](const QJsonObject &response) {
