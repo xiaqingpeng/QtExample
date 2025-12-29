@@ -22,6 +22,7 @@
 #include <QPixmap>
 #include <QBitmap>
 #include <QPainter>
+#include <QTimer>
 #include <QDebug>
 
 MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
@@ -293,6 +294,15 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
 
         contentStack->addWidget(scrollArea);
         contentStack->setCurrentWidget(scrollArea);
+        
+        // 如果是用户信息页面，连接头像更新信号
+        if (subMenu == "用户信息") {
+            UserInfoPage *userInfoPage = qobject_cast<UserInfoPage*>(contentWidget);
+            if (userInfoPage) {
+                connect(userInfoPage, &UserInfoPage::avatarUpdated, 
+                        this, &MainUIWindow::updateUserInfo);
+            }
+        }
     }
 }
 
@@ -300,10 +310,12 @@ void MainUIWindow::onLoginSuccess(const QString &token)
 {
     // 登录成功，切换到主界面
     mainStack->setCurrentIndex(1);
-    statusBar->showMessage("登录成功 | Qt版本: " + QString(qVersion()));
+    statusBar->showMessage("登录成功 | Qt版本:" + QString(qVersion()));
     
-    // 更新用户信息显示
-    updateUserInfo();
+    // 延迟100ms后更新用户信息显示，确保QSettings完全同步
+    QTimer::singleShot(100, this, [this]() {
+        updateUserInfo();
+    });
 }
 
 void MainUIWindow::onLogoutClicked()

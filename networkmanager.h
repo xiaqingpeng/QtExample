@@ -5,11 +5,29 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QNetworkCookieJar>
+#include <QNetworkCookie>
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <functional>
 #include <QUrlQuery>
+#include <QSettings>
+
+// 自定义CookieJar，支持持久化存储
+class PersistentCookieJar : public QNetworkCookieJar
+{
+    Q_OBJECT
+public:
+    explicit PersistentCookieJar(QObject *parent = nullptr);
+    
+    QList<QNetworkCookie> cookiesForUrl(const QUrl &url) const override;
+    bool setCookiesFromUrl(const QList<QNetworkCookie> &cookieList, const QUrl &url) override;
+    
+private:
+    void saveCookies();
+    void loadCookies();
+};
 
 class NetworkManager : public QObject
 {
@@ -46,6 +64,13 @@ public:
                         const SuccessCallback &successCallback,
                         const ErrorCallback &errorCallback = nullptr);
 
+    // 文件上传请求
+    void uploadFile(const QString &url,
+                   const QString &filePath,
+                   const QString &fileFieldName,
+                   const SuccessCallback &successCallback,
+                   const ErrorCallback &errorCallback = nullptr);
+
     // 获取平台标识
     static QString getPlatform();
 
@@ -59,6 +84,9 @@ private:
     void handleResponse(QNetworkReply *reply,
                        const SuccessCallback &successCallback,
                        const ErrorCallback &errorCallback);
+
+    // 从QSettings获取Token
+    QString getToken();
 };
 
 #endif // NETWORKMANAGER_H

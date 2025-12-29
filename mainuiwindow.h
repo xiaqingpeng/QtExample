@@ -26,13 +26,13 @@ private slots:
     void onSubMenuClicked(QListWidgetItem *item);
     void onLoginSuccess(const QString &token);
     void onLogoutClicked();
+    void updateUserInfo();
 
 private:
     void setupUI(QWidget *parent = nullptr);
     void setupMainMenu();
     void setupSubMenu(const QString &mainMenu);
     void setupContent();
-    void updateUserInfo();
     QPixmap createCircularPixmap(const QPixmap &pixmap, int size);
 
     QGridLayout *mainLayout;

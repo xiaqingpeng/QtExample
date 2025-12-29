@@ -9,6 +9,11 @@
 #include <QJsonDocument>
 #include <QMessageBox>
 #include <QDateTime>
+#include <QFileDialog>
+#include <QHttpMultiPart>
+#include <QHttpPart>
+#include <QFile>
+#include <QJsonParseError>
 
 UserInfoPage::UserInfoPage(QWidget *parent)
     : QWidget(parent)
@@ -131,6 +136,31 @@ void UserInfoPage::setupUI()
     
     avatarLayout->addWidget(m_avatarLabel, 0, Qt::AlignCenter);
     cardLayout->addWidget(avatarContainer, 0, Qt::AlignCenter);
+    
+    // 上传头像按钮
+    m_uploadAvatarButton = new QPushButton("更换头像");
+    m_uploadAvatarButton->setStyleSheet(
+        "QPushButton { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 #667eea, stop:1 #764ba2); "
+        "    color: white; "
+        "    border: none; "
+        "    padding: 10px 30px; "
+        "    border-radius: 20px; "
+        "    font-size: 14px; "
+        "    font-weight: bold; "
+        "}"
+        "QPushButton:hover { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 #5568d3, stop:1 #653a8a); "
+        "}"
+        "QPushButton:pressed { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 #4457c2, stop:1 #542978); "
+        "}"
+    );
+    connect(m_uploadAvatarButton, &QPushButton::clicked, this, &UserInfoPage::onUploadAvatarClicked);
+    cardLayout->addWidget(m_uploadAvatarButton, 0, Qt::AlignCenter);
     
     // 用户名
     m_usernameLabel = new QLabel("加载中...");
@@ -294,4 +324,149 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
     layout->addWidget(valueLabel, 1);
     
     return widget;
+}
+
+void UserInfoPage::onUploadAvatarClicked()
+{
+    // 打开文件选择对话框
+    QString filePath = QFileDialog::getOpenFileName(
+        this,
+        "选择头像图片",
+        "",
+        "图片文件 (*.png *.jpg *.jpeg *.bmp *.gif)"
+    );
+    
+    if (filePath.isEmpty()) {
+        return;
+    }
+    
+    // 验证文件大小（限制为5MB）
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        showError("无法打开文件");
+        return;
+    }
+    
+    qint64 fileSize = file.size();
+    file.close();
+    
+    if (fileSize > 5 * 1024 * 1024) {
+        showError("文件大小不能超过5MB");
+        return;
+    }
+    
+    // 上传头像
+    uploadAvatar(filePath);
+}
+
+void UserInfoPage::uploadAvatar(const QString &filePath)
+{
+    // 使用NetworkManager的uploadFile方法上传头像
+    m_networkManager->uploadFile(
+        "http://120.48.95.51:7001/api/upload/image",
+        filePath,
+        "file",
+        [this](const QJsonObject &response) {
+            // 成功回调
+            // 检查响应结构
+            if (!response.contains("data") || !response["data"].isObject()) {
+                showError("服务器返回数据格式错误");
+                return;
+            }
+            
+            QJsonObject dataObj = response["data"].toObject();
+            
+            if (!dataObj.contains("url")) {
+                showError("服务器未返回图片URL");
+                return;
+            }
+            
+            QString imageUrl = dataObj["url"].toString();
+            
+            // 移除URL中的引号（如果存在）
+            imageUrl = imageUrl.remove('"').trimmed();
+            
+            // 更新设置中的头像URL
+            QSettings settings("YourCompany", "QtApp");
+            settings.setValue("user/avatar", imageUrl);
+            settings.sync();
+            
+            // 重新加载用户信息以显示新头像
+            loadUserInfo();
+            
+            // 发射头像更新信号，通知主窗口更新导航栏头像
+            emit avatarUpdated();
+            
+            QMessageBox::information(this, "成功", "头像上传成功！");
+        },
+        [this](const QString &errorMsg) {
+            // 错误回调
+            showError("上传失败: " + errorMsg);
+        }
+    );
+}
+
+void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
+{
+    if (reply->error() != QNetworkReply::NoError) {
+        QString errorMsg = "上传失败: " + reply->errorString();
+        qDebug() << "Avatar upload error:" << errorMsg;
+        
+        // 读取服务器返回的详细错误信息
+        QByteArray errorData = reply->readAll();
+        if (!errorData.isEmpty()) {
+            qDebug() << "Server error response:" << QString::fromUtf8(errorData);
+            errorMsg += "\n服务器详情: " + QString::fromUtf8(errorData);
+        }
+        
+        showError(errorMsg);
+        reply->deleteLater();
+        return;
+    }
+    
+    // 读取响应数据
+    QByteArray responseData = reply->readAll();
+    QString responseString = QString::fromUtf8(responseData);
+    
+    qDebug() << "Avatar upload response:" << responseString;
+    
+    // 解析JSON响应
+    QJsonParseError parseError;
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData, &parseError);
+    
+    if (parseError.error != QJsonParseError::NoError) {
+        showError("服务器响应格式错误");
+        reply->deleteLater();
+        return;
+    }
+    
+    QJsonObject jsonObj = jsonDoc.object();
+    
+    if (!jsonObj.contains("url")) {
+        showError("服务器未返回图片URL");
+        reply->deleteLater();
+        return;
+    }
+    
+    QString imageUrl = jsonObj["url"].toString();
+    
+    // 移除URL中的引号（如果存在）
+    imageUrl = imageUrl.remove('"').trimmed();
+    
+    qDebug() << "Uploaded avatar URL:" << imageUrl;
+    
+    // 更新设置中的头像URL
+    QSettings settings("YourCompany", "QtApp");
+    settings.setValue("user/avatar", imageUrl);
+    settings.sync();
+    
+    // 重新加载用户信息以显示新头像
+    loadUserInfo();
+    
+    // 发射头像更新信号，通知主窗口更新导航栏头像
+    emit avatarUpdated();
+    
+    QMessageBox::information(this, "成功", "头像上传成功！");
+    
+    reply->deleteLater();
 }
