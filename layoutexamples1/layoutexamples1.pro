@@ -11,10 +11,10 @@ CONFIG += shared
 TARGET = LayoutExamples1
 
 SOURCES += \
-    layoutexamplestab.cpp
+    layoutexamplestab1.cpp
 
 HEADERS += \
-    layoutexamplestab.h
+    layoutexamplestab1.h
 
 # 添加资源文件
 RESOURCES += \

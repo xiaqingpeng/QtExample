@@ -10,59 +10,23 @@ QMAKE_MACOSX_DEPLOYMENT_TARGET = 26.0
 # 你可以让代码在使用已弃用API时报错
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000
 
-TEMPLATE = app
+TEMPLATE = subdirs
 
-SOURCES += \
-    main.cpp \
-    mainuiwindow.cpp \
-    loginpage.cpp \
-    changepasswordpage.cpp \
-    userinfopage.cpp \
-    networkmanager.cpp \
-    basiccontrols/basiccontrolstab.cpp \
-    advancedcontrols/advancedcontrolstab.cpp \
-    datadisplay/datadisplaytab.cpp \
-    dialogs/dialogstab.cpp \
-    layoutexamples1/layoutexamplestab1.cpp \
-    layoutexamples2/layoutexamplestab2.cpp \
-    layoutexamples3/layoutexamplestab3.cpp \
-    echarts/echartstab.cpp \
-    echarts/logstatstab.cpp
+# 子项目列表
+SUBDIRS += \
+    loginpage \
+    changepasswordpage \
+    userinfo \
+    networkmanager \
+    advancedcontrols \
+    basiccontrols \
+    datadisplay \
+    dialogs \
+    echarts \
+    layoutexamples1 \
+    layoutexamples2/layoutexamplestab2.pro \
+    layoutexamples3/layoutexamplestab3.pro \
+    app
 
-HEADERS += \
-    mainuiwindow.h \
-    loginpage.h \
-    changepasswordpage.h \
-    userinfopage.h \
-    networkmanager.h \
-    basiccontrols/basiccontrolstab.h \
-    advancedcontrols/advancedcontrolstab.h \
-    datadisplay/datadisplaytab.h \
-    dialogs/dialogstab.h \
-    layoutexamples1/layoutexamplestab1.h \
-    layoutexamples2/layoutexamplestab2.h \
-    layoutexamples3/layoutexamplestab3.h \
-    echarts/echartstab.h \
-    echarts/logstatstab.h
-
-FORMS += \
-    mainuiwindow.ui
-
-# 添加资源文件
-RESOURCES += layoutexamplestab.qrc
-
-# 头文件路径
-INCLUDEPATH += \
-    ./advancedcontrols \
-    ./basiccontrols \
-    ./datadisplay \
-    ./dialogs \
-    ./layoutexamples1 \
-    ./layoutexamples2 \
-    ./layoutexamples3 \
-    ./echarts
-
-# 默认部署规则
-qnx: target.path = /tmp/${TARGET}/bin
-else: unix:!android: target.path = /opt/${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
+# 设置app依赖所有库
+app.depends = loginpage changepasswordpage userinfo networkmanager advancedcontrols basiccontrols datadisplay dialogs echarts layoutexamples1 layoutexamples2/layoutexamplestab2.pro layoutexamples3/layoutexamplestab3.pro

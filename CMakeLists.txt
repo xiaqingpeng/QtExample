@@ -27,14 +27,7 @@ endif()
 # 定义模块库
 
 # NetworkManager模块
-qt_add_library(NetworkManager STATIC
-    networkmanager.cpp
-    networkmanager.h
-)
-target_link_libraries(NetworkManager PRIVATE
-    Qt6::Core
-    Qt6::Network
-)
+add_subdirectory(networkmanager)
 
 # BasicControls模块
 qt_add_library(BasicControls STATIC
@@ -115,6 +108,9 @@ target_link_libraries(LayoutExamplesTab3 PRIVATE
     Qt6::Network
     NetworkManager
 )
+target_include_directories(LayoutExamplesTab3 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 # ECharts模块
 qt_add_library(ECharts STATIC
@@ -131,22 +127,28 @@ target_link_libraries(ECharts PRIVATE
     Qt6::Network
     NetworkManager
 )
+target_include_directories(ECharts PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# LoginPage模块
+add_subdirectory(loginpage)
+
+# ChangePasswordPage模块
+add_subdirectory(changepasswordpage)
+
+# UserInfo模块
+add_subdirectory(userinfo)
 
 # 主应用程序源文件
 set(SOURCES
     main.cpp
     mainuiwindow.cpp
-    loginpage.cpp
-    changepasswordpage.cpp
-    userinfopage.cpp
 )
 
 # 主应用程序头文件
 set(HEADERS
     mainuiwindow.h
-    loginpage.h
-    changepasswordpage.h
-    userinfopage.h
 )
 
 # UI文件列表
@@ -180,6 +182,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     LayoutExamplesTab2
     LayoutExamplesTab3
     ECharts
+    LoginPage
+    ChangePasswordPage
+    UserInfo
 )
 
 # 包含模块头文件目录
@@ -193,6 +198,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/layoutexamples2
     ${CMAKE_CURRENT_SOURCE_DIR}/layoutexamples3
     ${CMAKE_CURRENT_SOURCE_DIR}/echarts
+    ${CMAKE_CURRENT_SOURCE_DIR}/loginpage
+    ${CMAKE_CURRENT_SOURCE_DIR}/changepasswordpage
+    ${CMAKE_CURRENT_SOURCE_DIR}/userinfo
 )
 
 # 安装规则
@@ -203,7 +211,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # 安装模块库
-install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts
+install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts LoginPage ChangePasswordPage UserInfo
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
@@ -216,4 +224,21 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     BUILD_WITH_INSTALL_RPATH TRUE
     INSTALL_RPATH @executable_path/../Frameworks
 )
+
+# 复制所有共享库到应用程序的Frameworks目录
+function(copy_shared_library_to_bundle target_name)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:${target_name}>
+            $<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/
+        COMMENT "Copying ${target_name} to app bundle"
+    )
+endfunction()
+
+# 为所有共享库调用复制函数
+copy_shared_library_to_bundle(NetworkManager)
+copy_shared_library_to_bundle(LoginPage)
+copy_shared_library_to_bundle(ChangePasswordPage)
+copy_shared_library_to_bundle(UserInfo)
 
