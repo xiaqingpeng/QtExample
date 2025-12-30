@@ -9,6 +9,7 @@
 #include <QNetworkReply>
 #include <QCheckBox>
 #include "networkmanager.h"
+#include "analytics.h"
 
 class LoginPage : public QWidget
 {

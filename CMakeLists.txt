@@ -146,6 +146,9 @@ add_subdirectory(changepasswordpage)
 # UserInfo模块
 add_subdirectory(userinfo)
 
+# Analytics埋点SDK模块
+add_subdirectory(analytics)
+
 # 添加依赖关系，确保 NetworkManager 先于依赖它的模块构建
 add_dependencies(ChangePasswordPage NetworkManager)
 add_dependencies(LoginPage NetworkManager)
@@ -198,6 +201,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     LoginPage
     ChangePasswordPage
     UserInfo
+    Analytics
 )
 
 # 包含模块头文件目录

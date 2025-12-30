@@ -18,17 +18,43 @@
 #include <QBrush>
 #include <QRadialGradient>
 #include <QGraphicsDropShadowEffect>
+#include <QElapsedTimer>
 
 UserInfoPage::UserInfoPage(QWidget *parent)
     : QWidget(parent)
     , m_networkManager(new NetworkManager(this))
 {
+    // 初始化Analytics SDK
+    Analytics::Config config;
+    config.serverUrl = "http://120.48.95.51:7001/api/analytics/events";
+    config.appId = "qt-example-app";
+    config.enableDebug = true;
+    config.batchSize = 10;
+    config.flushInterval = 30;
+    config.enablePersistence = true;
+    Analytics::SDK::instance()->initialize(config);
+    
+    // 设置用户ID（从设置中获取）
+    QSettings settings("YourCompany", "QtApp");
+    QString userId = settings.value("user/id", "").toString();
+    if (!userId.isEmpty()) {
+        Analytics::SDK::instance()->setUserId(userId);
+    }
+    
     setupUI();
     loadUserInfo();
+    
+    // 追踪页面浏览事件
+    Analytics::SDK::instance()->trackView("user_info_page", {
+        {"page_title", "个人中心"},
+        {"user_id", userId}
+    });
 }
 
 UserInfoPage::~UserInfoPage()
 {
+    // 确保所有埋点事件都被上报
+    Analytics::SDK::instance()->flush();
 }
 
 void UserInfoPage::setupUI()
@@ -452,6 +478,12 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
 
 void UserInfoPage::onUploadAvatarClicked()
 {
+    // 追踪点击事件
+    Analytics::SDK::instance()->trackClick("upload_avatar_button", {
+        {"page", "user_info"},
+        {"button_text", "更换头像"}
+    });
+    
     // 打开文件选择对话框
     QString filePath = QFileDialog::getOpenFileName(
         this,
@@ -485,12 +517,24 @@ void UserInfoPage::onUploadAvatarClicked()
 
 void UserInfoPage::uploadAvatar(const QString &filePath)
 {
+    // 开始性能计时
+    QElapsedTimer timer;
+    timer.start();
+    
     // 使用NetworkManager的uploadFile方法上传头像
     m_networkManager->uploadFile(
         "http://120.48.95.51:7001/api/upload/image",
         filePath,
         "file",
-        [this](const QJsonObject &response) {
+        [this, timer](const QJsonObject &response) {
+            // 记录上传性能
+            qint64 uploadTime = timer.elapsed();
+            Analytics::SDK::instance()->trackPerformance("avatar_upload_time", uploadTime, {
+                {"page", "user_info"},
+                {"file_type", "image"},
+                {"status", "success"}
+            });
+            
             // 成功回调
             // 检查响应结构
             if (!response.contains("data") || !response["data"].isObject()) {
@@ -523,7 +567,16 @@ void UserInfoPage::uploadAvatar(const QString &filePath)
             
             QMessageBox::information(this, "成功", "头像上传成功！");
         },
-        [this](const QString &errorMsg) {
+        [this, timer](const QString &errorMsg) {
+            // 记录上传失败性能
+            qint64 uploadTime = timer.elapsed();
+            Analytics::SDK::instance()->trackPerformance("avatar_upload_time", uploadTime, {
+                {"page", "user_info"},
+                {"file_type", "image"},
+                {"status", "failed"},
+                {"error_message", errorMsg}
+            });
+            
             // 错误回调
             showError("上传失败: " + errorMsg);
         }

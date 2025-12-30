@@ -12,6 +12,7 @@
 #include <QCryptographicHash>
 #include <QByteArray>
 #include <QDebug>
+#include <QElapsedTimer>
 
 LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
 {
@@ -27,6 +28,21 @@ LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
 
     // 默认显示登录页面
     m_pageStack->setCurrentIndex(0);
+    
+    // 初始化Analytics SDK
+    Analytics::Config config;
+    config.serverUrl = "http://120.48.95.51:7001/api/analytics/events";
+    config.appId = "qt-example-app";
+    config.enableDebug = true;
+    config.batchSize = 10;
+    config.flushInterval = 30;
+    config.enablePersistence = true;
+    Analytics::SDK::instance()->initialize(config);
+    
+    // 追踪登录页面浏览事件
+    Analytics::SDK::instance()->trackView("login_page", {
+        {"page_title", "登录页面"}
+    });
     
     // 检查是否有保存的登录信息，如果有则自动登录
     checkAutoLogin();
@@ -469,6 +485,12 @@ void LoginPage::setupRegisterUI()
 
 void LoginPage::onLoginClicked()
 {
+    // 追踪登录按钮点击事件
+    Analytics::SDK::instance()->trackClick("login_button", {
+        {"page", "login"},
+        {"button_text", "登录"}
+    });
+    
     QString email = m_loginEmail->text().trimmed();
     QString password = m_loginPassword->text();
 
@@ -477,10 +499,19 @@ void LoginPage::onLoginClicked()
     qDebug() << "Login Input - Email trimmed:" << email.trimmed();
 
     if (email.isEmpty() || password.isEmpty()) {
+        // 追踪表单验证错误
+        Analytics::SDK::instance()->trackError("validation_error", "邮箱和密码不能为空", {
+            {"page", "login"},
+            {"error_field", email.isEmpty() ? "email" : "password"}
+        });
         showError("邮箱和密码不能为空");
         return;
     }
 
+    // 开始性能计时
+    QElapsedTimer timer;
+    timer.start();
+    
     m_loginButton->setEnabled(false);
     m_loginButton->setText("登录中...");
 
@@ -491,7 +522,10 @@ void LoginPage::onLoginClicked()
     // 使用NetworkManager发送登录请求，自动添加平台识别头
     m_networkManager->post("http://120.48.95.51:7001/login",
                            json,
-                           [this](const QJsonObject &response) {
+                           [this, timer](const QJsonObject &response) {
+        // 记录登录性能
+        qint64 loginTime = timer.elapsed();
+        
         // 成功回调
         int code = response["code"].toInt();
         QString msg = response["msg"].toString();
@@ -507,6 +541,18 @@ void LoginPage::onLoginClicked()
         qDebug() << "All keys in response:" << response.keys();
 
         if (code == 0) {
+            // 追踪登录成功事件
+            Analytics::SDK::instance()->track("login_success", {
+                {"login_time", loginTime},
+                {"email", m_loginEmail->text().trimmed()}
+            });
+            
+            // 追踪登录性能
+            Analytics::SDK::instance()->trackPerformance("login_request_time", loginTime, {
+                {"page", "login"},
+                {"status", "success"}
+            });
+            
             QString cookie;
             if (response.contains("token")) {
                 cookie = response["token"].toString();
@@ -526,16 +572,43 @@ void LoginPage::onLoginClicked()
             QString emailInput = m_loginEmail->text().trimmed();
             QString password = m_rememberPassword->isChecked() ? m_loginPassword->text() : "";
             saveUserInfo(cookie, emailInput, password, userId, username, avatar, createTime);
+            
+            // 设置用户ID到Analytics SDK
+            Analytics::SDK::instance()->setUserId(userId);
+            
             showSuccess("登录成功！");
             emit loginSuccess(cookie);
         } else {
+            // 追踪登录失败事件
+            Analytics::SDK::instance()->trackError("login_failed", msg, {
+                {"page", "login"},
+                {"error_code", QString::number(code)},
+                {"login_time", loginTime}
+            });
+            
+            // 追踪登录性能
+            Analytics::SDK::instance()->trackPerformance("login_request_time", loginTime, {
+                {"page", "login"},
+                {"status", "failed"},
+                {"error_code", QString::number(code)}
+            });
+            
             showError(msg);
         }
 
         m_loginButton->setEnabled(true);
         m_loginButton->setText("登录");
     },
-    [this](const QString &errorMsg) {
+    [this, timer](const QString &errorMsg) {
+        // 记录登录失败性能
+        qint64 loginTime = timer.elapsed();
+        
+        // 追踪网络错误
+        Analytics::SDK::instance()->trackError("network_error", errorMsg, {
+            {"page", "login"},
+            {"login_time", loginTime}
+        });
+        
         // 错误回调
         qDebug() << "Login Error:" << errorMsg;
         showError("网络错误：" + errorMsg);
@@ -547,21 +620,40 @@ void LoginPage::onLoginClicked()
 
 void LoginPage::onRegisterClicked()
 {
+    // 追踪注册按钮点击事件
+    Analytics::SDK::instance()->trackClick("register_button", {
+        {"page", "register"},
+        {"button_text", "注册"}
+    });
+    
     QString username = m_registerUsername->text().trimmed();
     QString email = m_registerEmail->text().trimmed();
     QString password = m_registerPassword->text();
     QString confirmPassword = m_registerConfirmPassword->text();
 
     if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+        // 追踪表单验证错误
+        Analytics::SDK::instance()->trackError("validation_error", "用户名、邮箱和密码不能为空", {
+            {"page", "register"}
+        });
         showError("用户名、邮箱和密码不能为空");
         return;
     }
 
     if (password != confirmPassword) {
+        // 追踪表单验证错误
+        Analytics::SDK::instance()->trackError("validation_error", "两次输入的密码不一致", {
+            {"page", "register"},
+            {"error_field", "password_confirm"}
+        });
         showError("两次输入的密码不一致");
         return;
     }
 
+    // 开始性能计时
+    QElapsedTimer timer;
+    timer.start();
+    
     m_registerButton->setEnabled(false);
     m_registerButton->setText("注册中...");
 
@@ -574,23 +666,62 @@ void LoginPage::onRegisterClicked()
     // 使用NetworkManager发送注册请求，自动添加平台识别头
     m_networkManager->post("http://120.48.95.51:7001/register",
                            json,
-                           [this](const QJsonObject &response) {
+                           [this, timer](const QJsonObject &response) {
+        // 记录注册性能
+        qint64 registerTime = timer.elapsed();
+        
         // 成功回调
         int code = response["code"].toInt();
         QString msg = response["msg"].toString();
 
         if (code == 0) {
+            // 追踪注册成功事件
+            Analytics::SDK::instance()->track("register_success", {
+                {"register_time", registerTime},
+                {"email", m_registerEmail->text().trimmed()},
+                {"username", m_registerUsername->text().trimmed()}
+            });
+            
+            // 追踪注册性能
+            Analytics::SDK::instance()->trackPerformance("register_request_time", registerTime, {
+                {"page", "register"},
+                {"status", "success"}
+            });
+            
             showSuccess("注册成功！请登录");
             // 延迟1秒后切换到登录页面
             QTimer::singleShot(1000, this, &LoginPage::onSwitchToLogin);
         } else {
+            // 追踪注册失败事件
+            Analytics::SDK::instance()->trackError("register_failed", msg, {
+                {"page", "register"},
+                {"error_code", QString::number(code)},
+                {"register_time", registerTime}
+            });
+            
+            // 追踪注册性能
+            Analytics::SDK::instance()->trackPerformance("register_request_time", registerTime, {
+                {"page", "register"},
+                {"status", "failed"},
+                {"error_code", QString::number(code)}
+            });
+            
             showError(msg);
         }
 
         m_registerButton->setEnabled(true);
         m_registerButton->setText("注册");
     },
-    [this](const QString &errorMsg) {
+    [this, timer](const QString &errorMsg) {
+        // 记录注册失败性能
+        qint64 registerTime = timer.elapsed();
+        
+        // 追踪网络错误
+        Analytics::SDK::instance()->trackError("network_error", errorMsg, {
+            {"page", "register"},
+            {"register_time", registerTime}
+        });
+        
         // 错误回调
         qDebug() << "Register Error:" << errorMsg;
         showError("网络错误：" + errorMsg);
@@ -602,12 +733,22 @@ void LoginPage::onRegisterClicked()
 
 void LoginPage::onSwitchToLogin()
 {
+    // 追踪切换到登录页面事件
+    Analytics::SDK::instance()->trackView("login_page", {
+        {"from", "register"}
+    });
+    
     m_pageStack->setCurrentIndex(0);
     m_registerMessage->clear();
 }
 
 void LoginPage::onSwitchToRegister()
 {
+    // 追踪切换到注册页面事件
+    Analytics::SDK::instance()->trackView("register_page", {
+        {"from", "login"}
+    });
+    
     m_pageStack->setCurrentIndex(1);
     m_loginMessage->clear();
 }
