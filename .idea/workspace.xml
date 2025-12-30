@@ -43,27 +43,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4809be23-3e22-465c-be5f-cbe61f5162ed" name="更改" comment="更改">
-      <change afterPath="$PROJECT_DIR$/app/app.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/changepasswordpage/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/changepasswordpage/changepasswordpage.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/echarts/echarts.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/loginpage/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/loginpage/loginpage.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/networkmanager/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/networkmanager/networkmanager.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userinfo/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userinfo/userinfo.pro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/changepasswordpage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/changepasswordpage/changepasswordpage.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/changepasswordpage.h" beforeDir="false" afterPath="$PROJECT_DIR$/changepasswordpage/changepasswordpage.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/example.pro" beforeDir="false" afterPath="$PROJECT_DIR$/example.pro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/layoutexamples1/layoutexamples1.pro" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples1/layoutexamples1.pro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/layoutexamples3/layoutexamplestab3.pro" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamples3/layoutexamplestab3.pro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loginpage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/loginpage/loginpage.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/loginpage.h" beforeDir="false" afterPath="$PROJECT_DIR$/loginpage/loginpage.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/userinfopage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/userinfo/userinfopage.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/userinfopage.h" beforeDir="false" afterPath="$PROJECT_DIR$/userinfo/userinfopage.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mainuiwindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mainuiwindow.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -250,7 +230,7 @@
       <workItem from="1766227585002" duration="1152000" />
       <workItem from="1766376716334" duration="9000" />
       <workItem from="1766807614308" duration="8808000" />
-      <workItem from="1767059878039" duration="933000" />
+      <workItem from="1767059878039" duration="1565000" />
     </task>
     <task id="LOCAL-00001" summary="更改">
       <option name="closed" value="true" />

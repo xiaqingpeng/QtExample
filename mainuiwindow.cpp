@@ -192,13 +192,38 @@ void MainUIWindow::setupUI(QWidget *parent)
 
     // 二级菜单（中间）
     subMenuList = new QListWidget();
-    subMenuList->setMaximumWidth(200);
+    subMenuList->setMaximumWidth(220);
     subMenuList->setStyleSheet(
-        "QListWidget { border: none; background-color: #f8f9fa; }"
-        "QListWidget::item { padding: 10px; border-bottom: 1px solid #e9ecef; }"
-        "QListWidget::item:hover { background-color: #e3f2fd; }"
-        "QListWidget::item:selected { background-color: #2196f3; color: white; }"
-        );
+        "QListWidget { "
+        "    border: none; "
+        "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "    stop:0 #fdfbfb, stop:1 #ebedee); "
+        "    padding: 10px; "
+        "    border-radius: 12px; "
+        "} "
+        "QListWidget::item { "
+        "    padding: 14px 18px; "
+        "    margin: 4px 0; "
+        "    border-radius: 10px; "
+        "    font-size: 13px; "
+        "    color: #495057; "
+        "    background-color: rgba(255, 255, 255, 0.6); "
+        "    border: 1px solid rgba(0, 0, 0, 0.05); "
+        "} "
+        "QListWidget::item:hover { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 #a8edea, stop:1 #fed6e3); "
+        "    color: #2d3436; "
+        "    border-color: rgba(168, 237, 234, 0.3); "
+        "} "
+        "QListWidget::item:selected { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 #667eea, stop:1 #764ba2); "
+        "    color: white; "
+        "    font-weight: bold; "
+        "    border-color: transparent; "
+        "}"
+    );
     connect(subMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onSubMenuClicked);
     mainLayout->addWidget(subMenuList, 1, 1);
 
@@ -306,30 +331,71 @@ void MainUIWindow::setupUI(QWidget *parent)
     mainLayout->setColumnStretch(1, 1);
     mainLayout->setColumnStretch(2, 5);
     mainLayout->setRowStretch(1, 1);
+    
+    // 初始化二级菜单（在contentStack初始化之后）
+    setupSubMenu(mainMenuList->currentItem()->text());
 }
 
 void MainUIWindow::setupMainMenu()
 {
     mainMenuList = new QListWidget();
-    mainMenuList->setMaximumWidth(150);
+    mainMenuList->setMaximumWidth(180);
     mainMenuList->setStyleSheet(
-        "QListWidget { border: none; background-color: #343a40; }"
-        "QListWidget::item { padding: 15px; color: white; border-bottom: 1px solid #495057; }"
-        "QListWidget::item:hover { background-color: #495057; }"
-        "QListWidget::item:selected { background-color: #007bff; }"
-        );
+        "QListWidget { "
+        "    border: none; "
+        "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "    stop:0 #667eea, stop:0.5 #764ba2, stop:1 #f093fb); "
+        "    padding: 8px; "
+        "    border-right: 1px solid rgba(255, 255, 255, 0.1); "
+        "} "
+        "QListWidget::item { "
+        "    padding: 14px 18px; "
+        "    margin: 4px 0; "
+        "    color: #ffffff; "
+        "    border-radius: 10px; "
+        "    font-size: 14px; "
+        "    font-weight: 500; "
+        "    background-color: rgba(255, 255, 255, 0.05); "
+        "} "
+        "QListWidget::item:hover { "
+        "    background-color: rgba(255, 255, 255, 0.2); "
+        "    color: #ffffff; "
+        "} "
+        "QListWidget::item:selected { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 #00c6fb, stop:1 #005bea); "
+        "    color: white; "
+        "    font-weight: bold; "
+        "    box-shadow: 0 4px 15px rgba(0, 91, 234, 0.3); "
+        "}"
+    );
 
-    // 添加一级菜单
-    new QListWidgetItem("控件示例", mainMenuList);
-    new QListWidgetItem("布局示例", mainMenuList);
-    new QListWidgetItem("对话框示例", mainMenuList);
-    new QListWidgetItem("图表示例", mainMenuList);
-    new QListWidgetItem("个人中心", mainMenuList);
+    // 添加一级菜单（移除emoji图标以避免渲染崩溃）
+    QListWidgetItem *item1 = new QListWidgetItem("控件示例");
+    item1->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mainMenuList->addItem(item1);
+
+    QListWidgetItem *item2 = new QListWidgetItem("布局示例");
+    item2->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mainMenuList->addItem(item2);
+
+    QListWidgetItem *item3 = new QListWidgetItem("对话框示例");
+    item3->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mainMenuList->addItem(item3);
+
+    QListWidgetItem *item4 = new QListWidgetItem("图表示例");
+    item4->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mainMenuList->addItem(item4);
+
+    QListWidgetItem *item5 = new QListWidgetItem("个人中心");
+    item5->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mainMenuList->addItem(item5);
 
     connect(mainMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onMainMenuClicked);
 
-    // 默认选择第一个一级菜单
+    // 默认选择第一个一级菜单，但不立即触发二级菜单设置
     mainMenuList->setCurrentRow(0);
+    // 注意：setupSubMenu将在setupUI函数末尾调用，确保contentStack已初始化
 }
 
 void MainUIWindow::setupSubMenu(const QString &mainMenu)
@@ -377,6 +443,12 @@ void MainUIWindow::onMainMenuClicked(QListWidgetItem *item)
 
 void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
 {
+    // 安全检查：确保contentStack已初始化
+    if (!contentStack) {
+        qWarning() << "contentStack is not initialized!";
+        return;
+    }
+
     QString subMenu = item->text();
 
     // 清空内容区域
@@ -388,33 +460,30 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
 
     // 根据二级菜单创建对应的内容
     QWidget *contentWidget = nullptr;
-    if (subMenu == "基本控件") {
+    if (subMenu.contains("基本控件")) {
         contentWidget = new BasicControlsTab();
-    } else if (subMenu == "高级控件") {
+    } else if (subMenu.contains("高级控件")) {
         contentWidget = new AdvancedControlsTab();
-    } else if (subMenu == "数据显示") {
+    } else if (subMenu.contains("数据显示")) {
         contentWidget = new DataDisplayTab();
     } 
-    
-    else if (subMenu == "布局示例1") {
+    else if (subMenu.contains("布局示例1")) {
         contentWidget = new LayoutExamplesTab();
     } 
-
-    else if (subMenu == "布局示例2") {
+    else if (subMenu.contains("布局示例2")) {
         contentWidget = new LayoutExamplesTab2();
     } 
-
-    else if (subMenu == "布局示例3") {
+    else if (subMenu.contains("布局示例3")) {
         contentWidget = new LayoutExamplesTab3();
-    } else if (subMenu == "对话框") {
+    } else if (subMenu.contains("对话框")) {
         contentWidget = new DialogsTab();
-    } else if (subMenu == "ECharts示例") {
+    } else if (subMenu.contains("ECharts示例")) {
         contentWidget = new EChartsTab();
-    } else if (subMenu == "日志统计") {
+    } else if (subMenu.contains("日志统计")) {
         contentWidget = new LogStatsTab();
-    } else if (subMenu == "用户信息") {
+    } else if (subMenu.contains("用户信息")) {
         contentWidget = new UserInfoPage();
-    } else if (subMenu == "修改密码") {
+    } else if (subMenu.contains("修改密码")) {
         contentWidget = new ChangePasswordPage();
     }
 
@@ -426,12 +495,18 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         scrollArea->setWidgetResizable(true);
         scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        scrollArea->setStyleSheet(
+            "QScrollArea { "
+            "    border: none; "
+            "    background-color: white; "
+            "}"
+        );
 
         contentStack->addWidget(scrollArea);
         contentStack->setCurrentWidget(scrollArea);
         
         // 如果是用户信息页面，连接头像更新信号
-        if (subMenu == "用户信息") {
+        if (subMenu.contains("用户信息")) {
             UserInfoPage *userInfoPage = qobject_cast<UserInfoPage*>(contentWidget);
             if (userInfoPage) {
                 connect(userInfoPage, &UserInfoPage::avatarUpdated, 
@@ -443,6 +518,12 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
 
 void MainUIWindow::onLoginSuccess(const QString &token)
 {
+    // 安全检查：确保所有UI元素都已初始化
+    if (!mainStack || !statusIndicator || !statusText || !statusMessage) {
+        qWarning() << "UI elements not initialized in onLoginSuccess!";
+        return;
+    }
+    
     // 登录成功，切换到主界面
     mainStack->setCurrentIndex(1);
     
@@ -458,12 +539,21 @@ void MainUIWindow::onLoginSuccess(const QString &token)
     
     // 延迟100ms后更新用户信息显示，确保QSettings完全同步
     QTimer::singleShot(100, this, [this]() {
-        updateUserInfo();
+        // 再次检查对象是否仍然存在
+        if (this) {
+            updateUserInfo();
+        }
     });
 }
 
 void MainUIWindow::onLogoutClicked()
 {
+    // 安全检查：确保所有UI元素都已初始化
+    if (!mainStack || !usernameLabel || !avatarLabel || !statusIndicator || !statusText || !statusMessage) {
+        qWarning() << "UI elements not initialized in onLogoutClicked!";
+        return;
+    }
+    
     // 清除用户信息
     QSettings settings("YourCompany", "QtApp");
     settings.remove("user/token");
@@ -503,6 +593,12 @@ void MainUIWindow::onLogoutClicked()
 
 void MainUIWindow::updateUserInfo()
 {
+    // 安全检查：确保所有UI元素都已初始化
+    if (!usernameLabel || !avatarLabel) {
+        qWarning() << "UI elements not initialized in updateUserInfo!";
+        return;
+    }
+    
     // 从设置中获取用户信息
     QSettings settings("YourCompany", "QtApp");
     QString username = settings.value("user/username", "").toString();
@@ -526,6 +622,12 @@ void MainUIWindow::updateUserInfo()
         QNetworkReply *reply = networkMgr->get(request);
         
         connect(reply, &QNetworkReply::finished, [this, reply]() {
+            // 安全检查：确保主窗口和头像标签仍然存在
+            if (!this || !avatarLabel) {
+                reply->deleteLater();
+                return;
+            }
+            
             if (reply->error() == QNetworkReply::NoError) {
                 QByteArray imageData = reply->readAll();
                 QPixmap pixmap;
