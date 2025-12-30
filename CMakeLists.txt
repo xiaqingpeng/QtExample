@@ -74,10 +74,16 @@ target_link_libraries(Dialogs PRIVATE
 )
 
 # LayoutExamples模块
+if(NOT WIN32)
+    set(LAYOUT_QRC_FILES layoutexamplestab.qrc)
+else()
+    set(LAYOUT_QRC_FILES "")
+endif()
+
 qt_add_library(LayoutExamples1 STATIC
     layoutexamples1/layoutexamplestab1.cpp
     layoutexamples1/layoutexamplestab1.h
-    layoutexamplestab.qrc
+    ${LAYOUT_QRC_FILES}
 )
 target_link_libraries(LayoutExamples1 PRIVATE
     Qt6::Core
