@@ -12,14 +12,16 @@ TARGET = loginpage
 
 SOURCES += \
     loginpage.cpp \
-    ../networkmanager.cpp
+    ../networkmanager.cpp \
+    ../analytics/analytics.cpp
 
 HEADERS += \
     loginpage.h \
-    ../networkmanager.h
+    ../networkmanager.h \
+    ../analytics/analytics.h
 
-# 包含项目根目录以访问networkmanager.h
-INCLUDEPATH += ..
+# 包含项目根目录以访问networkmanager.h和analytics.h
+INCLUDEPATH += .. ../analytics
 
 # 安装配置
 target.path = $[QT_INSTALL_LIBS]

@@ -13,7 +13,11 @@ target_link_libraries(LoginPage PRIVATE
     Qt6::Widgets
     Qt6::Network
     NetworkManager
+    Analytics
 )
+
+# 添加依赖关系
+add_dependencies(LoginPage Analytics)
 
 # 导出头文件
 target_include_directories(LoginPage PUBLIC

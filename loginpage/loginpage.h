@@ -9,7 +9,8 @@
 #include <QNetworkReply>
 #include <QCheckBox>
 #include "networkmanager.h"
-#include "analytics.h"
+// analytics.h 在 loginpage.cpp 中被大量使用，因此需要在头文件中包含
+#include "analytics.h" // IWYU pragma: export
 
 class LoginPage : public QWidget
 {

@@ -155,6 +155,8 @@ add_dependencies(LoginPage NetworkManager)
 add_dependencies(UserInfo NetworkManager)
 add_dependencies(LayoutExamplesTab3 NetworkManager)
 add_dependencies(ECharts NetworkManager)
+add_dependencies(LoginPage Analytics)
+add_dependencies(UserInfo Analytics)
 
 # 主应用程序源文件
 set(SOURCES
@@ -218,6 +220,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/loginpage
     ${CMAKE_CURRENT_SOURCE_DIR}/changepasswordpage
     ${CMAKE_CURRENT_SOURCE_DIR}/userinfo
+    ${CMAKE_CURRENT_SOURCE_DIR}/analytics
 )
 
 # 安装规则

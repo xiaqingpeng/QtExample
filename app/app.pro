@@ -34,6 +34,9 @@ LIBS += -L$$OUT_PWD/../userinfo -luserinfo
 # 链接networkmanager模块
 LIBS += -L$$OUT_PWD/../networkmanager -lnetworkmanager
 
+# 链接analytics模块
+LIBS += -L$$OUT_PWD/../analytics -lanalytics
+
 # 链接其他模块（使用正确的库名称）
 LIBS += -L$$OUT_PWD/../advancedcontrols -ladvancedcontrols
 LIBS += -L$$OUT_PWD/../basiccontrols -lbasiccontrols
@@ -48,6 +51,8 @@ LIBS += -L$$OUT_PWD/../layoutexamples3 -llayoutexamplestab3
 INCLUDEPATH += ../loginpage
 INCLUDEPATH += ../changepasswordpage
 INCLUDEPATH += ../userinfo
+INCLUDEPATH += ../networkmanager
+INCLUDEPATH += ../analytics
 INCLUDEPATH += ../advancedcontrols
 INCLUDEPATH += ../basiccontrols
 INCLUDEPATH += ../datadisplay

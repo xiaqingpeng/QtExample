@@ -54,6 +54,8 @@ MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
 
 void MainUIWindow::setupUI(QWidget *parent)
 {
+    Q_UNUSED(parent);
+    
     // 创建标题栏容器（带渐变背景）
     QWidget *titleBarWidget = new QWidget();
     titleBarWidget->setFixedHeight(80);
@@ -518,6 +520,8 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
 
 void MainUIWindow::onLoginSuccess(const QString &token)
 {
+    Q_UNUSED(token);
+    
     // 安全检查：确保所有UI元素都已初始化
     if (!mainStack || !statusIndicator || !statusText || !statusMessage) {
         qWarning() << "UI elements not initialized in onLoginSuccess!";
@@ -539,10 +543,7 @@ void MainUIWindow::onLoginSuccess(const QString &token)
     
     // 延迟100ms后更新用户信息显示，确保QSettings完全同步
     QTimer::singleShot(100, this, [this]() {
-        // 再次检查对象是否仍然存在
-        if (this) {
-            updateUserInfo();
-        }
+        updateUserInfo();
     });
 }
 
@@ -622,12 +623,6 @@ void MainUIWindow::updateUserInfo()
         QNetworkReply *reply = networkMgr->get(request);
         
         connect(reply, &QNetworkReply::finished, [this, reply]() {
-            // 安全检查：确保主窗口和头像标签仍然存在
-            if (!this || !avatarLabel) {
-                reply->deleteLater();
-                return;
-            }
-            
             if (reply->error() == QNetworkReply::NoError) {
                 QByteArray imageData = reply->readAll();
                 QPixmap pixmap;
