@@ -541,18 +541,6 @@ void LoginPage::onLoginClicked()
         qDebug() << "All keys in response:" << response.keys();
 
         if (code == 0) {
-            // 追踪登录成功事件
-            Analytics::SDK::instance()->track("login_success", {
-                {"login_time", loginTime},
-                {"email", m_loginEmail->text().trimmed()}
-            });
-            
-            // 追踪登录性能
-            Analytics::SDK::instance()->trackPerformance("login_request_time", loginTime, {
-                {"page", "login"},
-                {"status", "success"}
-            });
-            
             QString cookie;
             if (response.contains("token")) {
                 cookie = response["token"].toString();
@@ -573,8 +561,20 @@ void LoginPage::onLoginClicked()
             QString password = m_rememberPassword->isChecked() ? m_loginPassword->text() : "";
             saveUserInfo(cookie, emailInput, password, userId, username, avatar, createTime);
             
-            // 设置用户ID到Analytics SDK
+            // 先设置用户ID到Analytics SDK
             Analytics::SDK::instance()->setUserId(userId);
+            
+            // 然后追踪登录成功事件（此时会使用正确的用户ID）
+            Analytics::SDK::instance()->track("login_success", {
+                {"login_time", loginTime},
+                {"email", m_loginEmail->text().trimmed()}
+            });
+            
+            // 追踪登录性能
+            Analytics::SDK::instance()->trackPerformance("login_request_time", loginTime, {
+                {"page", "login"},
+                {"status", "success"}
+            });
             
             showSuccess("登录成功！");
             emit loginSuccess(cookie);

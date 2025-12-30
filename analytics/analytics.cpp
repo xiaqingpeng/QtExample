@@ -66,6 +66,9 @@ void SDK::initialize(const Config& config) {
     m_config = config;
     m_sessionId = generateSessionId();
     
+    // 初始化时设置临时匿名用户ID
+    m_userId = "anonymous_" + generateSessionId();
+    
     if (m_config.enablePersistence) {
         m_settings = new QSettings("Analytics", "SDK", this);
         loadFromDisk();
@@ -76,6 +79,7 @@ void SDK::initialize(const Config& config) {
     
     if (m_config.enableDebug) {
         qDebug() << "[Analytics] SDK initialized with appId:" << m_config.appId;
+        qDebug() << "[Analytics] Anonymous user ID:" << m_userId;
     }
 }
 
@@ -113,6 +117,35 @@ void SDK::trackView(const QString& pageName, const QVariantMap& properties) {
     QVariantMap props = properties;
     props["page_name"] = pageName;
     track(EventType::VIEW, "page_view", props);
+}
+
+void SDK::trackViewStart(const QString& pageName) {
+    qint64 startTime = QDateTime::currentMSecsSinceEpoch();
+    m_pageViewStartTimes[pageName] = startTime;
+    
+    if (m_config.enableDebug) {
+        qDebug() << "[Analytics] Page view started:" << pageName;
+    }
+}
+
+void SDK::trackViewEnd(const QString& pageName, const QVariantMap& properties) {
+    QVariantMap props = properties;
+    props["page_name"] = pageName;
+    
+    // 计算页面停留时间
+    qint64 duration = 0;
+    if (m_pageViewStartTimes.contains(pageName)) {
+        qint64 startTime = m_pageViewStartTimes[pageName];
+        duration = QDateTime::currentMSecsSinceEpoch() - startTime;
+        props["duration_ms"] = duration;
+        m_pageViewStartTimes.remove(pageName);
+    }
+    
+    track(EventType::VIEW, "page_view", props);
+    
+    if (m_config.enableDebug) {
+        qDebug() << "[Analytics] Page view ended:" << pageName << "duration:" << duration << "ms";
+    }
 }
 
 void SDK::trackClick(const QString& elementName, const QVariantMap& properties) {
@@ -165,25 +198,72 @@ void SDK::addToQueue(const Event& event) {
 void SDK::sendEvents(const QList<Event>& events) {
     QJsonArray eventArray;
     for (const Event& event : events) {
-        eventArray.append(event.toJson());
+        // 转换为后端API期望的格式
+        QJsonObject eventObj;
+        eventObj["event"] = event.eventName;
+        eventObj["eventType"] = event.eventType;
+        eventObj["properties"] = QJsonObject::fromVariantMap(event.properties);
+        eventObj["userId"] = event.userId;
+        eventObj["sessionId"] = event.sessionId;
+        
+        // 添加duration字段（如果properties中有duration_ms）
+        if (event.properties.contains("duration_ms")) {
+            eventObj["duration"] = event.properties["duration_ms"].toLongLong();
+        }
+        
+        eventArray.append(eventObj);
     }
     
     QJsonObject payload;
-    payload["app_id"] = m_config.appId;
     payload["events"] = eventArray;
-    payload["device_info"] = QJsonObject::fromVariantMap(getDeviceInfo());
     
     QJsonDocument doc(payload);
     QByteArray data = doc.toJson(QJsonDocument::Compact);
     
-    QNetworkRequest request(m_config.serverUrl);
+    // 使用批量事件接口
+    QString batchUrl = m_config.serverUrl;
+    if (batchUrl.endsWith("/events")) {
+        batchUrl += "/batch";
+    } else if (!batchUrl.endsWith("/events/batch")) {
+        batchUrl += "/events/batch";
+    }
+    
+    QNetworkRequest request(batchUrl);
+    
+    // 立即设置User-Agent，确保不被Qt网络库覆盖
+    request.setRawHeader("User-Agent", "QtApp/1.0");
+    request.setHeader(QNetworkRequest::UserAgentHeader, "QtApp/1.0");
+    
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     
     QNetworkReply* reply = m_networkManager->post(request, data);
-    connect(reply, &QNetworkReply::finished, this, &SDK::onNetworkReply);
+    
+    // 使用lambda捕获reply对象，避免使用不安全的sender()
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            if (m_config.enableDebug) {
+                qDebug() << "[Analytics] Events sent successfully";
+                QByteArray responseData = reply->readAll();
+                if (!responseData.isEmpty()) {
+                    qDebug() << "[Analytics] Server response:" << responseData;
+                }
+            }
+        } else {
+            qWarning() << "[Analytics] Failed to send events:" << reply->errorString();
+            if (m_config.enableDebug) {
+                qDebug() << "[Analytics] HTTP Status Code:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+                QByteArray responseData = reply->readAll();
+                if (!responseData.isEmpty()) {
+                    qDebug() << "[Analytics] Server response:" << responseData;
+                }
+            }
+        }
+        reply->deleteLater();
+    });
     
     if (m_config.enableDebug) {
-        qDebug() << "[Analytics] Sending" << events.size() << "events to server";
+        qDebug() << "[Analytics] Sending" << events.size() << "events to server:" << batchUrl;
+        qDebug() << "[Analytics] Payload:" << doc.toJson(QJsonDocument::Indented);
     }
 }
 
@@ -202,9 +282,20 @@ void SDK::onNetworkReply() {
     if (reply->error() == QNetworkReply::NoError) {
         if (m_config.enableDebug) {
             qDebug() << "[Analytics] Events sent successfully";
+            QByteArray responseData = reply->readAll();
+            if (!responseData.isEmpty()) {
+                qDebug() << "[Analytics] Server response:" << responseData;
+            }
         }
     } else {
         qWarning() << "[Analytics] Failed to send events:" << reply->errorString();
+        if (m_config.enableDebug) {
+            qDebug() << "[Analytics] HTTP Status Code:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            QByteArray responseData = reply->readAll();
+            if (!responseData.isEmpty()) {
+                qDebug() << "[Analytics] Server response:" << responseData;
+            }
+        }
     }
     
     reply->deleteLater();

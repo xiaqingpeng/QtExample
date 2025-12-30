@@ -83,6 +83,12 @@ public:
     // 获取设备信息
     QVariantMap getDeviceInfo();
     
+    // 页面浏览开始（用于计算停留时间）
+    void trackViewStart(const QString& pageName);
+    
+    // 页面浏览结束（自动计算停留时间）
+    void trackViewEnd(const QString& pageName, const QVariantMap& properties = QVariantMap());
+    
 private slots:
     void onFlushTimer();
     void onNetworkReply();
@@ -96,6 +102,9 @@ private:
     void saveToDisk();
     void loadFromDisk();
     QString generateSessionId();
+    
+    // 页面浏览时间跟踪
+    QMap<QString, qint64> m_pageViewStartTimes; // 页面名称 -> 开始时间戳
     
     static SDK* s_instance;
     

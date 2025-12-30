@@ -138,10 +138,13 @@ QNetworkRequest NetworkManager::createRequest(const QString &url)
 {
     QNetworkRequest request{QUrl(url)};
     
-    // 设置通用请求头
+    // 立即设置User-Agent，确保不被Qt网络库覆盖
+    request.setRawHeader("User-Agent", "QtApp/1.0");
+    request.setHeader(QNetworkRequest::UserAgentHeader, "QtApp/1.0");
+    
+    // 设置Content-Type
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Accept", "application/json");
-    request.setRawHeader("User-Agent", "QtApp/1.0");
     
     // 添加平台识别头，让后端能够正确识别平台
     QString platform = getPlatform();

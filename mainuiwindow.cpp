@@ -627,8 +627,8 @@ void MainUIWindow::updateUserInfo()
                 QByteArray imageData = reply->readAll();
                 QPixmap pixmap;
                 if (pixmap.loadFromData(imageData)) {
-                    // 创建圆形头像（50px大小以匹配头像标签尺寸）
-                    QPixmap circularPixmap = createCircularPixmap(pixmap, 50);
+                    // 创建圆形头像（58px大小以匹配头像标签尺寸）
+                    QPixmap circularPixmap = createCircularPixmap(pixmap, 58);
                     avatarLabel->setPixmap(circularPixmap);
                 }
             }
@@ -643,8 +643,8 @@ QPixmap MainUIWindow::createCircularPixmap(const QPixmap &pixmap, int size)
     QPixmap circularPixmap(size, size);
     circularPixmap.fill(Qt::transparent);
     
-    // 缩放原始图片以适应圆形
-    QPixmap scaledPixmap = pixmap.scaled(size, size, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    // 缩放原始图片以适应圆形（忽略宽高比，确保大小完全匹配）
+    QPixmap scaledPixmap = pixmap.scaled(size, size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
     
     // 创建圆形遮罩
     QBitmap mask(size, size);
