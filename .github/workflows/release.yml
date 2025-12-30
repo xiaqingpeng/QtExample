@@ -29,13 +29,13 @@ jobs:
             archive_ext: tar.gz
             cmake_generator: Ninja
             cmake_config: Release
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
         submodules: recursive
-    
+
     - name: Cache Qt installation
       uses: actions/cache@v3
       with:
@@ -44,7 +44,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-qt-${{ matrix.qt_version }}-
           ${{ runner.os }}-qt-
-    
+
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
@@ -53,7 +53,7 @@ jobs:
         arch: ${{ matrix.qt_arch }}
         cache: true
         modules: 'qtwebengine qtnetworkauth'
-    
+
     - name: Install system dependencies (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -66,17 +66,17 @@ jobs:
           libxcb-cursor0 \
           libfontconfig1 \
           libxkbcommon-x11-0
-    
+
     - name: Setup MSVC environment (Windows)
       if: matrix.os == 'windows-latest'
       uses: ilammy/msvc-dev-cmd@v1
-    
+
     - name: Configure CMake
       run: |
         if [ "$RUNNER_OS" == "Windows" ]; then
-          cmake -B build -G "${{ matrix.cmake_generator }}" `
-            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_config }} `
-            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" `
+          cmake -B build -G "${{ matrix.cmake_generator }}" \
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_config }} \
+            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" \
             -DCMAKE_CXX_STANDARD=17
         elif [ "$RUNNER_OS" == "macOS" ]; then
           cmake -B build -G "${{ matrix.cmake_generator }}" \
@@ -91,11 +91,11 @@ jobs:
             -DCMAKE_CXX_STANDARD=17
         fi
       shell: bash
-    
+
     - name: Build project
       run: |
         cmake --build build --config ${{ matrix.cmake_config }} --parallel
-    
+
     - name: Package application
       id: package
       env:
@@ -123,7 +123,7 @@ jobs:
           echo "ASSET_PATH=$ARCHIVE_NAME.tar.gz" >> $GITHUB_ENV
         fi
       shell: bash
-    
+
     - name: Upload Release Asset
       uses: softprops/action-gh-release@v1
       with:
