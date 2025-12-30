@@ -240,30 +240,30 @@ void LayoutExamplesTab::createHorizontalImageTextLayout()
     
     // 使用项目中的小马图片
     QStringList imageFiles = {
-        "小马发红包.png",
-        "小马吃棒棒糖.png",
-        "小马抱福字.png",
-        "小马拿红包.png",
-        "小马拿金元宝.png",
-        "小马送饺子.png"
+        "pony_red_envelope.png",
+        "pony_lollipop.png",
+        "pony_fu_character.png",
+        "pony_holding_envelope.png",
+        "pony_gold_ingot.png",
+        "pony_dumplings.png"
     };
     
     QStringList titles = {
-        "小马发红包",
-        "小马吃棒棒糖",
-        "小马抱福字",
-        "小马拿红包",
-        "小马拿金元宝",
-        "小马送饺子"
+        "Pony Red Envelope",
+        "Pony Lollipop",
+        "Pony Fu Character",
+        "Pony Holding Envelope",
+        "Pony Gold Ingot",
+        "Pony Dumplings"
     };
     
     QStringList descriptions = {
-        "可爱的小马在发放红包",
-        "小马正在享受美味的棒棒糖",
-        "小马福字，祝福大家新年快乐",
-        "小马手里拿着红包，准备送给朋友",
-        "小马抱着金元宝，象征着财富和好运",
-        "小马正在送饺子，传递温暖和关爱"
+        "Cute pony giving out red envelopes",
+        "Pony enjoying delicious lollipop",
+        "Pony Fu character, wishing everyone a happy New Year",
+        "Pony holding red envelope, ready to give to friends",
+        "Pony holding gold ingot, symbolizing wealth and good luck",
+        "Pony delivering dumplings, spreading warmth and care"
     };
     
     for (int i = 0; i < 6; i++) {
@@ -361,12 +361,12 @@ void LayoutExamplesTab::createVerticalImageTextLayout()
         
         // 使用项目中的小马图片
         QStringList imageFiles = {
-            "小马发红包.png",
-            "小马吃棒棒糖.png",
-            "小马抱福字.png",
-            "小马拿红包.png",
-            "小马拿金元宝.png",
-            "小马送饺子.png"
+            "pony_red_envelope.png",
+            "pony_lollipop.png",
+            "pony_fu_character.png",
+            "pony_holding_envelope.png",
+            "pony_gold_ingot.png",
+            "pony_dumplings.png"
         };
         // 使用Qt资源系统加载图片
         QString imagePath = QString(":/images/%1").arg(imageFiles[i]);
@@ -416,7 +416,7 @@ void LayoutExamplesTab::createVerticalImageTextLayout()
     vScrollArea->setWidget(vContentWidget);
     vImageTextLayout->addWidget(vScrollArea);
     
-    QLabel *imageHint = new QLabel(QString("提示: 本示例使用Qt资源系统中的小马图片\n资源路径: :/images/\n包含图片: 小马发红包.png, 小马吃棒棒糖.png, 小马抱福字.png, 小马拿红包.png, 小马拿金元宝.png, 小马送饺子.png"));
+    QLabel *imageHint = new QLabel(QString("提示: 本示例使用Qt资源系统中的小马图片\n资源路径: :/images/\n包含图片: pony_red_envelope.png, pony_lollipop.png, pony_fu_character.png, pony_holding_envelope.png, pony_gold_ingot.png, pony_dumplings.png"));
     imageHint->setStyleSheet("color: #757575; font-size: 11px; margin-top: 5px;");
     imageHint->setWordWrap(true);
     vImageTextLayout->addWidget(imageHint);

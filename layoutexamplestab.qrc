@@ -1,11 +1,11 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource>
-        <file>images/小马发红包.png</file>
-        <file>images/小马吃棒棒糖.png</file>
-        <file>images/小马抱福字.png</file>
-        <file>images/小马拿红包.png</file>
-        <file>images/小马拿金元宝.png</file>
-        <file>images/小马送饺子.png</file>
+        <file>images/pony_red_envelope.png</file>
+    <file>images/pony_lollipop.png</file>
+    <file>images/pony_fu_character.png</file>
+    <file>images/pony_holding_envelope.png</file>
+    <file>images/pony_gold_ingot.png</file>
+    <file>images/pony_dumplings.png</file>
     </qresource>
 </RCC>
