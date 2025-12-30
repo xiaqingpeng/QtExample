@@ -8,8 +8,6 @@
 #include "layoutexamples3/layoutexamplestab3.h"
 #include "echarts/echartstab.h"
 #include "echarts/logstatstab.h"
-#include "userprofiletab/userprofiletab.h"
-#include "reportstab/reportstab.h"
 #include "loginpage.h"
 #include "changepasswordpage.h"
 #include "userinfopage.h"
@@ -420,8 +418,6 @@ void MainUIWindow::setupSubMenu(const QString &mainMenu)
     } else if (mainMenu == "图表示例") {
         new QListWidgetItem("ECharts示例", subMenuList);
         new QListWidgetItem("日志统计", subMenuList);
-        new QListWidgetItem("用户画像展示", subMenuList);
-        new QListWidgetItem("统计报表", subMenuList);
     } else if (mainMenu == "个人中心") {
         new QListWidgetItem("用户信息", subMenuList);
         new QListWidgetItem("修改密码", subMenuList);
@@ -491,38 +487,6 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         contentWidget = new UserInfoPage();
     } else if (subMenu.contains("修改密码")) {
         contentWidget = new ChangePasswordPage();
-    } else if (subMenu.contains("用户画像展示")) {
-        // 创建用户画像展示页面
-        contentWidget = new QWidget();
-        QVBoxLayout *contentLayout = new QVBoxLayout(contentWidget);
-        contentLayout->setContentsMargins(20, 20, 20, 20);
-        contentLayout->setSpacing(20);
-        
-        QLabel *titleLabel = new QLabel("用户画像展示");
-        titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: #495057;");
-        contentLayout->addWidget(titleLabel);
-
-        QLabel *descLabel = new QLabel("查看和分析用户画像数据");
-        descLabel->setStyleSheet("font-size: 14px; color: #6c757d;");
-        contentLayout->addWidget(descLabel);
-
-        contentLayout->addStretch();
-    } else if (subMenu.contains("统计报表")) {
-        // 创建统计报表页面
-        contentWidget = new QWidget();
-        QVBoxLayout *contentLayout = new QVBoxLayout(contentWidget);
-        contentLayout->setContentsMargins(20, 20, 20, 20);
-        contentLayout->setSpacing(20);
-        
-        QLabel *titleLabel = new QLabel("统计报表");
-        titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: #495057;");
-        contentLayout->addWidget(titleLabel);
-
-        QLabel *descLabel = new QLabel("生成和导出各类统计报表");
-        descLabel->setStyleSheet("font-size: 14px; color: #6c757d;");
-        contentLayout->addWidget(descLabel);
-
-        contentLayout->addStretch();
     }
 
     // 如果创建了内容控件，添加到内容区域

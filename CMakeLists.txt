@@ -146,12 +146,6 @@ add_subdirectory(changepasswordpage)
 # UserInfo模块
 add_subdirectory(userinfo)
 
-# UserProfileTab模块
-add_subdirectory(userprofiletab)
-
-# ReportsTab模块
-add_subdirectory(reportstab)
-
 # Analytics埋点SDK模块
 add_subdirectory(analytics)
 
@@ -159,8 +153,6 @@ add_subdirectory(analytics)
 add_dependencies(ChangePasswordPage NetworkManager)
 add_dependencies(LoginPage NetworkManager)
 add_dependencies(UserInfo NetworkManager)
-add_dependencies(UserProfileTab NetworkManager)
-add_dependencies(ReportsTab NetworkManager)
 add_dependencies(LayoutExamplesTab3 NetworkManager)
 add_dependencies(ECharts NetworkManager)
 add_dependencies(LoginPage Analytics)
@@ -211,8 +203,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     LoginPage
     ChangePasswordPage
     UserInfo
-    UserProfileTab
-    ReportsTab
     Analytics
 )
 
@@ -230,8 +220,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/loginpage
     ${CMAKE_CURRENT_SOURCE_DIR}/changepasswordpage
     ${CMAKE_CURRENT_SOURCE_DIR}/userinfo
-    ${CMAKE_CURRENT_SOURCE_DIR}/userprofiletab
-    ${CMAKE_CURRENT_SOURCE_DIR}/reportstab
     ${CMAKE_CURRENT_SOURCE_DIR}/analytics
 )
 
@@ -243,7 +231,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # 安装模块库
-install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts LoginPage ChangePasswordPage UserInfo UserProfileTab ReportsTab
+install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts LoginPage ChangePasswordPage UserInfo
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

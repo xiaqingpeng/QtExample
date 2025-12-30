@@ -22,6 +22,7 @@
     <generated>
       <config projectName="example" targetName="example" />
       <config projectName="example" targetName="LoginPage" />
+      <config projectName="example" targetName="UserProfileTab" />
       <config projectName="example" targetName="BasicControls" />
       <config projectName="example" targetName="LayoutExamples1" />
       <config projectName="example" targetName="AdvancedControls" />
@@ -33,6 +34,7 @@
       <config projectName="example" targetName="NetworkManager" />
       <config projectName="example" targetName="DataDisplay" />
       <config projectName="example" targetName="LayoutExamplesTab3" />
+      <config projectName="example" targetName="ReportsTab" />
       <config projectName="example" targetName="LayoutExamplesTab2" />
       <config projectName="example" targetName="example_qmlimportscan" />
     </generated>
@@ -44,17 +46,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4809be23-3e22-465c-be5f-cbe61f5162ed" name="更改" comment="更改">
-      <change afterPath="$PROJECT_DIR$/reportstab/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reportstab/reportstab.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reportstab/reportstab.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reportstab/reportstab.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userprofiletab/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userprofiletab/userprofiletab.cpp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userprofiletab/userprofiletab.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userprofiletab/userprofiletab.pro" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/QT_FRONTEND_TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/QT_FRONTEND_TODO.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/app.pro" beforeDir="false" afterPath="$PROJECT_DIR$/app/app.pro" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example.pro" beforeDir="false" afterPath="$PROJECT_DIR$/example.pro" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mainuiwindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mainuiwindow.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reportstab/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reportstab/reportstab.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reportstab/reportstab.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reportstab/reportstab.pro" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/userprofiletab/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/userprofiletab/userprofiletab.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/userprofiletab/userprofiletab.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/userprofiletab/userprofiletab.pro" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -26,12 +26,10 @@ FORMS += \
 # 包含项目根目录以访问networkmanager.h
 INCLUDEPATH += ..
 
-# 链接loginpage、changepasswordpage、userinfo、userprofiletab和reportstab模块
+# 链接loginpage、changepasswordpage和userinfo模块
 LIBS += -L$$OUT_PWD/../loginpage -lloginpage
 LIBS += -L$$OUT_PWD/../changepasswordpage -lchangepasswordpage
 LIBS += -L$$OUT_PWD/../userinfo -luserinfo
-LIBS += -L$$OUT_PWD/../userprofiletab -luserprofiletab
-LIBS += -L$$OUT_PWD/../reportstab -lreportstab
 
 # 链接networkmanager模块
 LIBS += -L$$OUT_PWD/../networkmanager -lnetworkmanager
@@ -53,8 +51,6 @@ LIBS += -L$$OUT_PWD/../layoutexamples3 -llayoutexamplestab3
 INCLUDEPATH += ../loginpage
 INCLUDEPATH += ../changepasswordpage
 INCLUDEPATH += ../userinfo
-INCLUDEPATH += ../userprofiletab
-INCLUDEPATH += ../reportstab
 INCLUDEPATH += ../networkmanager
 INCLUDEPATH += ../analytics
 INCLUDEPATH += ../advancedcontrols
