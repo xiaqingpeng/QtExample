@@ -6,13 +6,11 @@ on:
     paths-ignore:
       - 'README.md'
       - 'LICENSE'
-      - '.github/**'
   pull_request:
     branches: [ main, develop ]
     paths-ignore:
       - 'README.md'
       - 'LICENSE'
-      - '.github/**'
 
 jobs:
   build:
