@@ -1,4 +1,5 @@
 #include "reportstab.h"
+#include <QHeaderView>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
