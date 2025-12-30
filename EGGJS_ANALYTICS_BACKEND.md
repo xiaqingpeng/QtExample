@@ -35,8 +35,8 @@
 ### 技术栈
 
 - **框架**: Egg.js 3.x
-- **数据库**: MySQL 5.7+
-- **ORM**: egg-mysql
+- **数据库**: PostgreSQL 12+
+- **ORM**: egg-sequelize
 - **跨域**: egg-cors
 - **Node.js**: 16.0+
 
@@ -79,7 +79,7 @@ egg-analytics/
 
 - **Node.js**: >= 16.0.0
 - **npm**: >= 8.0.0
-- **MySQL**: >= 5.7.0
+- **PostgreSQL**: >= 12.0
 - **操作系统**: Linux / macOS / Windows
 
 ### 可选环境
@@ -128,9 +128,11 @@ mysql -u root -p
 ```
 
 ```sql
-CREATE DATABASE IF NOT EXISTS analytics_db 
-DEFAULT CHARACTER SET utf8mb4 
-COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE analytics_db 
+  WITH ENCODING='UTF8'
+  LC_COLLATE='en_US.UTF-8'
+  LC_CTYPE='en_US.UTF-8'
+  TEMPLATE=template0;
 ```
 
 ### 4. 执行数据库迁移
@@ -144,13 +146,18 @@ mysql -u root -p analytics_db < database/migrations/init.sql
 编辑 `config/config.default.js`，修改数据库配置：
 
 ```javascript
-config.mysql = {
-  client: {
-    host: 'localhost',
-    port: '3306',
-    user: 'root',
-    password: 'your_password',
-    database: 'analytics_db'
+config.sequelize = {
+  dialect: 'postgres',
+  host: 'localhost',
+  port: 5432,
+  username: 'postgres',
+  password: 'your_password',
+  database: 'analytics_db',
+  timezone: '+08:00',
+  define: {
+    freezeTableName: true,
+    underscored: true,
+    timestamps: true
   }
 };
 ```
@@ -408,37 +415,39 @@ curl "http://120.48.95.51:7001/api/analytics/events?page=1&pageSize=20&eventType
 
 ```sql
 -- 创建数据库
-CREATE DATABASE IF NOT EXISTS analytics_db 
-DEFAULT CHARACTER SET utf8mb4 
-COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE analytics_db 
+  WITH ENCODING='UTF8'
+  LC_COLLATE='en_US.UTF-8'
+  LC_CTYPE='en_US.UTF-8'
+  TEMPLATE=template0;
 
-USE analytics_db;
+\c analytics_db;
 
 -- 创建埋点事件表
 CREATE TABLE IF NOT EXISTS analytics_events (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
-  event_name VARCHAR(255) NOT NULL COMMENT '事件名称',
-  event_type VARCHAR(50) DEFAULT 'custom' COMMENT '事件类型',
-  properties JSON COMMENT '事件属性（JSON格式）',
-  user_id VARCHAR(255) DEFAULT NULL COMMENT '用户ID',
-  session_id VARCHAR(255) DEFAULT NULL COMMENT '会话ID',
-  duration INT DEFAULT NULL COMMENT '持续时间（毫秒）',
-  error_message TEXT DEFAULT NULL COMMENT '错误信息',
-  ip VARCHAR(45) DEFAULT NULL COMMENT 'IP地址',
-  user_agent VARCHAR(500) DEFAULT NULL COMMENT '用户代理',
-  request_id VARCHAR(100) DEFAULT NULL COMMENT '请求ID',
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  
-  -- 索引
-  INDEX idx_event_name (event_name),
-  INDEX idx_user_id (user_id),
-  INDEX idx_created_at (created_at),
-  INDEX idx_event_type (event_type),
-  INDEX idx_user_created (user_id, created_at)
-) ENGINE=InnoDB 
-DEFAULT CHARSET=utf8mb4 
-COLLATE=utf8mb4_unicode_ci 
-COMMENT='埋点事件表';
+  id BIGSERIAL PRIMARY KEY,
+  event_name VARCHAR(255) NOT NULL,
+  event_type VARCHAR(50) DEFAULT 'custom',
+  properties JSONB,
+  user_id VARCHAR(255),
+  session_id VARCHAR(255),
+  duration INTEGER,
+  error_message TEXT,
+  ip VARCHAR(45),
+  user_agent VARCHAR(500),
+  request_id VARCHAR(100),
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 创建索引
+CREATE INDEX idx_event_name ON analytics_events(event_name);
+CREATE INDEX idx_user_id ON analytics_events(user_id);
+CREATE INDEX idx_created_at ON analytics_events(created_at);
+CREATE INDEX idx_event_type ON analytics_events(event_type);
+CREATE INDEX idx_user_created ON analytics_events(user_id, created_at);
+
+-- 创建 GIN 索引用于 JSONB 查询优化
+CREATE INDEX idx_properties ON analytics_events USING GIN(properties);
 
 -- 创建性能分析视图
 CREATE OR REPLACE VIEW v_event_stats AS
@@ -452,6 +461,21 @@ SELECT
   MAX(created_at) as last_seen
 FROM analytics_events
 GROUP BY event_name, event_type;
+
+-- 创建表注释
+COMMENT ON TABLE analytics_events IS '埋点事件表';
+COMMENT ON COLUMN analytics_events.id IS '主键ID';
+COMMENT ON COLUMN analytics_events.event_name IS '事件名称';
+COMMENT ON COLUMN analytics_events.event_type IS '事件类型';
+COMMENT ON COLUMN analytics_events.properties IS '事件属性（JSONB格式）';
+COMMENT ON COLUMN analytics_events.user_id IS '用户ID';
+COMMENT ON COLUMN analytics_events.session_id IS '会话ID';
+COMMENT ON COLUMN analytics_events.duration IS '持续时间（毫秒）';
+COMMENT ON COLUMN analytics_events.error_message IS '错误信息';
+COMMENT ON COLUMN analytics_events.ip IS 'IP地址';
+COMMENT ON COLUMN analytics_events.user_agent IS '用户代理';
+COMMENT ON COLUMN analytics_events.request_id IS '请求ID';
+COMMENT ON COLUMN analytics_events.created_at IS '创建时间';
 ```
 
 ---
@@ -485,18 +509,20 @@ module.exports = appInfo => {
     credentials: true
   };
   
-  // MySQL 配置
-  config.mysql = {
-    client: {
-      host: 'localhost',
-      port: '3306',
-      user: 'root',
-      password: 'your_password',
-      database: 'analytics_db',
-      charset: 'utf8mb4'
-    },
-    app: true,
-    agent: false
+  // PostgreSQL 配置
+  config.sequelize = {
+    dialect: 'postgres',
+    host: 'localhost',
+    port: 5432,
+    username: 'postgres',
+    password: 'your_password',
+    database: 'analytics_db',
+    timezone: '+08:00',
+    define: {
+      freezeTableName: true,
+      underscored: true,
+      timestamps: true
+    }
   };
   
   // 日志配置
@@ -538,13 +564,18 @@ module.exports = () => {
   };
   
   // 生产环境数据库连接池
-  config.mysql = {
-    client: {
-      host: process.env.MYSQL_HOST,
-      port: process.env.MYSQL_PORT,
-      user: process.env.MYSQL_USER,
-      password: process.env.MYSQL_PASSWORD,
-      database: process.env.MYSQL_DATABASE
+  config.sequelize = {
+    dialect: 'postgres',
+    host: process.env.PG_HOST,
+    port: process.env.PG_PORT || 5432,
+    username: process.env.PG_USER,
+    password: process.env.PG_PASSWORD,
+    database: process.env.PG_DATABASE,
+    pool: {
+      max: 20,
+      min: 5,
+      acquire: 30000,
+      idle: 10000
     }
   };
   
@@ -563,10 +594,16 @@ module.exports = () => {
 ```javascript
 'use strict';
 
-// MySQL 插件
-exports.mysql = {
+// Sequelize 插件（PostgreSQL）
+exports.sequelize = {
   enable: true,
-  package: 'egg-mysql'
+  package: 'egg-sequelize'
+};
+
+// pg 插件
+exports.pg = {
+  enable: true,
+  package: 'egg-pg'
 };
 
 // CORS 插件
@@ -659,16 +696,22 @@ CMD ["npm", "start"]
 version: '3.8'
 
 services:
-  mysql:
-    image: mysql:5.7
+  postgres:
+    image: postgres:14-alpine
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: analytics_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: analytics_db
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql-data:/var/lib/mysql
+      - postgres-data:/var/lib/postgresql/data
       - ./database/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   analytics:
     build: .
@@ -677,15 +720,15 @@ services:
     depends_on:
       - mysql
     environment:
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-      MYSQL_USER: root
-      MYSQL_PASSWORD: rootpassword
-      MYSQL_DATABASE: analytics_db
+      PG_HOST: postgres
+      PG_PORT: 5432
+      PG_USER: postgres
+      PG_PASSWORD: rootpassword
+      PG_DATABASE: analytics_db
     restart: always
 
 volumes:
-  mysql-data:
+  postgres-data:
 ```
 
 #### 3. 启动服务
@@ -1143,6 +1186,140 @@ config.rateLimit = {
 
 ### A. 完整代码示例
 
+#### app/model/analytics_event.js
+
+```javascript
+'use strict';
+
+module.exports = app => {
+  const { STRING, INTEGER, TEXT, JSONB, DATE, BIGINT } = app.Sequelize;
+
+  const AnalyticsEvent = app.model.define('analytics_events', {
+    id: {
+      type: BIGINT,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    event_name: {
+      type: STRING(255),
+      allowNull: false,
+      comment: '事件名称'
+    },
+    event_type: {
+      type: STRING(50),
+      defaultValue: 'custom',
+      comment: '事件类型'
+    },
+    properties: {
+      type: JSONB,
+      defaultValue: {},
+      comment: '事件属性（JSONB格式）'
+    },
+    user_id: {
+      type: STRING(255),
+      allowNull: true,
+      comment: '用户ID'
+    },
+    session_id: {
+      type: STRING(255),
+      allowNull: true,
+      comment: '会话ID'
+    },
+    duration: {
+      type: INTEGER,
+      allowNull: true,
+      comment: '持续时间（毫秒）'
+    },
+    error_message: {
+      type: TEXT,
+      allowNull: true,
+      comment: '错误信息'
+    },
+    ip: {
+      type: STRING(45),
+      allowNull: true,
+      comment: 'IP地址'
+    },
+    user_agent: {
+      type: STRING(500),
+      allowNull: true,
+      comment: '用户代理'
+    },
+    request_id: {
+      type: STRING(100),
+      allowNull: true,
+      comment: '请求ID'
+    },
+    created_at: {
+      type: DATE,
+      allowNull: false,
+      defaultValue: app.Sequelize.literal('CURRENT_TIMESTAMP'),
+      comment: '创建时间'
+    }
+  }, {
+    tableName: 'analytics_events',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: false,
+    indexes: [
+      {
+        name: 'idx_event_name',
+        fields: ['event_name']
+      },
+      {
+        name: 'idx_user_id',
+        fields: ['user_id']
+      },
+      {
+        name: 'idx_created_at',
+        fields: ['created_at']
+      },
+      {
+        name: 'idx_event_type',
+        fields: ['event_type']
+      },
+      {
+        name: 'idx_user_created',
+        fields: ['user_id', 'created_at']
+      },
+      {
+        name: 'idx_properties',
+        fields: ['properties'],
+        using: 'GIN'
+      }
+    ]
+  });
+
+  return AnalyticsEvent;
+};
+```
+
+#### app/model/index.js
+
+```javascript
+'use strict';
+
+module.exports = app => {
+  const { Sequelize } = app;
+  
+  app.model = app.Sequelize;
+  
+  // 加载所有模型
+  app.loader.loadToApp(app.config.baseDir + '/app/model', 'model', {
+    injectClass: app.Model,
+    caseStyle: 'lower',
+    directory: app.config.baseDir + '/app/model'
+  });
+  
+  // 关联模型
+  Object.keys(app.model).forEach(modelName => {
+    if (app.model[modelName].associate) {
+      app.model[modelName].associate(app.model);
+    }
+  });
+};
+```
+
 #### app/controller/analytics.js
 
 ```javascript
@@ -1167,13 +1344,16 @@ class AnalyticsController extends Controller {
       }
       
       const enrichedEvent = {
-        ...eventData,
-        meta: {
-          ip: ctx.ip,
-          userAgent: ctx.get('user-agent'),
-          timestamp: Date.now(),
-          requestId: ctx.id
-        }
+        event_name: eventData.event,
+        event_type: eventData.eventType || 'custom',
+        properties: eventData.properties || {},
+        user_id: eventData.userId,
+        session_id: eventData.sessionId,
+        duration: eventData.duration,
+        error_message: eventData.errorMessage,
+        ip: ctx.ip,
+        user_agent: ctx.get('user-agent'),
+        request_id: ctx.id
       };
       
       await ctx.service.analytics.saveEvent(enrichedEvent);
@@ -1316,82 +1496,90 @@ class AnalyticsService extends Service {
   async saveEvent(eventData) {
     const { app } = this;
     
-    if (app.mysql) {
-      await app.mysql.insert('analytics_events', {
-        event_name: eventData.event,
-        event_type: eventData.eventType || 'custom',
-        properties: JSON.stringify(eventData.properties || {}),
-        user_id: eventData.userId || null,
-        session_id: eventData.sessionId || null,
-        duration: eventData.duration || null,
-        error_message: eventData.errorMessage || null,
-        ip: eventData.meta?.ip,
-        user_agent: eventData.meta?.userAgent,
-        request_id: eventData.meta?.requestId,
-        created_at: new Date(eventData.timestamp || Date.now())
-      });
-    } else {
-      await this.saveToFile(eventData);
-    }
+    const result = await app.model.AnalyticsEvent.create({
+      event_name: eventData.event_name,
+      event_type: eventData.event_type,
+      properties: eventData.properties,
+      user_id: eventData.user_id,
+      session_id: eventData.session_id,
+      duration: eventData.duration,
+      error_message: eventData.error_message,
+      ip: eventData.ip,
+      user_agent: eventData.user_agent,
+      request_id: eventData.request_id
+    });
     
-    return eventData;
+    return result;
   }
   
   async saveBatchEvents(events) {
     const { app } = this;
-    const savedEvents = [];
     
-    for (const event of events) {
-      await this.saveEvent(event);
-      savedEvents.push(event);
-    }
+    const records = events.map(event => ({
+      event_name: event.event,
+      event_type: event.eventType || 'custom',
+      properties: event.properties || {},
+      user_id: event.userId,
+      session_id: event.sessionId,
+      duration: event.duration,
+      error_message: event.errorMessage,
+      ip: this.ctx.ip,
+      user_agent: this.ctx.get('user-agent'),
+      request_id: this.ctx.id
+    }));
     
-    return savedEvents;
+    const result = await app.model.AnalyticsEvent.bulkCreate(records);
+    return result;
   }
   
   async getStats({ eventType, startDate, endDate }) {
     const { app } = this;
     
-    if (!app.mysql) {
-      return { message: 'Database not configured' };
+    const where = {};
+    
+    if (eventType) {
+      where.event_type = eventType;
     }
     
-    const where = {};
-    if (eventType) {
-      where.event_name = eventType;
-    }
     if (startDate || endDate) {
       where.created_at = {};
-      if (startDate) where.created_at['>='] = startDate;
-      if (endDate) where.created_at['<='] = endDate;
+      if (startDate) {
+        where.created_at[app.Sequelize.Op.gte] = startDate;
+      }
+      if (endDate) {
+        where.created_at[app.Sequelize.Op.lte] = endDate;
+      }
     }
     
-    const total = await app.mysql.count('analytics_events', where);
+    const total = await app.model.AnalyticsEvent.count({ where });
     
-    const groupStats = await app.mysql.select('analytics_events', {
+    const byEventType = await app.model.AnalyticsEvent.findAll({
+      attributes: [
+        'event_name',
+        [app.Sequelize.fn('COUNT', '*'), 'count']
+      ],
       where,
-      columns: ['event_name', 'COUNT(*) as count'],
-      orders: [['count', 'DESC']],
-      group: 'event_name'
+      group: ['event_name'],
+      order: [[app.Sequelize.literal('count'), 'DESC']],
+      limit: 10,
+      raw: true
     });
     
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const recentTrend = await app.mysql.select('analytics_events', {
-      where: {
-        ...where,
-        created_at: { '>=': oneDayAgo }
-      },
-      columns: [
-        'DATE_FORMAT(created_at, "%Y-%m-%d %H:00:00") as hour',
-        'COUNT(*) as count'
+    const recentTrend = await app.model.AnalyticsEvent.findAll({
+      attributes: [
+        [app.Sequelize.fn('DATE_TRUNC', 'hour', app.Sequelize.col('created_at')), 'hour'],
+        [app.Sequelize.fn('COUNT', '*'), 'count']
       ],
-      group: 'hour',
-      orders: [['hour', 'ASC']]
+      where,
+      group: [app.Sequelize.fn('DATE_TRUNC', 'hour', app.Sequelize.col('created_at'))],
+      order: [[app.Sequelize.literal('hour'), 'DESC']],
+      limit: 24,
+      raw: true
     });
     
     return {
       total,
-      byEventType: groupStats,
+      byEventType,
       recentTrend
     };
   }
@@ -1399,25 +1587,27 @@ class AnalyticsService extends Service {
   async listEvents({ eventType, page, pageSize, startDate, endDate }) {
     const { app } = this;
     
-    if (!app.mysql) {
-      return { events: [], total: 0 };
+    const where = {};
+    
+    if (eventType) {
+      where.event_type = eventType;
     }
     
-    const where = {};
-    if (eventType) {
-      where.event_name = eventType;
-    }
     if (startDate || endDate) {
       where.created_at = {};
-      if (startDate) where.created_at['>='] = startDate;
-      if (endDate) where.created_at['<='] = endDate;
+      if (startDate) {
+        where.created_at[app.Sequelize.Op.gte] = startDate;
+      }
+      if (endDate) {
+        where.created_at[app.Sequelize.Op.lte] = endDate;
+      }
     }
     
-    const total = await app.mysql.count('analytics_events', where);
+    const offset = (page - 1) * pageSize;
     
-    const events = await app.mysql.select('analytics_events', {
+    const { count, rows } = await app.model.AnalyticsEvent.findAndCountAll({
       where,
-      columns: [
+      attributes: [
         'id',
         'event_name',
         'event_type',
@@ -1427,40 +1617,20 @@ class AnalyticsService extends Service {
         'error_message',
         'created_at'
       ],
-      orders: [['created_at', 'DESC']],
-      offset: (page - 1) * pageSize,
-      limit: pageSize
+      order: [['created_at', 'DESC']],
+      limit: pageSize,
+      offset
     });
     
-    const parsedEvents = events.map(event => ({
-      ...event,
-      properties: JSON.parse(event.properties || '{}')
-    }));
+    const totalPages = Math.ceil(count / pageSize);
     
     return {
-      events: parsedEvents,
-      total,
+      events: rows,
+      total: count,
       page,
       pageSize,
-      totalPages: Math.ceil(total / pageSize)
+      totalPages
     };
-  }
-  
-  async saveToFile(eventData) {
-    const { app } = this;
-    const fs = require('fs');
-    const path = require('path');
-    
-    const logDir = path.join(app.baseDir, 'logs', 'analytics');
-    const today = new Date().toISOString().split('T')[0];
-    const logFile = path.join(logDir, `${today}.jsonl`);
-    
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-    
-    const logLine = JSON.stringify(eventData) + '\n';
-    fs.appendFileSync(logFile, logLine);
   }
 }
 
@@ -1496,7 +1666,10 @@ module.exports = app => {
   "dependencies": {
     "egg": "^3.23.0",
     "egg-cors": "^2.2.3",
-    "egg-mysql": "^3.1.0"
+    "egg-sequelize": "^6.0.0",
+    "sequelize": "^6.35.0",
+    "pg": "^8.11.0",
+    "pg-hstore": "^2.3.4"
   },
   "devDependencies": {
     "egg-bin": "^5.4.0",
