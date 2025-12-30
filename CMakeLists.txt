@@ -251,9 +251,6 @@ function(copy_shared_library_to_bundle target_name)
     endif()
 endfunction()
 
-# 为所有共享库调用复制函数
-copy_shared_library_to_bundle(NetworkManager)
-copy_shared_library_to_bundle(LoginPage)
-copy_shared_library_to_bundle(ChangePasswordPage)
-copy_shared_library_to_bundle(UserInfo)
+# 注意：NetworkManager、LoginPage、ChangePasswordPage和UserInfo已改为静态库，
+# 不再需要复制到macOS应用包中
 
