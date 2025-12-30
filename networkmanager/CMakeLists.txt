@@ -1,7 +1,7 @@
 # NetworkManager模块的CMakeLists.txt
 
-# 创建共享库
-qt_add_library(NetworkManager SHARED
+# 创建静态库
+qt_add_library(NetworkManager STATIC
     ../networkmanager.cpp
     ../networkmanager.h
 )
