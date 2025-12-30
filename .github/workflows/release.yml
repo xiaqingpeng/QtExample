@@ -1,0 +1,282 @@
+name: Qt Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    name: Build and Release on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        qt_version: ['6.6.1']
+        include:
+          - os: windows-latest
+            qt_arch: win64_msvc2019_64
+            archive_ext: zip
+            cmake_generator: "Ninja"
+            cmake_config: Release
+          - os: macos-latest
+            qt_arch: clang_64
+            archive_ext: zip
+            cmake_generator: "Ninja"
+            cmake_config: Release
+          - os: ubuntu-latest
+            qt_arch: gcc_64
+            archive_ext: tar.gz
+            cmake_generator: Ninja
+            cmake_config: Release
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Cache Qt installation
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.Qt6_DIR }}
+        key: ${{ runner.os }}-qt-${{ matrix.qt_version }}-${{ matrix.qt_arch }}
+        restore-keys: |
+          ${{ runner.os }}-qt-${{ matrix.qt_version }}-
+          ${{ runner.os }}-qt-
+    
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: ${{ matrix.qt_version }}
+        target: desktop
+        arch: ${{ matrix.qt_arch }}
+        cache: true
+        modules: 'qtwebengine qtnetworkauth'
+    
+    - name: Install system dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          ninja-build \
+          libgl1-mesa-dev \
+          libxcb-xinerama0 \
+          libxcb-cursor0 \
+          libfontconfig1 \
+          libxkbcommon-x11-0
+    
+    - name: Setup MSVC environment (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: ilammy/msvc-dev-cmd@v1
+    
+    - name: Configure CMake
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          cmake -B build -G "${{ matrix.cmake_generator }}" `
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_config }} `
+            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" `
+            -DCMAKE_CXX_STANDARD=17
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          cmake -B build -G "${{ matrix.cmake_generator }}" \
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_config }} \
+            -DCMAKE_PREFIX_PATH="$Qt6_DIR" \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET="10.15"
+        else
+          cmake -B build -G "${{ matrix.cmake_generator }}" \
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_config }} \
+            -DCMAKE_PREFIX_PATH="$Qt6_DIR" \
+            -DCMAKE_CXX_STANDARD=17
+        fi
+      shell: bash
+    
+    - name: Build project
+      run: |
+        cmake --build build --config ${{ matrix.cmake_config }} --parallel
+    
+    - name: Package application
+      id: package
+      env:
+        ARCHIVE_NAME: example-${{ github.ref_name }}-${{ runner.os }}-qt${{ matrix.qt_version }}
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          mkdir -p "$env:ARCHIVE_NAME"
+          cp build/example.exe "$env:ARCHIVE_NAME/"
+          cp build/*.dll "$env:ARCHIVE_NAME/" 2>/dev/null || true
+          cp -r images "$env:ARCHIVE_NAME/"
+          Compress-Archive -Path "$env:ARCHIVE_NAME" -DestinationPath "$env:ARCHIVE_NAME.zip" -Force
+          echo "ASSET_PATH=$env:ARCHIVE_NAME.zip" >> $env:GITHUB_ENV
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          mkdir -p "$ARCHIVE_NAME"
+          cp -R build/example.app "$ARCHIVE_NAME/"
+          cp -r images "$ARCHIVE_NAME/"
+          zip -r "$ARCHIVE_NAME.zip" "$ARCHIVE_NAME"
+          echo "ASSET_PATH=$ARCHIVE_NAME.zip" >> $GITHUB_ENV
+        else
+          mkdir -p "$ARCHIVE_NAME"
+          cp build/example "$ARCHIVE_NAME/"
+          cp build/*.so* "$ARCHIVE_NAME/" 2>/dev/null || true
+          cp -r images "$ARCHIVE_NAME/"
+          tar -czf "$ARCHIVE_NAME.tar.gz" "$ARCHIVE_NAME"
+          echo "ASSET_PATH=$ARCHIVE_NAME.tar.gz" >> $GITHUB_ENV
+        fi
+      shell: bash
+    
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ${{ env.ASSET_PATH }}
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}# release.yml
+name:QtRelease
+
+on:
+push:
+    tags:
+      -'v*'# 仅当推送 v 开头的标签时触发，例如 v1.0.0
+
+jobs:
+build-and-release:
+    name:BuildandReleaseon${{matrix.os}}
+    runs-on:${{matrix.os}}
+    strategy:
+      matrix:
+        # 定义构建矩阵，在此例中会在 Windows 和 macOS 上运行
+        os:[windows-latest,macos-latest]
+        # 你可以根据需要扩展或缩减矩阵，例如添加不同的 Qt 版本
+        # 注意：Linux 平台的部署工具和打包方式略有不同，此处暂不涵盖
+
+    steps:
+    # 步骤 1: 检出代码
+    -name:Checkoutcode
+      uses:actions/checkout@v4
+
+    # 步骤 2: 安装 Qt
+    -name:InstallQt
+      uses:jurplel/install-qt-action@v3# 一个流行的安装 Qt 的 Action
+      with:
+        version:'5.15.2'# 指定 Qt 版本，可根据需要修改
+        target:'desktop'
+        # 根据不同平台和编译器选择架构，示例中 Windows 使用 MSVC，macOS 使用 Clang
+        arch:${{matrix.os=='windows-latest'&&'win64_msvc2019_64':'clang_64'}}
+
+    # 步骤 3: 编译项目 (Windows 和 macOS 命令略有不同)
+    -name:BuildProject
+      run:|
+        qmake
+        # 根据不同操作系统使用不同的构建工具
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          nmake
+        else
+          make
+        fi
+
+    # 步骤 4: 打包项目 (仅在打标签时执行)
+    -name:PackageProject
+      id:package
+      # 此步骤仅在推送 tag 时运行
+      if:startsWith(github.ref,'refs/tags/')
+      env:
+        # Windows 下 windeployqt 可能需要此环境变量来定位 MSVC 的路径
+        VCINSTALLDIR:'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC'
+        # 定义压缩包名称，包含标签名和运行平台
+        archiveName:'MyQtApp-${{ github.ref_name }}-${{ runner.os }}'
+        targetName:'MyQtApp${{ runner.os == \"Windows\" && '.exe' || '' }}'# 根据平台决定可执行文件后缀
+      shell:pwsh# 使用 PowerShell 执行后续脚本
+      run:|
+        # 创建临时目录用于存放发布文件
+        New-Item -ItemType Directory -Path $env:archiveName -Force
+
+        # 拷贝编译生成的可执行文件到临时目录
+        # 请根据你的项目实际生成路径调整 'release/MyQtApp.exe' 或 'MyQtApp'
+        Copy-Item-Path'release/${{ env.targetName }}'-Destination'${{ env.archiveName }}/'-Force
+
+        # 使用 Qt 部署工具收集依赖库
+        if("${{runner.os}}"-eq"Windows"){
+          # Windows 平台使用 windeployqt
+          windeployqt--qmldir.'${{ env.archiveName }}/${{ env.targetName }}'
+        }elseif("${{runner.os}}"-eq"macOS"){
+          # macOS 平台使用 macdeployqt (注意 macdeployqt 会直接处理 app 包)
+          # 假设你的项目在 macOS 上生成了 .app 包，例如 "MyQtApp.app"
+          # 首先需要将 .app 包拷贝到打包目录
+          # Copy-Item -Path 'release/MyQtApp.app' -Destination '${{ env.archiveName }}/' -Recurse -Force
+          # 然后使用 macdeployqt 处理 .app 包并生成 .dmg (或嵌入依赖)
+          # macdeployqt '${{ env.archiveName }}/MyQtApp.app' -dmg
+          # 注意：macdeployqt 的详细用法请参考 Qt 文档，此处仅为示意
+          Write-Host"macOS packaging step would go here (e.g., using macdeployqt)."
+          # 简化示例：假设我们只是把可执行文件和必要的资源打包
+          # 实际 macOS 应用打包通常更复杂，涉及 .app 目录结构
+        }
+
+        # 创建压缩包 (Windows 和 macOS 通用)
+        Compress-Archive-Path'${{ env.archiveName }}'-DestinationPath'${{ env.archiveName }}.zip'-Force
+
+        # 为后续步骤设置环境变量，传递打包后的文件名称
+        echo"ASSET_PATH=${{ env.archiveName }}.zip">>$env:GITHUB_ENV
+
+    # 步骤 5: 创建 GitHub Release 并上传构件
+    -name:UploadReleaseAsset
+      # 使用 softprops/action-gh-release Action 来创建发布和上传构件
+      uses:softprops/action-gh-release@v1
+      # 此步骤也仅在推送 tag 时运行
+      if:startsWith(github.ref,'refs/tags/')
+      with:
+        # 构件路径，即上一步生成的 zip 文件
+        files:${{env.ASSET_PATH}}
+        # Release 的草稿状态，false 表示直接发布
+        draft:false
+        # 是否预发布，对于正式版本通常为 false
+        prerelease:false
+      env:
+        # 使用 GitHub 自动生成的令牌，无需手动配置
+        GITHUB_TOKEN:${{secrets.GITHUB_TOKEN}}
+# 关键配置解读：
+
+# 触发条件：on: push: tags: - 'v*' 确保只有在推送 v 开头的标签（如 v1.0.0）时才运行此 Workflow，避免每次提交都触发发行流程。
+# 构建矩阵：strategy.matrix 允许你轻松指定多个操作系统或 Qt 版本进行并行构建，确保软件的多平台兼容性。
+# Qt 安装：使用 jurplel/install-qt-action 这个专门的 Action 来安装 Qt，它简化了不同平台和版本 Qt 的安装过程。
+# 打包与依赖处理：
+# Windows：使用 windeployqt 工具自动收集 Qt 运行时库等依赖项。
+# macOS：可使用 macdeployqt 工具处理应用包和依赖。
+# 发布：使用 softprops/action-gh-release Action 自动创建 GitHub Release 并上传打包好的构件。GITHUB_TOKEN 由 GitHub 自动提供，通常无需额外配置。
+# 🔑 生成 GitHub Token
+# 为了让 CI 服务能够访问 GitHub Release 功能，早期一些教程会建议创建 Personal Access Token (PAT) 并配置到仓库的 Secrets 中。
+
+# 不过，在上面的示例中，我们使用了 secrets.GITHUB_TOKEN。这是一个 GitHub 自动为 Workflow 运行的仓库创建的内置令牌，它默认具有当前仓库的读写权限，足以完成创建 Release 和上传构件的操作，通常无需你手动生成和配置，更加方便安全。
+
+# 🏷️ 版本管理与自动化发行流程
+# 创建并推送 Tag
+# 当你的代码达到发布状态时，创建一个 Tag 并推送到 GitHub 即可触发自动化发行流程：
+
+# # 创建带注释的标签
+# git tag -a v1.0.0 -m "Release version 1.0.0"
+# # 推送标签到远程仓库
+# git push origin --tags
+# 多平台打包策略
+# 一个成功的自动化发行流程会在 GitHub Release 页面生成针对不同平台的软件包，例如：
+
+# MyQtApp-v1.0.0-Windows.zip (Windows平台，使用 windeployqt 打包)
+# MyQtApp-v1.0.0-macOS.zip (macOS平台，可使用 macdeployqt 处理)
+# 💡 高级技巧与最佳实践
+# 矩阵构建优化：你可以通过构建矩阵同时测试多个 Qt 版本和编译器组合。
+# 缓存依赖加速构建：利用 GitHub Actions 的缓存机制缓存 Qt 安装目录或编译依赖，可以显著缩短后续构建的时间。
+# 自动化测试集成：在 CI 流程中加入自动化测试步骤（例如 make check），确保发布版本的质量。
+# 版本号自动管理：可以考虑使用 semantic-release 等工具根据约定式提交信息自动决定版本号并生成更新日志。
+# 💎 总结
+# 通过以上配置，你已为 Qt 项目建立了基于 GitHub Actions 的自动化发行流程。这套系统能在你推送版本标签后，自动在多个平台编译、打包并发布到 GitHub Release，大大提升了开发效率和软件质量。
+
+# 关键成功因素包括：
+
+# 正确配置 GitHub Actions Workflow。
+# 理解并正确使用 Qt 的部署工具（如 windeployqt, macdeployqt）。
+# 建立与版本 Tag 关联的自动发行机制。
+# 希望这篇讲解能帮助你顺利实现 Qt 项目的自动化发行。如果你在实践过程中遇到问题，或者想了解更深入的定制选项，随时可以继续提问。
+
+# 图片
+
+
