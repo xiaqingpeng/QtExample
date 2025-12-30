@@ -67,7 +67,7 @@ jobs:
         cmake --build build --config Release --parallel
     
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: example-windows-${{ matrix.qt_version }}
         path: |
