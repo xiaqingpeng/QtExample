@@ -225,15 +225,17 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     INSTALL_RPATH @executable_path/../Frameworks
 )
 
-# 复制所有共享库到应用程序的Frameworks目录
+# 复制所有共享库到应用程序的Frameworks目录（仅 macOS）
 function(copy_shared_library_to_bundle target_name)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_FILE:${target_name}>
-            $<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/
-        COMMENT "Copying ${target_name} to app bundle"
-    )
+    if(APPLE)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                $<TARGET_FILE:${target_name}>
+                $<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/
+            COMMENT "Copying ${target_name} to app bundle"
+        )
+    endif()
 endfunction()
 
 # 为所有共享库调用复制函数
