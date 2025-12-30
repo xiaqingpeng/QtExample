@@ -77,6 +77,7 @@ jobs:
     
     - name: Package application
       if: startsWith(github.ref, 'refs/tags/')
+      shell: pwsh
       run: |
         $env:ARCHIVE_NAME = "example-${{ github.ref_name }}-windows-qt${{ matrix.qt_version }}"
         New-Item -ItemType Directory -Path $env:ARCHIVE_NAME -Force
