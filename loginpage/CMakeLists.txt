@@ -1,7 +1,7 @@
 # LoginPage模块的CMakeLists.txt
 
-# 创建共享库
-qt_add_library(LoginPage SHARED
+# 创建静态库
+qt_add_library(LoginPage STATIC
     loginpage.cpp
     loginpage.h
 )

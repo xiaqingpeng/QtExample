@@ -1,7 +1,7 @@
 # UserInfo模块的CMakeLists.txt
 
-# 创建共享库
-qt_add_library(UserInfo SHARED
+# 创建静态库
+qt_add_library(UserInfo STATIC
     userinfopage.cpp
     userinfopage.h
 )

@@ -1,7 +1,7 @@
 # ChangePasswordPage模块的CMakeLists.txt
 
-# 创建共享库
-qt_add_library(ChangePasswordPage SHARED
+# 创建静态库
+qt_add_library(ChangePasswordPage STATIC
     changepasswordpage.cpp
     changepasswordpage.h
 )
