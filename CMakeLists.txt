@@ -146,6 +146,13 @@ add_subdirectory(changepasswordpage)
 # UserInfo模块
 add_subdirectory(userinfo)
 
+# 添加依赖关系，确保 NetworkManager 先于依赖它的模块构建
+add_dependencies(ChangePasswordPage NetworkManager)
+add_dependencies(LoginPage NetworkManager)
+add_dependencies(UserInfo NetworkManager)
+add_dependencies(LayoutExamplesTab3 NetworkManager)
+add_dependencies(ECharts NetworkManager)
+
 # 主应用程序源文件
 set(SOURCES
     main.cpp
