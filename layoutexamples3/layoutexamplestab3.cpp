@@ -90,7 +90,7 @@ void LayoutExamplesTab3::createDashboardLayout()
     for (int i = 0; i < 4; ++i) {
         QWidget *card = new QWidget();
         card->setStyleSheet(
-            QString("background-color: white; border-radius: 8px; border-left: 4px solid %1; box-shadow: 0 2px 4px rgba(0,0,0,0.1);")
+            QString("background-color: white; border-radius: 8px; border-left: 4px solid %1;")
             .arg(cardColors[i].name())
         );
         
@@ -136,7 +136,7 @@ void LayoutExamplesTab3::createDashboardLayout()
     
     // 左图表
     QWidget *chart1 = new QWidget();
-    chart1->setStyleSheet("background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);");
+    chart1->setStyleSheet("background-color: white; border-radius: 8px;");
     QVBoxLayout *chart1Layout = new QVBoxLayout(chart1);
     chart1Layout->setContentsMargins(15, 15, 15, 15);
     chart1Layout->addWidget(new QLabel("用户增长趋势"));
@@ -147,7 +147,7 @@ void LayoutExamplesTab3::createDashboardLayout()
     
     // 右图表
     QWidget *chart2 = new QWidget();
-    chart2->setStyleSheet("background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);");
+    chart2->setStyleSheet("background-color: white; border-radius: 8px;");
     QVBoxLayout *chart2Layout = new QVBoxLayout(chart2);
     chart2Layout->setContentsMargins(15, 15, 15, 15);
     chart2Layout->addWidget(new QLabel("用户分布"));

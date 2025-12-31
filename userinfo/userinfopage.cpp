@@ -301,12 +301,7 @@ void UserInfoPage::loadUserInfo()
     QString avatar = settings.value("user/avatar", "").toString();
     QString createTime = settings.value("user/createTime", "").toString();
     
-    qDebug() << "=== Loading User Info from Settings ===";
-    qDebug() << "User ID:" << userId;
-    qDebug() << "Username:" << username;
-    qDebug() << "Email:" << email;
-    qDebug() << "Avatar:" << avatar;
-    qDebug() << "Create Time:" << createTime;
+    // 从设置加载用户信息
     
     if (userId.isEmpty() && username.isEmpty() && email.isEmpty()) {
         showError("未找到登录信息，请重新登录");
@@ -556,7 +551,7 @@ void UserInfoPage::uploadAvatar(const QString &filePath)
                 
                 m_networkManager->updateUserProfile(userId, profileData,
                     [this](const QJsonObject &response) {
-                        qDebug() << "User profile updated successfully:" << response;
+                        // 用户资料更新成功
                     },
                     [this](const QString &error) {
                         qWarning() << "Failed to update user profile:" << error;
@@ -593,12 +588,12 @@ void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
 {
     if (reply->error() != QNetworkReply::NoError) {
         QString errorMsg = "上传失败: " + reply->errorString();
-        qDebug() << "Avatar upload error:" << errorMsg;
+        // 头像上传错误
         
         // 读取服务器返回的详细错误信息
         QByteArray errorData = reply->readAll();
         if (!errorData.isEmpty()) {
-            qDebug() << "Server error response:" << QString::fromUtf8(errorData);
+            // 服务器错误响应
             errorMsg += "\n服务器详情: " + QString::fromUtf8(errorData);
         }
         
@@ -611,7 +606,7 @@ void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
     QByteArray responseData = reply->readAll();
     QString responseString = QString::fromUtf8(responseData);
     
-    qDebug() << "Avatar upload response:" << responseString;
+    // 头像上传响应
     
     // 解析JSON响应
     QJsonParseError parseError;
@@ -636,7 +631,7 @@ void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
     // 移除URL中的引号（如果存在）
     imageUrl = imageUrl.remove('"').trimmed();
     
-    qDebug() << "Uploaded avatar URL:" << imageUrl;
+    // 已上传头像URL
     
     // 更新设置中的头像URL
     QSettings settings("YourCompany", "QtApp");
@@ -651,7 +646,7 @@ void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
         
         m_networkManager->updateUserProfile(userId, profileData,
             [this](const QJsonObject &response) {
-                qDebug() << "User profile updated successfully:" << response;
+                // 用户资料更新成功
             },
             [this](const QString &error) {
                 qWarning() << "Failed to update user profile:" << error;

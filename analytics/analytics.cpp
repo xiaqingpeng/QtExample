@@ -94,15 +94,14 @@ void SDK::initialize(const Config& config) {
     m_flushTimer->start(m_config.flushInterval * 1000);
     
     if (m_config.enableDebug) {
-        qDebug() << "[Analytics] SDK initialized with appId:" << m_config.appId;
-        qDebug() << "[Analytics] Anonymous user ID:" << m_userId;
+        // Analytics SDK已初始化
     }
 }
 
 void SDK::setUserId(const QString& userId) {
     m_userId = userId;
     if (m_config.enableDebug) {
-        qDebug() << "[Analytics] User ID set:" << userId;
+        // 用户ID已设置
     }
 }
 
@@ -125,7 +124,7 @@ void SDK::track(const QString& eventType, const QString& eventName, const QVaria
     addToQueue(event);
     
     if (m_config.enableDebug) {
-        qDebug() << "[Analytics] Track event:" << eventType << eventName;
+        // 追踪事件
     }
 }
 
@@ -140,7 +139,7 @@ void SDK::trackViewStart(const QString& pageName) {
     m_pageViewStartTimes[pageName] = startTime;
     
     if (m_config.enableDebug) {
-        qDebug() << "[Analytics] Page view started:" << pageName;
+        // 页面浏览开始
     }
 }
 
@@ -160,7 +159,7 @@ void SDK::trackViewEnd(const QString& pageName, const QVariantMap& properties) {
     track(EventType::VIEW, "page_view", props);
     
     if (m_config.enableDebug) {
-        qDebug() << "[Analytics] Page view ended:" << pageName << "duration:" << duration << "ms";
+        // 页面浏览结束
     }
 }
 
@@ -253,13 +252,7 @@ void SDK::sendEvents(const QList<Event>& events) {
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     
     if (m_config.enableDebug) {
-        qDebug() << "[Analytics] === Network Request Details ===";
-        qDebug() << "[Analytics] URL:" << batchUrl;
-        qDebug() << "[Analytics] Method: POST";
-        qDebug() << "[Analytics] Headers:" << request.rawHeaderList();
-        qDebug() << "[Analytics] Content-Type:" << request.header(QNetworkRequest::ContentTypeHeader).toString();
-        qDebug() << "[Analytics] Payload size:" << data.size() << "bytes";
-        qDebug() << "[Analytics] Payload:" << QString::fromUtf8(data);
+        // 发送网络请求
     }
     
     QNetworkReply* reply = m_networkManager->post(request, data);
@@ -267,33 +260,17 @@ void SDK::sendEvents(const QList<Event>& events) {
     // 使用lambda捕获reply对象，避免使用不安全的sender()
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         if (reply->error() == QNetworkReply::NoError) {
-            if (m_config.enableDebug) {
-                qDebug() << "[Analytics] === Request Successful ===";
-                qDebug() << "[Analytics] Events sent successfully";
-                QByteArray responseData = reply->readAll();
-                if (!responseData.isEmpty()) {
-                    qDebug() << "[Analytics] Server response:" << responseData;
-                }
-            }
+            // 请求成功
         } else {
             qWarning() << "[Analytics] === Request Failed ===";
             qWarning() << "[Analytics] Failed to send events:" << reply->errorString();
-            if (m_config.enableDebug) {
-                qDebug() << "[Analytics] Error code:" << reply->error();
-                qDebug() << "[Analytics] HTTP Status Code:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-                qDebug() << "[Analytics] HTTP Reason Phrase:" << reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
-                QByteArray responseData = reply->readAll();
-                if (!responseData.isEmpty()) {
-                    qDebug() << "[Analytics] Server response:" << responseData;
-                }
-                qDebug() << "[Analytics] Request URL:" << reply->request().url().toString();
-            }
+            // 请求失败，记录错误详情
         }
         reply->deleteLater();
     });
     
     if (m_config.enableDebug) {
-        qDebug() << "[Analytics] Sending" << events.size() << "events to server:" << batchUrl;
+        // 发送事件到服务器
     }
 }
 
@@ -310,22 +287,10 @@ void SDK::onNetworkReply() {
     }
     
     if (reply->error() == QNetworkReply::NoError) {
-        if (m_config.enableDebug) {
-            qDebug() << "[Analytics] Events sent successfully";
-            QByteArray responseData = reply->readAll();
-            if (!responseData.isEmpty()) {
-                qDebug() << "[Analytics] Server response:" << responseData;
-            }
-        }
+        // 事件发送成功
     } else {
         qWarning() << "[Analytics] Failed to send events:" << reply->errorString();
-        if (m_config.enableDebug) {
-            qDebug() << "[Analytics] HTTP Status Code:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-            QByteArray responseData = reply->readAll();
-            if (!responseData.isEmpty()) {
-                qDebug() << "[Analytics] Server response:" << responseData;
-            }
-        }
+        // 事件发送失败
     }
     
     reply->deleteLater();

@@ -312,7 +312,7 @@ void LoginPage::setupRegisterUI()
     // 标题
     QLabel *titleLabel = new QLabel("注册账号");
     titleLabel->setAlignment(Qt::AlignLeft);
-    QFont titleFont("Microsoft YaHei", 24, QFont::Bold);
+    QFont titleFont("Arial", 24, QFont::Bold);
     titleLabel->setFont(titleFont);
     titleLabel->setStyleSheet(
         "color: #333333;"
@@ -494,9 +494,7 @@ void LoginPage::onLoginClicked()
     QString email = m_loginEmail->text().trimmed();
     QString password = m_loginPassword->text();
 
-    qDebug() << "Login Input - Email:" << email;
-    qDebug() << "Login Input - Password length:" << password.length();
-    qDebug() << "Login Input - Email trimmed:" << email.trimmed();
+    // 处理登录输入
 
     if (email.isEmpty() || password.isEmpty()) {
         // 追踪表单验证错误
@@ -530,15 +528,7 @@ void LoginPage::onLoginClicked()
         int code = response["code"].toInt();
         QString msg = response["msg"].toString();
 
-        qDebug() << "=== Login Response ===";
-        qDebug() << "Full response:" << QJsonDocument(response).toJson(QJsonDocument::Indented);
-        qDebug() << "Code:" << code;
-        qDebug() << "Message:" << msg;
-        qDebug() << "Token field exists:" << response.contains("token");
-        if (response.contains("token")) {
-            qDebug() << "Token value:" << response["token"].toString();
-        }
-        qDebug() << "All keys in response:" << response.keys();
+        // 处理登录响应
 
         if (code == 0) {
             QString cookie;
@@ -546,7 +536,7 @@ void LoginPage::onLoginClicked()
                 cookie = response["token"].toString();
             }
 
-            qDebug() << "Cookie received:" << cookie;
+            // 处理Cookie
 
             // 获取用户信息
             QJsonObject data = response["data"].toObject();
@@ -610,7 +600,7 @@ void LoginPage::onLoginClicked()
         });
         
         // 错误回调
-        qDebug() << "Login Error:" << errorMsg;
+        // 登录错误
         showError("网络错误：" + errorMsg);
 
         m_loginButton->setEnabled(true);
@@ -723,7 +713,7 @@ void LoginPage::onRegisterClicked()
         });
         
         // 错误回调
-        qDebug() << "Register Error:" << errorMsg;
+        // 注册错误
         showError("网络错误：" + errorMsg);
 
         m_registerButton->setEnabled(true);
@@ -775,14 +765,7 @@ void LoginPage::saveUserInfo(const QString &token, const QString &email, const Q
 {
     QSettings settings("YourCompany", "QtApp");
     
-    qDebug() << "=== Saving User Info ===";
-    qDebug() << "Token to save:" << token;
-    qDebug() << "Email to save:" << email;
-    qDebug() << "Password to save:" << (password.isEmpty() ? "empty" : "exists");
-    qDebug() << "User ID to save:" << userId;
-    qDebug() << "Username to save:" << username;
-    qDebug() << "Avatar to save:" << avatar;
-    qDebug() << "Create time to save:" << createTime;
+    // 保存用户信息
     
     settings.setValue("user/token", token);
     settings.setValue("user/email", email);
@@ -798,12 +781,12 @@ void LoginPage::saveUserInfo(const QString &token, const QString &email, const Q
         QString encryptedPassword = encryptPassword(password);
         settings.setValue("user/password", encryptedPassword);
         settings.setValue("user/remember", true);
-        qDebug() << "Password encrypted and saved for:" << email;
+        // 密码已加密保存
     } else {
         // 清除保存的密码
         settings.remove("user/password");
         settings.setValue("user/remember", false);
-        qDebug() << "Password cleared for:" << email;
+        // 密码已清除
     }
     
     // 同步设置，确保立即写入
@@ -813,11 +796,7 @@ void LoginPage::saveUserInfo(const QString &token, const QString &email, const Q
     QString savedToken = settings.value("user/token", "").toString();
     QString savedEmail = settings.value("user/email", "").toString();
     
-    qDebug() << "=== User Info Saved ===";
-    qDebug() << "Email:" << email;
-    qDebug() << "Token saved:" << (savedToken.isEmpty() ? "empty" : savedToken);
-    qDebug() << "Password saved:" << !password.isEmpty();
-    qDebug() << "Settings file:" << settings.fileName();
+    // 用户信息已保存
 }
 
 void LoginPage::loadUserInfo(QString &token, QString &email, QString &password)
@@ -829,17 +808,13 @@ void LoginPage::loadUserInfo(QString &token, QString &email, QString &password)
     QString encryptedPassword = settings.value("user/password", "").toString();
     if (!encryptedPassword.isEmpty()) {
         password = decryptPassword(encryptedPassword);
-        qDebug() << "Password loaded and decrypted for:" << email;
+        // 密码已加载并解密
     } else {
         password.clear();
-        qDebug() << "No password found for:" << email;
+        // 未找到密码
     }
     
-    qDebug() << "=== User Info Loaded ===";
-    qDebug() << "Settings file:" << settings.fileName();
-    qDebug() << "Email:" << email;
-    qDebug() << "Token:" << (token.isEmpty() ? "empty" : "exists");
-    qDebug() << "Password:" << (password.isEmpty() ? "empty" : "exists");
+    // 用户信息已加载
 }
 
 bool LoginPage::checkAutoLogin()
@@ -847,10 +822,7 @@ bool LoginPage::checkAutoLogin()
     QString token, email, password;
     loadUserInfo(token, email, password);
     
-    qDebug() << "=== Auto Login Check ===";
-    qDebug() << "Token:" << (token.isEmpty() ? "empty" : "exists");
-    qDebug() << "Email:" << (email.isEmpty() ? "empty" : email);
-    qDebug() << "Password:" << (password.isEmpty() ? "empty" : "exists");
+    // 检查自动登录
     
     if (!email.isEmpty()) {
         // 填充登录表单
@@ -861,18 +833,18 @@ bool LoginPage::checkAutoLogin()
             m_loginPassword->setText(password);
             m_rememberPassword->setChecked(true);
             showSuccess("正在自动登录...");
-            qDebug() << "Auto login triggered for:" << email;
+            // 触发自动登录
             // 延迟500ms后自动触发登录
             QTimer::singleShot(500, this, &LoginPage::onLoginClicked);
         } else {
             // 没有保存密码，只填充邮箱
             m_rememberPassword->setChecked(false);
             showSuccess("检测到已登录用户，请输入密码继续");
-            qDebug() << "Email filled, but no password saved for:" << email;
+            // 邮箱已填充，但未保存密码
         }
         return true;
     }
-    qDebug() << "No saved login info found";
+    // 未找到保存的登录信息
     return false;
 }
 
@@ -883,7 +855,7 @@ void LoginPage::clearUserInfo()
     settings.remove("user/email");
     settings.remove("user/password");
     settings.remove("user/remember");
-    qDebug() << "User info cleared";
+    // 用户信息已清除
 }
 
 QString LoginPage::encryptPassword(const QString &password)

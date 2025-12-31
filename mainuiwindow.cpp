@@ -370,7 +370,6 @@ void MainUIWindow::setupMainMenu()
         "    stop:0 #00c6fb, stop:1 #005bea); "
         "    color: white; "
         "    font-weight: bold; "
-        "    box-shadow: 0 4px 15px rgba(0, 91, 234, 0.3); "
         "}"
     );
 
@@ -589,7 +588,7 @@ void MainUIWindow::onLogoutClicked()
     settings.remove("user/createTime");
     settings.sync();
     
-    qDebug() << "User logged out, user info cleared";
+    // 用户登出，清除用户信息
     
     // 清除登录页面的输入
     if (loginPage) {
@@ -627,9 +626,7 @@ void MainUIWindow::updateUserInfo()
     QString username = settings.value("user/username", "").toString();
     QString avatar = settings.value("user/avatar", "").toString();
     
-    qDebug() << "=== Updating User Info in Main Window ===";
-    qDebug() << "Username:" << username;
-    qDebug() << "Avatar:" << avatar;
+    // 更新用户信息
     
     // 更新用户名
     if (!username.isEmpty()) {

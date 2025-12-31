@@ -8,8 +8,7 @@
 #include <QDebug>
 
 // 自定义日志宏：打印文件名、行号和日志信息
-#define LOG_DEBUG() qDebug() << "[" << __FILE__ << ":" << __LINE__ << "]"
-#define LOG_INFO(msg) qDebug() << "[" << __FILE__ << ":" << __LINE__ << "]" << (msg)
+// 日志宏已禁用
 
 LogStatsTab::LogStatsTab(QWidget *parent)
     : QWidget(parent)
@@ -383,7 +382,7 @@ void LogStatsTab::onFilterChanged()
 {
     // 当筛选条件改变时，重置到第一页并重新获取数据
     m_currentPage = 1;
-    LOG_DEBUG() << "筛选条件已改变，重新获取数据...";
+    // 筛选条件已改变，重新获取数据
     fetchLogData();
 }
 
@@ -391,7 +390,7 @@ void LogStatsTab::onTimeFilterChanged()
 {
     // 当时间筛选条件改变时，重置到第一页并重新获取数据
     m_currentPage = 1;
-    LOG_DEBUG() << "时间筛选条件已改变，重新获取数据...";
+    // 时间筛选条件已改变，重新获取数据
     fetchLogData();
 }
 
@@ -410,7 +409,7 @@ void LogStatsTab::onTimeShortcutClicked(int days)
         // 今天
         m_startTimeEdit->setDateTime(QDateTime(now.date(), QTime(0, 0, 0)));
         m_endTimeEdit->setDateTime(QDateTime(now.date(), QTime(23, 59, 59)));
-        LOG_DEBUG() << "选择今天";
+        // 选择今天
         // 高亮"今天"按钮
         updateButtonHighlight(0);
     } else if (days == 1) {
@@ -418,7 +417,7 @@ void LogStatsTab::onTimeShortcutClicked(int days)
         QDateTime yesterday = now.addDays(-1);
         m_startTimeEdit->setDateTime(QDateTime(yesterday.date(), QTime(0, 0, 0)));
         m_endTimeEdit->setDateTime(QDateTime(yesterday.date(), QTime(23, 59, 59)));
-        LOG_DEBUG() << "选择昨天";
+        // 选择昨天
         // 高亮"昨天"按钮
         updateButtonHighlight(1);
     } else if (days > 0) {
@@ -427,14 +426,14 @@ void LogStatsTab::onTimeShortcutClicked(int days)
         QDateTime endTime = QDateTime(now.date(), QTime(23, 59, 59));
         m_startTimeEdit->setDateTime(startTime);
         m_endTimeEdit->setDateTime(endTime);
-        LOG_DEBUG() << "选择最近" << days << "天";
+        // 选择最近几天
         // 高亮对应的按钮
         updateButtonHighlight(days);
     } else if (days == -1) {
         // 清除时间筛选
         m_startTimeEdit->clear();
         m_endTimeEdit->clear();
-        LOG_DEBUG() << "清除时间筛选";
+        // 清除时间筛选
     }
 
     // 恢复信号发射
@@ -554,7 +553,7 @@ void LogStatsTab::fetchLogData()
         },
         [this](const QString &errorMsg) {
             // 错误回调
-            LOG_DEBUG() << "Failed to fetch log data:" << errorMsg;
+            // 获取日志数据失败
             QMessageBox::warning(this, "错误", "获取日志数据失败: " + errorMsg);
         },
         queryParams

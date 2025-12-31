@@ -112,7 +112,7 @@ void ChangePasswordPage::onChangePasswordClicked()
     json["newPassword"] = newPassword;
     json["confirmPassword"] = confirmPassword;
 
-    qDebug() << "发送修改密码请求...";
+    // 发送修改密码请求
 
     // 使用NetworkManager发送POST请求，自动添加平台识别头、Token和Cookie
     m_networkManager->post("http://120.48.95.51:7001/user/change-password",
@@ -136,7 +136,7 @@ void ChangePasswordPage::onChangePasswordClicked()
     },
     [this](const QString &errorMsg) {
         // 错误回调
-        qDebug() << "修改密码失败:" << errorMsg;
+        // 修改密码失败
         QMessageBox::warning(this, "错误", "网络请求失败: " + errorMsg);
     });
 }

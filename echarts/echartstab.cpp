@@ -18,11 +18,8 @@
 #include <QList>
 #include <QDateTimeEdit>
 #include <QDate>
-#include <QUrlQuery>
-
-// 自定义日志宏：打印文件名、行号和日志信息
-#define LOG_DEBUG() qDebug() << "[" << __FILE__ << ":" << __LINE__ << "]"
-#define LOG_INFO(msg) qDebug() << "[" << __FILE__ << ":" << __LINE__ << "]" << (msg)
+#include "echartstab.h"
+#include "common.h"
 
 EChartsTab::EChartsTab(QWidget *parent)
     : QMainWindow(parent)
@@ -60,10 +57,9 @@ EChartsTab::EChartsTab(QWidget *parent)
 
     // 5. 加载本地HTML文件（使用绝对路径确保文件能被找到）
     QString htmlPath = "/Applications/qingpengxia/qt/qt6/example/echarts/ECharts/chart.html";
-    LOG_DEBUG() << "HTML文件路径:" << htmlPath;
     QFile file(htmlPath);
     if (!file.exists()) {
-        LOG_DEBUG() << "HTML文件不存在:" << htmlPath;
+        // HTML文件不存在
         return;
     }
     
@@ -309,14 +305,12 @@ EChartsTab::~EChartsTab()
 void EChartsTab::onFilterChanged()
 {
     // 当筛选条件改变时，自动重新获取数据
-    LOG_DEBUG() << "筛选条件已改变，重新获取数据...";
     fetchApiData();
 }
 
 void EChartsTab::onTimeFilterChanged()
 {
     // 当时间筛选条件改变时，自动重新获取数据
-    LOG_DEBUG() << "时间筛选条件已改变，重新获取数据...";
     fetchApiData();
 }
 
@@ -335,7 +329,6 @@ void EChartsTab::onTimeShortcutClicked(int days)
         // 今天
         m_startTimeEdit->setDateTime(QDateTime(now.date(), QTime(0, 0, 0)));
         m_endTimeEdit->setDateTime(QDateTime(now.date(), QTime(23, 59, 59)));
-        LOG_DEBUG() << "选择今天";
         // 高亮"今天"按钮
         updateButtonHighlight(0);
     } else if (days == 1) {
@@ -343,7 +336,6 @@ void EChartsTab::onTimeShortcutClicked(int days)
         QDateTime yesterday = now.addDays(-1);
         m_startTimeEdit->setDateTime(QDateTime(yesterday.date(), QTime(0, 0, 0)));
         m_endTimeEdit->setDateTime(QDateTime(yesterday.date(), QTime(23, 59, 59)));
-        LOG_DEBUG() << "选择昨天";
         // 高亮"昨天"按钮
         updateButtonHighlight(1);
     } else if (days > 0) {
@@ -352,14 +344,12 @@ void EChartsTab::onTimeShortcutClicked(int days)
         QDateTime endTime = QDateTime(now.date(), QTime(23, 59, 59));
         m_startTimeEdit->setDateTime(startTime);
         m_endTimeEdit->setDateTime(endTime);
-        LOG_DEBUG() << "选择最近" << days << "天";
         // 高亮对应的按钮
         updateButtonHighlight(days);
     } else if (days == -1) {
         // 清除时间
         m_startTimeEdit->clear();
         m_endTimeEdit->clear();
-        LOG_DEBUG() << "清除时间筛选";
         // 高亮"清除时间"按钮
         updateButtonHighlight(-1);
     }
@@ -437,22 +427,18 @@ void EChartsTab::updateButtonHighlight(int days)
 void EChartsTab::onPageLoaded(bool ok)
 {
     if (ok) {
-        LOG_DEBUG() << "WebView页面加载完成，开始获取API数据";
         // 页面加载完成后，延迟一小段时间确保JavaScript环境准备好
         QTimer::singleShot(500, this, &EChartsTab::fetchApiData);
     } else {
-        LOG_DEBUG() << "WebView页面加载失败";
+        // WebView页面加载失败
     }
 }
 
 void EChartsTab::fetchApiData()
 {
-    LOG_DEBUG() << "开始请求API数据...";
-    
     // 自动更新定时器已关闭
     // if (!m_apiTimer->isActive()) {
     //     m_apiTimer->start(30000); // 30秒
-    //     qDebug() << "启动自动更新定时器";
     // }
     
     // 从下拉框获取筛选条件
@@ -495,20 +481,9 @@ void EChartsTab::fetchApiData()
         apiUrl += "?" + params.join("&");
     }
     
-    LOG_DEBUG() << "API URL:" << apiUrl;
-    LOG_DEBUG() << "请求参数:";
-    LOG_DEBUG() << "  - Method:" << (method.isEmpty() ? "All" : method);
-    LOG_DEBUG() << "  - Platform:" << (platform.isEmpty() ? "All" : platform);
-    LOG_DEBUG() << "  - StartTime:" << (startTime.isEmpty() ? "None" : startTime);
-    LOG_DEBUG() << "  - EndTime:" << (endTime.isEmpty() ? "None" : endTime);
-    LOG_DEBUG() << "  - PageNum: 1";
-    LOG_DEBUG() << "  - PageSize: 1000";
-    
     m_networkManager->get(apiUrl, [this](const QJsonObject &rootObj) {
         if (rootObj["code"].toInt() == 0) {
             QJsonArray rows = rootObj["rows"].toArray();
-            
-            LOG_DEBUG() << "API返回数据条数:" << rows.size();
             
             // 统计各路径的访问次数和响应时间
             QMap<QString, int> pathCounts;
@@ -516,9 +491,6 @@ void EChartsTab::fetchApiData()
             
             // 输出数据的时间范围
             if (!rows.isEmpty()) {
-                QString firstTime = rows.first().toObject()["requestTime"].toString();
-                QString lastTime = rows.last().toObject()["requestTime"].toString();
-                LOG_DEBUG() << "数据时间范围:" << firstTime << "至" << lastTime;
             }
             
             for (const QJsonValue &rowValue : rows) {
@@ -573,13 +545,12 @@ void EChartsTab::fetchApiData()
              .arg(jsonArrayToString(avgDurations));
             
             m_webView->page()->runJavaScript(jsCode);
-            LOG_DEBUG() << "API数据已更新到图表";
             
         } else {
-            LOG_DEBUG() << "API返回错误:" << rootObj["msg"].toString();
+            qWarning() << "API返回错误:" << rootObj["msg"].toString();
         }
     }, [this](const QString &errorMsg) {
-        LOG_DEBUG() << "API请求失败:" << errorMsg;
+        qWarning() << "API请求失败:" << errorMsg;
         // 调用JavaScript显示网络错误提示
         QString jsCode = QString(
             "if (window.showNetworkErrorMessage) {"

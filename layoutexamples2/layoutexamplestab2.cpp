@@ -157,7 +157,7 @@ void LayoutExamplesTab2::createCardLayout()
     // 创建四张卡片
     for (int i = 0; i < 4; ++i) {
         QWidget *card = new QWidget();
-        card->setStyleSheet("background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);");
+        card->setStyleSheet("background-color: white; border-radius: 8px;");
         
         QVBoxLayout *cardLayout = new QVBoxLayout(card);
         cardLayout->setSpacing(10);

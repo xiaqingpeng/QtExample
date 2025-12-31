@@ -18,17 +18,12 @@ PersistentCookieJar::PersistentCookieJar(QObject *parent)
 QList<QNetworkCookie> PersistentCookieJar::cookiesForUrl(const QUrl &url) const
 {
     QList<QNetworkCookie> cookies = QNetworkCookieJar::cookiesForUrl(url);
-    qDebug() << "PersistentCookieJar - Cookies for URL:" << url.toString() << "Count:" << cookies.size();
-    for (const QNetworkCookie &cookie : cookies) {
-        qDebug() << "  Cookie:" << cookie.name() << "=" << cookie.value();
-    }
+    // 获取指定URL的cookies
     return cookies;
 }
 
 bool PersistentCookieJar::setCookiesFromUrl(const QList<QNetworkCookie> &cookieList, const QUrl &url)
 {
-    qDebug() << "PersistentCookieJar - Setting cookies from URL:" << url.toString() << "Count:" << cookieList.size();
-    
     // 修改Cookie的域名，使其适用于整个域名
     QList<QNetworkCookie> modifiedCookies;
     for (const QNetworkCookie &cookie : cookieList) {
@@ -40,9 +35,6 @@ bool PersistentCookieJar::setCookiesFromUrl(const QList<QNetworkCookie> &cookieL
         
         // 设置路径为根路径，使其适用于所有路径
         modifiedCookie.setPath("/");
-        
-        qDebug() << "  Cookie:" << cookie.name() << "=" << cookie.value();
-        qDebug() << "    Domain:" << modifiedCookie.domain() << "Path:" << modifiedCookie.path();
         
         modifiedCookies.append(modifiedCookie);
     }
@@ -69,7 +61,7 @@ void PersistentCookieJar::saveCookies()
     }
     
     settings.setValue("network/cookies", QString::fromUtf8(cookieData.toBase64()));
-    qDebug() << "PersistentCookieJar - Saved" << allCookies.size() << "cookies";
+    // 保存cookies到持久化存储
 }
 
 void PersistentCookieJar::loadCookies()
@@ -78,7 +70,7 @@ void PersistentCookieJar::loadCookies()
     QString cookieString = settings.value("network/cookies", "").toString();
     
     if (cookieString.isEmpty()) {
-        qDebug() << "PersistentCookieJar - No saved cookies found";
+        // 没有保存的cookies
         return;
     }
     
@@ -94,7 +86,7 @@ void PersistentCookieJar::loadCookies()
     }
     
     setAllCookies(cookies);
-    qDebug() << "PersistentCookieJar - Loaded" << cookies.size() << "cookies";
+    // 从持久化存储加载cookies
 }
 
 // NetworkManager 实现
@@ -111,8 +103,7 @@ NetworkManager::NetworkManager(QObject *parent)
     QNetworkProxyFactory::setUseSystemConfiguration(false);
     m_networkManager->setProxy(QNetworkProxy::NoProxy);
     
-    qDebug() << "NetworkManager - Initialized with persistent cookie jar";
-    qDebug() << "NetworkManager - Base URL:" << m_baseUrl;
+    // 初始化网络管理器
 }
 
 NetworkManager::~NetworkManager()
@@ -156,7 +147,6 @@ QNetworkRequest NetworkManager::createRequest(const QString &url)
     QString token = getToken();
     if (!token.isEmpty()) {
         request.setRawHeader("Authorization", QString("Bearer %1").arg(token).toUtf8());
-        qDebug() << "NetworkManager - Token added to request";
     }
     
     // 手动获取Cookie并添加到请求头
@@ -173,14 +163,12 @@ QNetworkRequest NetworkManager::createRequest(const QString &url)
                 cookieHeader += cookie.toRawForm(QNetworkCookie::NameAndValueOnly);
             }
             request.setRawHeader("Cookie", cookieHeader);
-            qDebug() << "NetworkManager - Cookie added to request:" << cookieHeader;
         } else {
-            qDebug() << "NetworkManager - No cookies found for URL:" << url;
+            // 没有找到该URL的cookies
         }
     }
     
-    qDebug() << "NetworkManager - Creating request for:" << url;
-    qDebug() << "NetworkManager - Platform:" << platform;
+    // 创建网络请求
     
     return request;
 }
@@ -197,7 +185,7 @@ void NetworkManager::get(const QString &url,
     
     QNetworkRequest request = createRequest(fullUrl);
     
-    qDebug() << "NetworkManager - GET request:" << fullUrl;
+    // 发送GET请求
     
     QNetworkReply *reply = m_networkManager->get(request);
     
@@ -209,7 +197,6 @@ void NetworkManager::get(const QString &url,
 void NetworkManager::setBaseUrl(const QString &baseUrl)
 {
     m_baseUrl = baseUrl;
-    qDebug() << "NetworkManager - Base URL set to:" << m_baseUrl;
 }
 
 QString NetworkManager::buildFullUrl(const QString &path)
@@ -459,7 +446,7 @@ void NetworkManager::handleResponse(QNetworkReply *reply,
                 successCallback(rootObj);
             }
         } else {
-            qDebug() << "NetworkManager - Invalid JSON response";
+            qWarning() << "NetworkManager - Invalid JSON response";
             if (errorCallback) {
                 errorCallback("Invalid JSON response");
             }
@@ -468,13 +455,12 @@ void NetworkManager::handleResponse(QNetworkReply *reply,
         QString errorMsg = reply->errorString();
         int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         
-        qDebug() << "NetworkManager - Error:" << errorMsg;
-        qDebug() << "NetworkManager - HTTP Status:" << statusCode;
+        qWarning() << "NetworkManager - Error:" << errorMsg << "HTTP Status:" << statusCode;
         
         // 读取并显示服务器的完整响应
         QByteArray responseData = reply->readAll();
         if (!responseData.isEmpty()) {
-            qDebug() << "NetworkManager - Response Data:" << QString::fromUtf8(responseData);
+            qWarning() << "NetworkManager - Response Data:" << QString::fromUtf8(responseData);
         }
         
         if (errorCallback) {
@@ -489,7 +475,6 @@ QString NetworkManager::getToken()
 {
     QSettings settings("YourCompany", "QtApp");
     QString token = settings.value("user/token", "").toString();
-    qDebug() << "NetworkManager - Token loaded:" << (token.isEmpty() ? "empty" : "exists");
     return token;
 }
 

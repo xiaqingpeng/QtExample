@@ -26,6 +26,7 @@ public:
 
 private slots:
     void onReportTypeChanged(int index);
+    void onChartTypeChanged(int index);
     void onDateRangeChanged();
     void exportReport();
     void exportToCSV();

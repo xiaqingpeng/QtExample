@@ -307,22 +307,22 @@ void UserProfileTab::updateBehaviorStatsDisplay(const QJsonObject &behaviorStats
     
     // 获取常用页面
     QJsonArray pagePreference = behaviorStats["pagePreference"].toArray();
-    qDebug() << "pagePreference数组大小:" << pagePreference.size();
+    // 处理页面偏好数据
     QStringList topPages;
     for (int i = 0; i < qMin(5, pagePreference.size()); ++i) {
         QJsonObject page = pagePreference[i].toObject();
-        qDebug() << "页面" << i << ":" << QJsonDocument(page).toJson(QJsonDocument::Compact);
+        // 处理单个页面数据
         topPages << page["pageName"].toString();
     }
     m_topPagesLabel->setText("常用页面: " + (topPages.isEmpty() ? "无数据" : topPages.join(", ")));
     
     // 获取常用功能
     QJsonArray featureUsage = behaviorStats["featureUsage"].toArray();
-    qDebug() << "featureUsage数组大小:" << featureUsage.size();
+    // 处理功能使用数据
     QStringList topFeatures;
     for (int i = 0; i < qMin(5, featureUsage.size()); ++i) {
         QJsonObject feature = featureUsage[i].toObject();
-        qDebug() << "功能" << i << ":" << QJsonDocument(feature).toJson(QJsonDocument::Compact);
+        // 处理单个功能数据
         topFeatures << feature["eventName"].toString();
     }
     m_topFeaturesLabel->setText("常用功能: " + (topFeatures.isEmpty() ? "无数据" : topFeatures.join(", ")));
