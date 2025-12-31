@@ -87,6 +87,10 @@ public:
     void getUserValueAssessment(const QString &userId,
                                 const SuccessCallback &successCallback,
                                 const ErrorCallback &errorCallback = nullptr);
+    void updateUserProfile(const QString &userId,
+                          const QJsonObject &data,
+                          const SuccessCallback &successCallback,
+                          const ErrorCallback &errorCallback = nullptr);
     
     // 统计报表API
     void getActivityStats(const QString &startDate, const QString &endDate,

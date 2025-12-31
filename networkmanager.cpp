@@ -274,6 +274,15 @@ void NetworkManager::getUserValueAssessment(const QString &userId,
     get("/api/analytics/user/value", successCallback, errorCallback, queryParams);
 }
 
+void NetworkManager::updateUserProfile(const QString &userId,
+                                        const QJsonObject &data,
+                                        const SuccessCallback &successCallback,
+                                        const ErrorCallback &errorCallback)
+{
+    QString url = "/api/user-profile/update/" + userId;
+    post(url, data, successCallback, errorCallback);
+}
+
 // 统计报表API实现
 void NetworkManager::getActivityStats(const QString &startDate, const QString &endDate,
                                      const SuccessCallback &successCallback,

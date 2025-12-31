@@ -548,6 +548,23 @@ void UserInfoPage::uploadAvatar(const QString &filePath)
             settings.setValue("user/avatar", imageUrl);
             settings.sync();
             
+            // 同步头像URL到后端用户画像
+            QString userId = settings.value("user/id", "").toString();
+            if (!userId.isEmpty()) {
+                QJsonObject profileData;
+                profileData["avatar"] = imageUrl;
+                
+                m_networkManager->updateUserProfile(userId, profileData,
+                    [this](const QJsonObject &response) {
+                        qDebug() << "User profile updated successfully:" << response;
+                    },
+                    [this](const QString &error) {
+                        qWarning() << "Failed to update user profile:" << error;
+                        // 不阻塞用户，因为头像已经上传成功
+                    }
+                );
+            }
+            
             // 重新加载用户信息以显示新头像
             loadUserInfo();
             
@@ -625,6 +642,23 @@ void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
     QSettings settings("YourCompany", "QtApp");
     settings.setValue("user/avatar", imageUrl);
     settings.sync();
+    
+    // 同步头像URL到后端用户画像
+    QString userId = settings.value("user/id", "").toString();
+    if (!userId.isEmpty()) {
+        QJsonObject profileData;
+        profileData["avatar"] = imageUrl;
+        
+        m_networkManager->updateUserProfile(userId, profileData,
+            [this](const QJsonObject &response) {
+                qDebug() << "User profile updated successfully:" << response;
+            },
+            [this](const QString &error) {
+                qWarning() << "Failed to update user profile:" << error;
+                // 不阻塞用户，因为头像已经上传成功
+            }
+        );
+    }
     
     // 重新加载用户信息以显示新头像
     loadUserInfo();
