@@ -55,6 +55,9 @@ class SDK : public QObject {
 public:
     static SDK* instance();
     
+    // 清理SDK单例实例
+    static void cleanup();
+    
     // 初始化SDK
     void initialize(const Config& config);
     

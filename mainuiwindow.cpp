@@ -494,6 +494,15 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         contentWidget = new LogStatsTab();
     } else if (subMenu.contains("用户画像")) {
         contentWidget = new UserProfileTab();
+        // 获取当前登录用户的ID并传递给用户画像页面
+        QSettings settings("YourCompany", "QtApp");
+        QString userId = settings.value("user/id", "").toString();
+        if (!userId.isEmpty()) {
+            UserProfileTab *userProfileTab = qobject_cast<UserProfileTab*>(contentWidget);
+            if (userProfileTab) {
+                userProfileTab->setUserId(userId);
+            }
+        }
     } else if (subMenu.contains("统计报表")) {
         contentWidget = new ReportsTab();
     } else if (subMenu.contains("用户信息")) {

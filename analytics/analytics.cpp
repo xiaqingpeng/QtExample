@@ -62,6 +62,13 @@ SDK* SDK::instance() {
     return s_instance;
 }
 
+void SDK::cleanup() {
+    if (s_instance) {
+        delete s_instance;
+        s_instance = nullptr;
+    }
+}
+
 void SDK::initialize(const Config& config) {
     m_config = config;
     m_sessionId = generateSessionId();

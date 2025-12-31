@@ -233,40 +233,45 @@ void NetworkManager::getUserProfile(const QString &userId,
                                     const SuccessCallback &successCallback,
                                     const ErrorCallback &errorCallback)
 {
-    QString url = QString("/api/analytics/users/%1/profile").arg(userId);
-    get(url, successCallback, errorCallback);
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("userId", userId);
+    get("/api/analytics/user/profile", successCallback, errorCallback, queryParams);
 }
 
 void NetworkManager::getUserTags(const QString &userId,
                                  const SuccessCallback &successCallback,
                                  const ErrorCallback &errorCallback)
 {
-    QString url = QString("/api/analytics/users/%1/tags").arg(userId);
-    get(url, successCallback, errorCallback);
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("userId", userId);
+    get("/api/analytics/user/tags", successCallback, errorCallback, queryParams);
 }
 
 void NetworkManager::getUserBehaviorStats(const QString &userId,
                                           const SuccessCallback &successCallback,
                                           const ErrorCallback &errorCallback)
 {
-    QString url = QString("/api/analytics/users/%1/behavior").arg(userId);
-    get(url, successCallback, errorCallback);
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("userId", userId);
+    get("/api/analytics/user/behavior", successCallback, errorCallback, queryParams);
 }
 
 void NetworkManager::getUserInterestProfile(const QString &userId,
                                              const SuccessCallback &successCallback,
                                              const ErrorCallback &errorCallback)
 {
-    QString url = QString("/api/analytics/users/%1/interest").arg(userId);
-    get(url, successCallback, errorCallback);
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("userId", userId);
+    get("/api/analytics/user/interest", successCallback, errorCallback, queryParams);
 }
 
 void NetworkManager::getUserValueAssessment(const QString &userId,
                                              const SuccessCallback &successCallback,
                                              const ErrorCallback &errorCallback)
 {
-    QString url = QString("/api/analytics/users/%1/value").arg(userId);
-    get(url, successCallback, errorCallback);
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("userId", userId);
+    get("/api/analytics/user/value", successCallback, errorCallback, queryParams);
 }
 
 // 统计报表API实现

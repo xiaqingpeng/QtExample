@@ -49,6 +49,8 @@ void UserProfileTab::setupUI()
     mainLayout->addWidget(createGroupBox("行为统计", createBehaviorStatsWidget()));
     
     // 兴趣分析和价值评估（并排显示）
+    setupInterestAnalysis();
+    setupValueAssessment();
     QHBoxLayout *chartsLayout = new QHBoxLayout();
     chartsLayout->addWidget(createGroupBox("兴趣分析", createInterestAnalysisWidget()));
     chartsLayout->addWidget(createGroupBox("价值评估", createValueAssessmentWidget()));
