@@ -161,7 +161,16 @@ void UserProfileTab::loadUserProfileData()
     // 获取用户画像数据
     networkManager->getUserProfile(m_currentUserId,
         [this](const QJsonObject &response) {
-            updateUserInfoDisplay(response);
+            if (response["success"].toBool()) {
+                QJsonObject data = response["data"].toObject();
+                if (!data.isEmpty()) {
+                    updateUserInfoDisplay(data);
+                } else {
+                    qWarning() << "用户画像数据为空";
+                }
+            } else {
+                qWarning() << "获取用户画像失败:" << response["message"].toString();
+            }
         },
         [this](const QString &error) {
             QMessageBox::warning(this, "错误", "加载用户画像失败: " + error);
@@ -170,7 +179,12 @@ void UserProfileTab::loadUserProfileData()
     // 获取用户标签
     networkManager->getUserTags(m_currentUserId,
         [this](const QJsonObject &response) {
-            updateUserTagsDisplay(response["tags"].toArray());
+            if (response["success"].toBool()) {
+                QJsonArray data = response["data"].toArray();
+                updateUserTagsDisplay(data);
+            } else {
+                qWarning() << "获取用户标签失败:" << response["message"].toString();
+            }
         },
         [this](const QString &error) {
             qWarning() << "加载用户标签失败:" << error;
@@ -179,7 +193,16 @@ void UserProfileTab::loadUserProfileData()
     // 获取用户行为特征
     networkManager->getUserBehaviorStats(m_currentUserId,
         [this](const QJsonObject &response) {
-            updateBehaviorStatsDisplay(response);
+            if (response["success"].toBool()) {
+                QJsonObject data = response["data"].toObject();
+                if (!data.isEmpty()) {
+                    updateBehaviorStatsDisplay(data);
+                } else {
+                    qWarning() << "用户行为统计数据为空";
+                }
+            } else {
+                qWarning() << "获取用户行为统计失败:" << response["message"].toString();
+            }
         },
         [this](const QString &error) {
             qWarning() << "加载行为统计失败:" << error;
@@ -188,7 +211,16 @@ void UserProfileTab::loadUserProfileData()
     // 获取用户兴趣画像
     networkManager->getUserInterestProfile(m_currentUserId,
         [this](const QJsonObject &response) {
-            updateInterestAnalysisDisplay(response["interests"].toArray());
+            if (response["success"].toBool()) {
+                QJsonObject data = response["data"].toObject();
+                if (!data.isEmpty()) {
+                    updateInterestAnalysisDisplay(data["interests"].toArray());
+                } else {
+                    qWarning() << "用户兴趣画像数据为空";
+                }
+            } else {
+                qWarning() << "获取用户兴趣画像失败:" << response["message"].toString();
+            }
         },
         [this](const QString &error) {
             qWarning() << "加载兴趣分析失败:" << error;
@@ -197,7 +229,16 @@ void UserProfileTab::loadUserProfileData()
     // 获取用户价值评估
     networkManager->getUserValueAssessment(m_currentUserId,
         [this](const QJsonObject &response) {
-            updateValueAssessmentDisplay(response);
+            if (response["success"].toBool()) {
+                QJsonObject data = response["data"].toObject();
+                if (!data.isEmpty()) {
+                    updateValueAssessmentDisplay(data);
+                } else {
+                    qWarning() << "用户价值评估数据为空";
+                }
+            } else {
+                qWarning() << "获取用户价值评估失败:" << response["message"].toString();
+            }
         },
         [this](const QString &error) {
             qWarning() << "加载价值评估失败:" << error;
