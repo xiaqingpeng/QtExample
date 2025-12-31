@@ -247,22 +247,22 @@ void UserProfileTab::loadUserProfileData()
 
 void UserProfileTab::updateUserInfoDisplay(const QJsonObject &userInfo)
 {
-    m_userIdLabel->setText("用户ID: " + userInfo["user_id"].toString());
+    m_userIdLabel->setText("用户ID: " + userInfo["userId"].toString());
     
-    QString registerTime = userInfo["register_time"].toString();
+    QString registerTime = userInfo["registerTime"].toString();
     if (!registerTime.isEmpty()) {
         QDateTime dateTime = QDateTime::fromString(registerTime, Qt::ISODate);
         m_registerTimeLabel->setText("注册时间: " + dateTime.toString("yyyy-MM-dd hh:mm:ss"));
     }
     
-    QString lastActive = userInfo["last_active_time"].toString();
+    QString lastActive = userInfo["lastActiveTime"].toString();
     if (!lastActive.isEmpty()) {
         QDateTime dateTime = QDateTime::fromString(lastActive, Qt::ISODate);
         m_lastActiveTimeLabel->setText("最后活跃: " + dateTime.toString("yyyy-MM-dd hh:mm:ss"));
     }
     
-    m_totalEventsLabel->setText("总事件数: " + QString::number(userInfo["total_events"].toInt()));
-    m_activeDaysLabel->setText("活跃天数: " + QString::number(userInfo["active_days"].toInt()));
+    m_totalEventsLabel->setText("总事件数: " + QString::number(userInfo["totalEvents"].toInt()));
+    m_activeDaysLabel->setText("活跃天数: " + QString::number(userInfo["activeDays"].toInt()));
 }
 
 void UserProfileTab::updateUserTagsDisplay(const QJsonArray &tags)
@@ -297,6 +297,8 @@ void UserProfileTab::updateUserTagsDisplay(const QJsonArray &tags)
 
 void UserProfileTab::updateBehaviorStatsDisplay(const QJsonObject &behaviorStats)
 {
+    qDebug() << "行为统计数据:" << QJsonDocument(behaviorStats).toJson(QJsonDocument::Compact);
+    
     QJsonObject visitFrequency = behaviorStats["visitFrequency"].toObject();
     m_visitCountLabel->setText("访问次数: " + QString::number(visitFrequency["totalVisits"].toInt()));
     
@@ -305,19 +307,25 @@ void UserProfileTab::updateBehaviorStatsDisplay(const QJsonObject &behaviorStats
     
     // 获取常用页面
     QJsonArray pagePreference = behaviorStats["pagePreference"].toArray();
+    qDebug() << "pagePreference数组大小:" << pagePreference.size();
     QStringList topPages;
     for (int i = 0; i < qMin(5, pagePreference.size()); ++i) {
-        topPages << pagePreference[i].toObject()["pageName"].toString();
+        QJsonObject page = pagePreference[i].toObject();
+        qDebug() << "页面" << i << ":" << QJsonDocument(page).toJson(QJsonDocument::Compact);
+        topPages << page["pageName"].toString();
     }
-    m_topPagesLabel->setText("常用页面: " + topPages.join(", "));
+    m_topPagesLabel->setText("常用页面: " + (topPages.isEmpty() ? "无数据" : topPages.join(", ")));
     
     // 获取常用功能
     QJsonArray featureUsage = behaviorStats["featureUsage"].toArray();
+    qDebug() << "featureUsage数组大小:" << featureUsage.size();
     QStringList topFeatures;
     for (int i = 0; i < qMin(5, featureUsage.size()); ++i) {
-        topFeatures << featureUsage[i].toObject()["eventName"].toString();
+        QJsonObject feature = featureUsage[i].toObject();
+        qDebug() << "功能" << i << ":" << QJsonDocument(feature).toJson(QJsonDocument::Compact);
+        topFeatures << feature["eventName"].toString();
     }
-    m_topFeaturesLabel->setText("常用功能: " + topFeatures.join(", "));
+    m_topFeaturesLabel->setText("常用功能: " + (topFeatures.isEmpty() ? "无数据" : topFeatures.join(", ")));
 }
 
 void UserProfileTab::updateInterestAnalysisDisplay(const QJsonArray &interests)

@@ -304,8 +304,49 @@ void ReportsTab::loadTopUsers()
     
     networkManager->getTopUsers(1, 10,
         [this](const QJsonObject &response) {
+            qDebug() << "=== 活跃用户API响应 ===";
+            qDebug() << "完整响应:" << QJsonDocument(response).toJson(QJsonDocument::Indented);
+            
             QJsonObject data = response["data"].toObject();
-            QJsonArray users = data["users"].toArray();
+            qDebug() << "data对象:" << QJsonDocument(data).toJson(QJsonDocument::Indented);
+            
+            // 尝试获取users或list字段
+            QJsonArray users;
+            if (data.contains("list")) {
+                users = data["list"].toArray();
+                qDebug() << "使用data.list字段，数组大小:" << users.size();
+            } else if (data.contains("users")) {
+                users = data["users"].toArray();
+                qDebug() << "使用data.users字段，数组大小:" << users.size();
+            } else {
+                qWarning() << "data对象中既没有list字段也没有users字段";
+                qDebug() << "data的所有keys:" << data.keys();
+            }
+            
+            // 检查用户对象是否为空
+            bool hasEmptyUsers = false;
+            for (int i = 0; i < users.size(); ++i) {
+                QJsonObject user = users[i].toObject();
+                if (user.isEmpty()) {
+                    hasEmptyUsers = true;
+                    break;
+                }
+            }
+            
+            if (hasEmptyUsers) {
+                qWarning() << "警告：检测到空的用户对象，后端数据异常！";
+                qWarning() << "可能原因：";
+                qWarning() << "1. user_profiles表缺少数据";
+                qWarning() << "2. 后端getUserList方法未正确填充用户数据";
+                qWarning() << "3. 数据库查询返回了空记录";
+            }
+            
+            // 输出每个用户的详细信息
+            for (int i = 0; i < users.size(); ++i) {
+                QJsonObject user = users[i].toObject();
+                qDebug() << "用户" << i + 1 << ":" << QJsonDocument(user).toJson(QJsonDocument::Indented);
+            }
+            
             updateTopUsersTable(users);
         },
         [this](const QString &error) {
@@ -328,18 +369,39 @@ void ReportsTab::loadRealTimeStats()
 
 void ReportsTab::updateKeyMetricsDisplay(const QJsonObject &metrics)
 {
+    qDebug() << "=== 更新关键指标显示 ===";
+    qDebug() << "完整metrics对象:" << QJsonDocument(metrics).toJson(QJsonDocument::Indented);
+    
     QJsonArray dauStats = metrics["dauStats"].toArray();
     QJsonArray mauStats = metrics["mauStats"].toArray();
     
+    qDebug() << "dauStats数组大小:" << dauStats.size();
+    qDebug() << "mauStats数组大小:" << mauStats.size();
+    
     if (!dauStats.isEmpty()) {
         int latestDau = dauStats.last().toObject()["dau"].toInt();
+        qDebug() << "最新DAU:" << latestDau;
         m_dauLabel->setText(QString("DAU: %1").arg(latestDau));
     }
     
     if (!mauStats.isEmpty()) {
         int latestMau = mauStats.last().toObject()["mau"].toInt();
+        qDebug() << "最新MAU:" << latestMau;
         m_mauLabel->setText(QString("MAU: %1").arg(latestMau));
     }
+    
+    // 检查是否有转化率数据
+    if (metrics.contains("conversionRate")) {
+        double conversionRate = metrics["conversionRate"].toDouble();
+        qDebug() << "转化率:" << conversionRate;
+        m_conversionLabel->setText(QString("转化率: %1%").arg(conversionRate * 100, 0, 'f', 2));
+    } else {
+        qDebug() << "metrics对象中没有conversionRate字段";
+        qDebug() << "metrics的所有keys:" << metrics.keys();
+        m_conversionLabel->setText("转化率: -");
+    }
+    
+    qDebug() << "关键指标更新完成";
 }
 
 void ReportsTab::updateTrendChart(const QJsonArray &trendData, const QString &title)
@@ -372,13 +434,34 @@ void ReportsTab::updateTopEventsTable(const QJsonArray &events)
 
 void ReportsTab::updateTopUsersTable(const QJsonArray &users)
 {
+    qDebug() << "=== 更新活跃用户表格 ===";
+    qDebug() << "用户数组大小:" << users.size();
+    
     m_topUsersTable->setRowCount(users.size());
+    
     for (int i = 0; i < users.size(); ++i) {
         QJsonObject user = users[i].toObject();
+        qDebug() << "用户" << i + 1 << "数据:" << QJsonDocument(user).toJson(QJsonDocument::Indented);
+        
+        // 使用正确的字段名（下划线命名）
+        QString userId = user["user_id"].toString();
+        QString activityLevel = user["activity_level"].toString();
+        
+        qDebug() << "  user_id:" << userId << "activity_level:" << activityLevel;
+        
+        // 如果用户对象为空，显示提示信息
+        if (user.isEmpty()) {
+            qWarning() << "用户" << i + 1 << "对象为空，后端数据异常";
+            userId = "数据缺失";
+            activityLevel = "数据缺失";
+        }
+        
         m_topUsersTable->setItem(i, 0, new QTableWidgetItem(QString::number(i + 1)));
-        m_topUsersTable->setItem(i, 1, new QTableWidgetItem(user["userId"].toString()));
-        m_topUsersTable->setItem(i, 2, new QTableWidgetItem(user["activityLevel"].toString()));
+        m_topUsersTable->setItem(i, 1, new QTableWidgetItem(userId));
+        m_topUsersTable->setItem(i, 2, new QTableWidgetItem(activityLevel));
     }
+    
+    qDebug() << "活跃用户表格更新完成";
 }
 
 void ReportsTab::updateRealTimeStats(const QJsonObject &stats)

@@ -365,7 +365,7 @@ void NetworkManager::getTopUsers(int page, int pageSize,
     queryParams.addQueryItem("page", QString::number(page));
     queryParams.addQueryItem("pageSize", QString::number(pageSize));
     
-    get("/api/analytics/users", successCallback, errorCallback, queryParams);
+    get("/api/analytics/user/list", successCallback, errorCallback, queryParams);
 }
 
 void NetworkManager::getRealTimeStats(const SuccessCallback &successCallback,
