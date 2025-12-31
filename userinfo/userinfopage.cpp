@@ -24,16 +24,6 @@ UserInfoPage::UserInfoPage(QWidget *parent)
     : QWidget(parent)
     , m_networkManager(new NetworkManager(this))
 {
-    // 初始化Analytics SDK
-    Analytics::Config config;
-    config.serverUrl = "http://120.48.95.51:7001/api/analytics/events";
-    config.appId = "qt-example-app";
-    config.enableDebug = true;
-    config.batchSize = 1;  // 降低批量大小，每个事件立即发送
-    config.flushInterval = 5;  // 降低刷新间隔，5秒定时发送
-    config.enablePersistence = true;
-    Analytics::SDK::instance()->initialize(config);
-    
     // 设置用户ID（从设置中获取）
     QSettings settings("YourCompany", "QtApp");
     QString userId = settings.value("user/id", "").toString();
@@ -53,8 +43,7 @@ UserInfoPage::UserInfoPage(QWidget *parent)
 
 UserInfoPage::~UserInfoPage()
 {
-    // 确保所有埋点事件都被上报
-    Analytics::SDK::instance()->flush();
+    // 不需要手动flush，SDK会自动管理事件上报
 }
 
 void UserInfoPage::setupUI()

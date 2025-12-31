@@ -64,6 +64,15 @@ SDK* SDK::instance() {
 
 void SDK::cleanup() {
     if (s_instance) {
+        // 停止定时器，防止在对象销毁后继续触发
+        if (s_instance->m_flushTimer) {
+            s_instance->m_flushTimer->stop();
+        }
+        
+        // 断开所有信号槽连接
+        s_instance->disconnect();
+        
+        // 删除实例
         delete s_instance;
         s_instance = nullptr;
     }
