@@ -8,6 +8,8 @@
 #include "layoutexamples3/layoutexamplestab3.h"
 #include "echarts/echartstab.h"
 #include "echarts/logstatstab.h"
+#include "userprofiletab/userprofiletab.h"
+#include "reportstab/reportstab.h"
 #include "loginpage.h"
 #include "changepasswordpage.h"
 #include "userinfopage.h"
@@ -389,9 +391,13 @@ void MainUIWindow::setupMainMenu()
     item4->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mainMenuList->addItem(item4);
 
-    QListWidgetItem *item5 = new QListWidgetItem("个人中心");
+    QListWidgetItem *item5 = new QListWidgetItem("数据分析");
     item5->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mainMenuList->addItem(item5);
+
+    QListWidgetItem *item6 = new QListWidgetItem("个人中心");
+    item6->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mainMenuList->addItem(item6);
 
     connect(mainMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onMainMenuClicked);
 
@@ -418,6 +424,9 @@ void MainUIWindow::setupSubMenu(const QString &mainMenu)
     } else if (mainMenu == "图表示例") {
         new QListWidgetItem("ECharts示例", subMenuList);
         new QListWidgetItem("日志统计", subMenuList);
+    } else if (mainMenu == "数据分析") {
+        new QListWidgetItem("用户画像", subMenuList);
+        new QListWidgetItem("统计报表", subMenuList);
     } else if (mainMenu == "个人中心") {
         new QListWidgetItem("用户信息", subMenuList);
         new QListWidgetItem("修改密码", subMenuList);
@@ -483,6 +492,10 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         contentWidget = new EChartsTab();
     } else if (subMenu.contains("日志统计")) {
         contentWidget = new LogStatsTab();
+    } else if (subMenu.contains("用户画像")) {
+        contentWidget = new UserProfileTab();
+    } else if (subMenu.contains("统计报表")) {
+        contentWidget = new ReportsTab();
     } else if (subMenu.contains("用户信息")) {
         contentWidget = new UserInfoPage();
     } else if (subMenu.contains("修改密码")) {

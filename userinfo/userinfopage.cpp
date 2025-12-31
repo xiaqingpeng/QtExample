@@ -29,8 +29,8 @@ UserInfoPage::UserInfoPage(QWidget *parent)
     config.serverUrl = "http://120.48.95.51:7001/api/analytics/events";
     config.appId = "qt-example-app";
     config.enableDebug = true;
-    config.batchSize = 10;
-    config.flushInterval = 30;
+    config.batchSize = 1;  // 降低批量大小，每个事件立即发送
+    config.flushInterval = 5;  // 降低刷新间隔，5秒定时发送
     config.enablePersistence = true;
     Analytics::SDK::instance()->initialize(config);
     

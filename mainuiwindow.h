@@ -12,6 +12,8 @@
 #include <QGraphicsDropShadowEffect>
 #include "echarts/echartstab.h"
 #include "echarts/logstatstab.h"
+#include "userprofiletab/userprofiletab.h"
+#include "reportstab/reportstab.h"
 #include "loginpage.h"
 #include "changepasswordpage.h"
 

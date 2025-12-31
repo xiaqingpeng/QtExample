@@ -101,6 +101,7 @@ void PersistentCookieJar::loadCookies()
 NetworkManager::NetworkManager(QObject *parent)
     : QObject(parent)
     , m_networkManager(new QNetworkAccessManager(this))
+    , m_baseUrl("http://120.48.95.51:7001")
 {
     // 设置自定义CookieJar，支持持久化存储
     PersistentCookieJar *cookieJar = new PersistentCookieJar(this);
@@ -111,6 +112,7 @@ NetworkManager::NetworkManager(QObject *parent)
     m_networkManager->setProxy(QNetworkProxy::NoProxy);
     
     qDebug() << "NetworkManager - Initialized with persistent cookie jar";
+    qDebug() << "NetworkManager - Base URL:" << m_baseUrl;
 }
 
 NetworkManager::~NetworkManager()
@@ -188,7 +190,7 @@ void NetworkManager::get(const QString &url,
                           const ErrorCallback &errorCallback,
                           const QUrlQuery &queryParams)
 {
-    QString fullUrl = url;
+    QString fullUrl = buildFullUrl(url);
     if (!queryParams.isEmpty()) {
         fullUrl += "?" + queryParams.toString();
     }
@@ -204,17 +206,176 @@ void NetworkManager::get(const QString &url,
     });
 }
 
+void NetworkManager::setBaseUrl(const QString &baseUrl)
+{
+    m_baseUrl = baseUrl;
+    qDebug() << "NetworkManager - Base URL set to:" << m_baseUrl;
+}
+
+QString NetworkManager::buildFullUrl(const QString &path)
+{
+    QString fullPath = path;
+    
+    // 如果path不是以http://或https://开头，则拼接基础URL
+    if (!path.startsWith("http://") && !path.startsWith("https://")) {
+        fullPath = m_baseUrl;
+        if (!path.startsWith("/")) {
+            fullPath += "/";
+        }
+        fullPath += path;
+    }
+    
+    return fullPath;
+}
+
+// 用户画像API实现
+void NetworkManager::getUserProfile(const QString &userId,
+                                    const SuccessCallback &successCallback,
+                                    const ErrorCallback &errorCallback)
+{
+    QString url = QString("/api/analytics/users/%1/profile").arg(userId);
+    get(url, successCallback, errorCallback);
+}
+
+void NetworkManager::getUserTags(const QString &userId,
+                                 const SuccessCallback &successCallback,
+                                 const ErrorCallback &errorCallback)
+{
+    QString url = QString("/api/analytics/users/%1/tags").arg(userId);
+    get(url, successCallback, errorCallback);
+}
+
+void NetworkManager::getUserBehaviorStats(const QString &userId,
+                                          const SuccessCallback &successCallback,
+                                          const ErrorCallback &errorCallback)
+{
+    QString url = QString("/api/analytics/users/%1/behavior").arg(userId);
+    get(url, successCallback, errorCallback);
+}
+
+void NetworkManager::getUserInterestProfile(const QString &userId,
+                                             const SuccessCallback &successCallback,
+                                             const ErrorCallback &errorCallback)
+{
+    QString url = QString("/api/analytics/users/%1/interest").arg(userId);
+    get(url, successCallback, errorCallback);
+}
+
+void NetworkManager::getUserValueAssessment(const QString &userId,
+                                             const SuccessCallback &successCallback,
+                                             const ErrorCallback &errorCallback)
+{
+    QString url = QString("/api/analytics/users/%1/value").arg(userId);
+    get(url, successCallback, errorCallback);
+}
+
+// 统计报表API实现
+void NetworkManager::getActivityStats(const QString &startDate, const QString &endDate,
+                                     const SuccessCallback &successCallback,
+                                     const ErrorCallback &errorCallback)
+{
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("startDate", startDate);
+    queryParams.addQueryItem("endDate", endDate);
+    
+    get("/api/analytics/activity", successCallback, errorCallback, queryParams);
+}
+
+void NetworkManager::getRetentionStats(const SuccessCallback &successCallback,
+                                        const ErrorCallback &errorCallback)
+{
+    get("/api/analytics/retention", successCallback, errorCallback);
+}
+
+void NetworkManager::getPageViewStats(const QString &startDate, const QString &endDate,
+                                      const SuccessCallback &successCallback,
+                                      const ErrorCallback &errorCallback)
+{
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("startDate", startDate);
+    queryParams.addQueryItem("endDate", endDate);
+    
+    get("/api/analytics/page-views", successCallback, errorCallback, queryParams);
+}
+
+void NetworkManager::getEventStats(const QString &startDate, const QString &endDate,
+                                   const SuccessCallback &successCallback,
+                                   const ErrorCallback &errorCallback)
+{
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("startDate", startDate);
+    queryParams.addQueryItem("endDate", endDate);
+    
+    get("/api/analytics/event-stats", successCallback, errorCallback, queryParams);
+}
+
+void NetworkManager::getTrendAnalysis(const QString &metric, const QString &startDate, const QString &endDate,
+                                     const SuccessCallback &successCallback,
+                                     const ErrorCallback &errorCallback)
+{
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("startDate", startDate);
+    queryParams.addQueryItem("endDate", endDate);
+    queryParams.addQueryItem("interval", metric);
+    
+    get("/api/analytics/trends", successCallback, errorCallback, queryParams);
+}
+
+void NetworkManager::getTopPages(const QString &startDate, const QString &endDate, int limit,
+                                 const SuccessCallback &successCallback,
+                                 const ErrorCallback &errorCallback)
+{
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("startDate", startDate);
+    queryParams.addQueryItem("endDate", endDate);
+    
+    get("/api/analytics/page-views", successCallback, errorCallback, queryParams);
+}
+
+void NetworkManager::getTopEvents(const QString &startDate, const QString &endDate, int limit,
+                                  const SuccessCallback &successCallback,
+                                  const ErrorCallback &errorCallback)
+{
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("startDate", startDate);
+    queryParams.addQueryItem("endDate", endDate);
+    
+    get("/api/analytics/event-stats", successCallback, errorCallback, queryParams);
+}
+
+void NetworkManager::getTopUsers(int page, int pageSize,
+                                 const SuccessCallback &successCallback,
+                                 const ErrorCallback &errorCallback)
+{
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("page", QString::number(page));
+    queryParams.addQueryItem("pageSize", QString::number(pageSize));
+    
+    get("/api/analytics/users", successCallback, errorCallback, queryParams);
+}
+
+void NetworkManager::getRealTimeStats(const SuccessCallback &successCallback,
+                                     const ErrorCallback &errorCallback)
+{
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("startDate", QDate::currentDate().toString("yyyy-MM-dd"));
+    queryParams.addQueryItem("endDate", QDate::currentDate().toString("yyyy-MM-dd"));
+    queryParams.addQueryItem("interval", "hour");
+    get("/api/analytics/trends", successCallback, errorCallback, queryParams);
+}
+
 void NetworkManager::post(const QString &url,
                            const QJsonObject &data,
                            const SuccessCallback &successCallback,
                            const ErrorCallback &errorCallback)
 {
-    QNetworkRequest request = createRequest(url);
+    QString fullUrl = buildFullUrl(url);
+    QNetworkRequest request = createRequest(fullUrl);
     
     QJsonDocument doc(data);
     QByteArray jsonData = doc.toJson();
     
-    qDebug() << "NetworkManager - POST request:" << url;
+    qDebug() << "NetworkManager - POST request:" << fullUrl;
     qDebug() << "NetworkManager - Data:" << doc.toJson(QJsonDocument::Compact);
     
     QNetworkReply *reply = m_networkManager->post(request, jsonData);
@@ -229,12 +390,13 @@ void NetworkManager::put(const QString &url,
                           const SuccessCallback &successCallback,
                           const ErrorCallback &errorCallback)
 {
-    QNetworkRequest request = createRequest(url);
+    QString fullUrl = buildFullUrl(url);
+    QNetworkRequest request = createRequest(fullUrl);
     
     QJsonDocument doc(data);
     QByteArray jsonData = doc.toJson();
     
-    qDebug() << "NetworkManager - PUT request:" << url;
+    qDebug() << "NetworkManager - PUT request:" << fullUrl;
     qDebug() << "NetworkManager - Data:" << doc.toJson(QJsonDocument::Compact);
     
     QNetworkReply *reply = m_networkManager->put(request, jsonData);
@@ -248,9 +410,10 @@ void NetworkManager::deleteResource(const QString &url,
                                       const SuccessCallback &successCallback,
                                       const ErrorCallback &errorCallback)
 {
-    QNetworkRequest request = createRequest(url);
+    QString fullUrl = buildFullUrl(url);
+    QNetworkRequest request = createRequest(fullUrl);
     
-    qDebug() << "NetworkManager - DELETE request:" << url;
+    qDebug() << "NetworkManager - DELETE request:" << fullUrl;
     
     QNetworkReply *reply = m_networkManager->deleteResource(request);
     

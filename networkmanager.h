@@ -71,14 +71,62 @@ public:
                    const SuccessCallback &successCallback,
                    const ErrorCallback &errorCallback = nullptr);
 
+    // 用户画像API
+    void getUserProfile(const QString &userId,
+                       const SuccessCallback &successCallback,
+                       const ErrorCallback &errorCallback = nullptr);
+    void getUserTags(const QString &userId,
+                    const SuccessCallback &successCallback,
+                    const ErrorCallback &errorCallback = nullptr);
+    void getUserBehaviorStats(const QString &userId,
+                             const SuccessCallback &successCallback,
+                             const ErrorCallback &errorCallback = nullptr);
+    void getUserInterestProfile(const QString &userId,
+                                const SuccessCallback &successCallback,
+                                const ErrorCallback &errorCallback = nullptr);
+    void getUserValueAssessment(const QString &userId,
+                                const SuccessCallback &successCallback,
+                                const ErrorCallback &errorCallback = nullptr);
+    
+    // 统计报表API
+    void getActivityStats(const QString &startDate, const QString &endDate,
+                         const SuccessCallback &successCallback,
+                         const ErrorCallback &errorCallback = nullptr);
+    void getRetentionStats(const SuccessCallback &successCallback,
+                          const ErrorCallback &errorCallback = nullptr);
+    void getPageViewStats(const QString &startDate, const QString &endDate,
+                         const SuccessCallback &successCallback,
+                         const ErrorCallback &errorCallback = nullptr);
+    void getEventStats(const QString &startDate, const QString &endDate,
+                      const SuccessCallback &successCallback,
+                      const ErrorCallback &errorCallback = nullptr);
+    void getTrendAnalysis(const QString &metric, const QString &startDate, const QString &endDate,
+                         const SuccessCallback &successCallback,
+                         const ErrorCallback &errorCallback = nullptr);
+    void getTopPages(const QString &startDate, const QString &endDate, int limit,
+                    const SuccessCallback &successCallback,
+                    const ErrorCallback &errorCallback = nullptr);
+    void getTopEvents(const QString &startDate, const QString &endDate, int limit,
+                     const SuccessCallback &successCallback,
+                     const ErrorCallback &errorCallback = nullptr);
+    void getTopUsers(int page, int pageSize,
+                    const SuccessCallback &successCallback,
+                    const ErrorCallback &errorCallback = nullptr);
+    void getRealTimeStats(const SuccessCallback &successCallback,
+                         const ErrorCallback &errorCallback = nullptr);
+
     // 获取平台标识
     static QString getPlatform();
+
+    // 设置基础URL
+    void setBaseUrl(const QString &baseUrl);
 
     // 创建带有通用请求头的QNetworkRequest
     QNetworkRequest createRequest(const QString &url);
 
 private:
     QNetworkAccessManager *m_networkManager;
+    QString m_baseUrl;  // 基础URL
 
     // 处理响应
     void handleResponse(QNetworkReply *reply,
@@ -87,6 +135,9 @@ private:
 
     // 从QSettings获取Token
     QString getToken();
+
+    // 构建完整URL
+    QString buildFullUrl(const QString &path);
 };
 
 #endif // NETWORKMANAGER_H

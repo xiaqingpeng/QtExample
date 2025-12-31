@@ -46,19 +46,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4809be23-3e22-465c-be5f-cbe61f5162ed" name="更改" comment="更改">
+      <change afterPath="$PROJECT_DIR$/reportstab/CMakeLists.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reportstab/reportstab.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reportstab/reportstab.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/userprofiletab/CMakeLists.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/userprofiletab/userprofiletab.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/userprofiletab/userprofiletab.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/QT_FRONTEND_TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/QT_FRONTEND_TODO.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/app.pro" beforeDir="false" afterPath="$PROJECT_DIR$/app/app.pro" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/example.pro" beforeDir="false" afterPath="$PROJECT_DIR$/example.pro" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analytics/analytics.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/analytics/analytics.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layoutexamplestab.qrc" beforeDir="false" afterPath="$PROJECT_DIR$/layoutexamplestab.qrc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/loginpage/loginpage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/loginpage/loginpage.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mainuiwindow.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/mainuiwindow.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reportstab/CMakeLists.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/reportstab/reportstab.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/reportstab/reportstab.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/reportstab/reportstab.pro" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/userprofiletab/CMakeLists.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/userprofiletab/userprofiletab.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/userprofiletab/userprofiletab.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/userprofiletab/userprofiletab.pro" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mainuiwindow.h" beforeDir="false" afterPath="$PROJECT_DIR$/mainuiwindow.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/networkmanager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/networkmanager.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/networkmanager.h" beforeDir="false" afterPath="$PROJECT_DIR$/networkmanager.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/userinfo/userinfopage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/userinfo/userinfopage.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -227,13 +230,13 @@
       <item itemvalue="CMake Application.LayoutExamples1" />
       <item itemvalue="CMake Application.LayoutExamplesTab2" />
       <item itemvalue="CMake Application.LayoutExamplesTab3" />
+      <item itemvalue="CMake Application.ReportsTab" />
+      <item itemvalue="CMake Application.UserProfileTab" />
       <item itemvalue="CMake Application.LoginPage" />
       <item itemvalue="CMake Application.NetworkManager" />
       <item itemvalue="CMake Application.UserInfo" />
-      <item itemvalue="CMake Application.UserProfileTab" />
       <item itemvalue="CMake Application.Analytics" />
       <item itemvalue="CMake Application.ChangePasswordPage" />
-      <item itemvalue="CMake Application.ReportsTab" />
     </list>
   </component>
   <component name="TaskManager">

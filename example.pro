@@ -27,7 +27,9 @@ SUBDIRS += \
     layoutexamples1 \
     layoutexamples2/layoutexamplestab2.pro \
     layoutexamples3/layoutexamplestab3.pro \
+    reportstab \
+    userprofiletab \
     app
 
 # 设置app依赖所有库
-app.depends = loginpage changepasswordpage userinfo networkmanager analytics advancedcontrols basiccontrols datadisplay dialogs echarts layoutexamples1 layoutexamples2/layoutexamplestab2.pro layoutexamples3/layoutexamplestab3.pro
+app.depends = loginpage changepasswordpage userinfo networkmanager analytics advancedcontrols basiccontrols datadisplay dialogs echarts layoutexamples1 layoutexamples2/layoutexamplestab2.pro layoutexamples3/layoutexamplestab3.pro reportstab userprofiletab

@@ -124,6 +124,7 @@ qt_add_library(ECharts STATIC
     echarts/echartstab.h
     echarts/logstatstab.cpp
     echarts/logstatstab.h
+    layoutexamplestab.qrc
 )
 target_link_libraries(ECharts PRIVATE
     Qt6::Core
@@ -134,6 +135,41 @@ target_link_libraries(ECharts PRIVATE
     NetworkManager
 )
 target_include_directories(ECharts PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# UserProfileTab模块
+qt_add_library(UserProfileTab STATIC
+    userprofiletab/userprofiletab.cpp
+    userprofiletab/userprofiletab.h
+)
+target_link_libraries(UserProfileTab PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::WebEngineWidgets
+    Qt6::Network
+    NetworkManager
+)
+target_include_directories(UserProfileTab PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# ReportsTab模块
+qt_add_library(ReportsTab STATIC
+    reportstab/reportstab.cpp
+    reportstab/reportstab.h
+    layoutexamplestab.qrc
+)
+target_link_libraries(ReportsTab PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::WebEngineWidgets
+    Qt6::Network
+    NetworkManager
+)
+target_include_directories(ReportsTab PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
@@ -155,6 +191,8 @@ add_dependencies(LoginPage NetworkManager)
 add_dependencies(UserInfo NetworkManager)
 add_dependencies(LayoutExamplesTab3 NetworkManager)
 add_dependencies(ECharts NetworkManager)
+add_dependencies(UserProfileTab NetworkManager)
+add_dependencies(ReportsTab NetworkManager)
 add_dependencies(LoginPage Analytics)
 add_dependencies(UserInfo Analytics)
 
@@ -200,6 +238,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     LayoutExamplesTab2
     LayoutExamplesTab3
     ECharts
+    UserProfileTab
+    ReportsTab
     LoginPage
     ChangePasswordPage
     UserInfo
@@ -217,6 +257,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/layoutexamples2
     ${CMAKE_CURRENT_SOURCE_DIR}/layoutexamples3
     ${CMAKE_CURRENT_SOURCE_DIR}/echarts
+    ${CMAKE_CURRENT_SOURCE_DIR}/userprofiletab
+    ${CMAKE_CURRENT_SOURCE_DIR}/reportstab
     ${CMAKE_CURRENT_SOURCE_DIR}/loginpage
     ${CMAKE_CURRENT_SOURCE_DIR}/changepasswordpage
     ${CMAKE_CURRENT_SOURCE_DIR}/userinfo
@@ -231,7 +273,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # 安装模块库
-install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts LoginPage ChangePasswordPage UserInfo
+install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts UserProfileTab ReportsTab LoginPage ChangePasswordPage UserInfo
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

@@ -46,6 +46,8 @@ LIBS += -L$$OUT_PWD/../echarts -lecharts
 LIBS += -L$$OUT_PWD/../layoutexamples1 -lLayoutExamples1
 LIBS += -L$$OUT_PWD/../layoutexamples2 -llayoutexamplestab2
 LIBS += -L$$OUT_PWD/../layoutexamples3 -llayoutexamplestab3
+LIBS += -L$$OUT_PWD/../reportstab -lreportstab
+LIBS += -L$$OUT_PWD/../userprofiletab -luserprofiletab
 
 # 包含模块头文件路径
 INCLUDEPATH += ../loginpage
@@ -61,3 +63,5 @@ INCLUDEPATH += ../echarts
 INCLUDEPATH += ../layoutexamples1
 INCLUDEPATH += ../layoutexamples2
 INCLUDEPATH += ../layoutexamples3
+INCLUDEPATH += ../reportstab
+INCLUDEPATH += ../userprofiletab

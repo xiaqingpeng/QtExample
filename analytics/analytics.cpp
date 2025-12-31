@@ -236,12 +236,23 @@ void SDK::sendEvents(const QList<Event>& events) {
     
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     
+    if (m_config.enableDebug) {
+        qDebug() << "[Analytics] === Network Request Details ===";
+        qDebug() << "[Analytics] URL:" << batchUrl;
+        qDebug() << "[Analytics] Method: POST";
+        qDebug() << "[Analytics] Headers:" << request.rawHeaderList();
+        qDebug() << "[Analytics] Content-Type:" << request.header(QNetworkRequest::ContentTypeHeader).toString();
+        qDebug() << "[Analytics] Payload size:" << data.size() << "bytes";
+        qDebug() << "[Analytics] Payload:" << QString::fromUtf8(data);
+    }
+    
     QNetworkReply* reply = m_networkManager->post(request, data);
     
     // 使用lambda捕获reply对象，避免使用不安全的sender()
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         if (reply->error() == QNetworkReply::NoError) {
             if (m_config.enableDebug) {
+                qDebug() << "[Analytics] === Request Successful ===";
                 qDebug() << "[Analytics] Events sent successfully";
                 QByteArray responseData = reply->readAll();
                 if (!responseData.isEmpty()) {
@@ -249,13 +260,17 @@ void SDK::sendEvents(const QList<Event>& events) {
                 }
             }
         } else {
+            qWarning() << "[Analytics] === Request Failed ===";
             qWarning() << "[Analytics] Failed to send events:" << reply->errorString();
             if (m_config.enableDebug) {
+                qDebug() << "[Analytics] Error code:" << reply->error();
                 qDebug() << "[Analytics] HTTP Status Code:" << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+                qDebug() << "[Analytics] HTTP Reason Phrase:" << reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
                 QByteArray responseData = reply->readAll();
                 if (!responseData.isEmpty()) {
                     qDebug() << "[Analytics] Server response:" << responseData;
                 }
+                qDebug() << "[Analytics] Request URL:" << reply->request().url().toString();
             }
         }
         reply->deleteLater();
@@ -263,7 +278,6 @@ void SDK::sendEvents(const QList<Event>& events) {
     
     if (m_config.enableDebug) {
         qDebug() << "[Analytics] Sending" << events.size() << "events to server:" << batchUrl;
-        qDebug() << "[Analytics] Payload:" << doc.toJson(QJsonDocument::Indented);
     }
 }
 
