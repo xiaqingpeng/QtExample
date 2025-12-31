@@ -1,4 +1,5 @@
 #include "logstatstab.h"
+#include "common.h"
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QJsonDocument>

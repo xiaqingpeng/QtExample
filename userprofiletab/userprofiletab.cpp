@@ -1,5 +1,6 @@
 #include "userprofiletab.h"
 #include "../networkmanager.h"
+#include "common.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -297,7 +298,7 @@ void UserProfileTab::updateUserTagsDisplay(const QJsonArray &tags)
 
 void UserProfileTab::updateBehaviorStatsDisplay(const QJsonObject &behaviorStats)
 {
-    qDebug() << "行为统计数据:" << QJsonDocument(behaviorStats).toJson(QJsonDocument::Compact);
+    LOG_DEBUG() << "行为统计数据:" << QJsonDocument(behaviorStats).toJson(QJsonDocument::Compact);
     
     QJsonObject visitFrequency = behaviorStats["visitFrequency"].toObject();
     m_visitCountLabel->setText("访问次数: " + QString::number(visitFrequency["totalVisits"].toInt()));

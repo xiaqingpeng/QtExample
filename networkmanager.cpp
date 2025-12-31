@@ -1,4 +1,5 @@
 #include "networkmanager.h"
+#include "common.h"
 #include <QDebug>
 #include <QNetworkProxy>
 #include <QUrl>
@@ -329,6 +330,7 @@ void NetworkManager::getTopPages(const QString &startDate, const QString &endDat
     QUrlQuery queryParams;
     queryParams.addQueryItem("startDate", startDate);
     queryParams.addQueryItem("endDate", endDate);
+    queryParams.addQueryItem("limit", QString::number(limit));
     
     get("/api/analytics/page-views", successCallback, errorCallback, queryParams);
 }
@@ -340,6 +342,7 @@ void NetworkManager::getTopEvents(const QString &startDate, const QString &endDa
     QUrlQuery queryParams;
     queryParams.addQueryItem("startDate", startDate);
     queryParams.addQueryItem("endDate", endDate);
+    queryParams.addQueryItem("limit", QString::number(limit));
     
     get("/api/analytics/event-stats", successCallback, errorCallback, queryParams);
 }
@@ -376,8 +379,8 @@ void NetworkManager::post(const QString &url,
     QJsonDocument doc(data);
     QByteArray jsonData = doc.toJson();
     
-    qDebug() << "NetworkManager - POST request:" << fullUrl;
-    qDebug() << "NetworkManager - Data:" << doc.toJson(QJsonDocument::Compact);
+    LOG_DEBUG() << "NetworkManager - POST request:" << fullUrl;
+    LOG_DEBUG() << "NetworkManager - Data:" << doc.toJson(QJsonDocument::Compact);
     
     QNetworkReply *reply = m_networkManager->post(request, jsonData);
     
@@ -397,8 +400,8 @@ void NetworkManager::put(const QString &url,
     QJsonDocument doc(data);
     QByteArray jsonData = doc.toJson();
     
-    qDebug() << "NetworkManager - PUT request:" << fullUrl;
-    qDebug() << "NetworkManager - Data:" << doc.toJson(QJsonDocument::Compact);
+    LOG_DEBUG() << "NetworkManager - PUT request:" << fullUrl;
+    LOG_DEBUG() << "NetworkManager - Data:" << doc.toJson(QJsonDocument::Compact);
     
     QNetworkReply *reply = m_networkManager->put(request, jsonData);
     
@@ -414,7 +417,7 @@ void NetworkManager::deleteResource(const QString &url,
     QString fullUrl = buildFullUrl(url);
     QNetworkRequest request = createRequest(fullUrl);
     
-    qDebug() << "NetworkManager - DELETE request:" << fullUrl;
+    LOG_DEBUG() << "NetworkManager - DELETE request:" << fullUrl;
     
     QNetworkReply *reply = m_networkManager->deleteResource(request);
     
@@ -438,7 +441,7 @@ void NetworkManager::handleResponse(QNetworkReply *reply,
         QByteArray data = reply->readAll();
         QJsonDocument doc = QJsonDocument::fromJson(data);
         
-        // qDebug() << "NetworkManager - Response:" << doc.toJson(QJsonDocument::Compact);
+        // LOG_DEBUG() << "NetworkManager - Response:" << doc.toJson(QJsonDocument::Compact);
         
         if (doc.isObject()) {
             QJsonObject rootObj = doc.object();
