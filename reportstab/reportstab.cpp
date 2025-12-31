@@ -443,11 +443,11 @@ void ReportsTab::updateTopUsersTable(const QJsonArray &users)
         QJsonObject user = users[i].toObject();
         qDebug() << "用户" << i + 1 << "数据:" << QJsonDocument(user).toJson(QJsonDocument::Indented);
         
-        // 使用正确的字段名（下划线命名）
-        QString userId = user["user_id"].toString();
-        QString activityLevel = user["activity_level"].toString();
+        // 使用正确的驼峰命名字段名
+        QString userId = user["userId"].toString();
+        QString activityLevel = user["activityLevel"].toString();
         
-        qDebug() << "  user_id:" << userId << "activity_level:" << activityLevel;
+        qDebug() << "  userId:" << userId << "activityLevel:" << activityLevel;
         
         // 如果用户对象为空，显示提示信息
         if (user.isEmpty()) {
