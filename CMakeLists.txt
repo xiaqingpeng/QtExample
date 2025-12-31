@@ -142,6 +142,7 @@ target_include_directories(ECharts PRIVATE
 qt_add_library(UserProfileTab STATIC
     userprofiletab/userprofiletab.cpp
     userprofiletab/userprofiletab.h
+    layoutexamplestab.qrc
 )
 target_link_libraries(UserProfileTab PRIVATE
     Qt6::Core
@@ -213,7 +214,7 @@ set(UIS
 )
 
 # 创建可执行文件
-qt_add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${UIS})
+qt_add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${UIS} layoutexamplestab.qrc)
 
 # 设置RPATH，确保应用程序能找到共享库
 set_target_properties(${PROJECT_NAME} PROPERTIES

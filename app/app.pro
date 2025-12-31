@@ -65,3 +65,6 @@ INCLUDEPATH += ../layoutexamples2
 INCLUDEPATH += ../layoutexamples3
 INCLUDEPATH += ../reportstab
 INCLUDEPATH += ../userprofiletab
+
+# 包含资源文件
+RESOURCES += ../layoutexamplestab.qrc
