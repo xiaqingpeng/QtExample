@@ -212,9 +212,9 @@ void UserProfileTab::loadUserProfileData()
     networkManager->getUserInterestProfile(m_currentUserId,
         [this](const QJsonObject &response) {
             if (response["success"].toBool()) {
-                QJsonObject data = response["data"].toObject();
+                QJsonArray data = response["data"].toArray();
                 if (!data.isEmpty()) {
-                    updateInterestAnalysisDisplay(data["interests"].toArray());
+                    updateInterestAnalysisDisplay(data);
                 } else {
                     qWarning() << "用户兴趣画像数据为空";
                 }
@@ -298,16 +298,16 @@ void UserProfileTab::updateUserTagsDisplay(const QJsonArray &tags)
 void UserProfileTab::updateBehaviorStatsDisplay(const QJsonObject &behaviorStats)
 {
     QJsonObject visitFrequency = behaviorStats["visitFrequency"].toObject();
-    m_visitCountLabel->setText("访问次数: " + QString::number(visitFrequency["total_visits"].toInt()));
+    m_visitCountLabel->setText("访问次数: " + QString::number(visitFrequency["totalVisits"].toInt()));
     
-    double avgDailyVisits = visitFrequency["avg_daily_visits"].toDouble();
+    double avgDailyVisits = visitFrequency["avgDailyVisits"].toDouble();
     m_avgStayTimeLabel->setText("平均每日访问: " + QString::number(avgDailyVisits, 'f', 2));
     
     // 获取常用页面
     QJsonArray pagePreference = behaviorStats["pagePreference"].toArray();
     QStringList topPages;
     for (int i = 0; i < qMin(5, pagePreference.size()); ++i) {
-        topPages << pagePreference[i].toObject()["page_name"].toString();
+        topPages << pagePreference[i].toObject()["pageName"].toString();
     }
     m_topPagesLabel->setText("常用页面: " + topPages.join(", "));
     
@@ -315,7 +315,7 @@ void UserProfileTab::updateBehaviorStatsDisplay(const QJsonObject &behaviorStats
     QJsonArray featureUsage = behaviorStats["featureUsage"].toArray();
     QStringList topFeatures;
     for (int i = 0; i < qMin(5, featureUsage.size()); ++i) {
-        topFeatures << featureUsage[i].toObject()["event_name"].toString();
+        topFeatures << featureUsage[i].toObject()["eventName"].toString();
     }
     m_topFeaturesLabel->setText("常用功能: " + topFeatures.join(", "));
 }
