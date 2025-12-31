@@ -379,8 +379,8 @@ void NetworkManager::post(const QString &url,
     QJsonDocument doc(data);
     QByteArray jsonData = doc.toJson();
     
-    LOG_DEBUG() << "NetworkManager - POST request:" << fullUrl;
-    LOG_DEBUG() << "NetworkManager - Data:" << doc.toJson(QJsonDocument::Compact);
+    LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << doc.toJson(QJsonDocument::Compact);
+    
     
     QNetworkReply *reply = m_networkManager->post(request, jsonData);
     
@@ -400,8 +400,8 @@ void NetworkManager::put(const QString &url,
     QJsonDocument doc(data);
     QByteArray jsonData = doc.toJson();
     
-    LOG_DEBUG() << "NetworkManager - PUT request:" << fullUrl;
-    LOG_DEBUG() << "NetworkManager - Data:" << doc.toJson(QJsonDocument::Compact);
+    LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << doc.toJson(QJsonDocument::Compact);
+   
     
     QNetworkReply *reply = m_networkManager->put(request, jsonData);
     
