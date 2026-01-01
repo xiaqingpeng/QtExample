@@ -318,7 +318,8 @@ void NetworkManager::getTrendAnalysis(const QString &metric, const QString &star
     QUrlQuery queryParams;
     queryParams.addQueryItem("startDate", startDate);
     queryParams.addQueryItem("endDate", endDate);
-    queryParams.addQueryItem("interval", metric);
+    queryParams.addQueryItem("metric", metric);
+    queryParams.addQueryItem("interval", "day"); // 默认按天分组
     
     get("/api/analytics/trends", successCallback, errorCallback, queryParams);
 }

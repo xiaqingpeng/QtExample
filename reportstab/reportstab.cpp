@@ -80,10 +80,12 @@ void ReportsTab::setupToolbar()
     
     // 报表类型选择
     m_reportTypeCombo = new QComboBox();
-    m_reportTypeCombo->addItem("用户活跃度", "activity");
+    m_reportTypeCombo->addItem("事件总数", "events");
+    m_reportTypeCombo->addItem("日活跃用户", "activity");
+    m_reportTypeCombo->addItem("页面访问量", "pageview");
+    m_reportTypeCombo->addItem("唯一用户数", "unique_users");
     m_reportTypeCombo->addItem("留存率", "retention");
-    m_reportTypeCombo->addItem("页面访问", "pageview");
-    m_reportTypeCombo->addItem("事件统计", "event");
+    m_reportTypeCombo->addItem("性能指标", "performance");
     connect(m_reportTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), 
             this, &ReportsTab::onReportTypeChanged);
     
@@ -303,125 +305,81 @@ void ReportsTab::loadTrendAnalysis()
     NetworkManager *networkManager = new NetworkManager(this);
     QString startDate = m_startDateEdit->date().toString("yyyy-MM-dd");
     QString endDate = m_endDateEdit->date().toString("yyyy-MM-dd");
-    QString metric = m_reportTypeCombo->currentData().toString();
+    QString reportType = m_reportTypeCombo->currentData().toString();
     QString title = m_reportTypeCombo->currentText();
     
-    // 根据报表类型调用不同的API接口
-    if (metric == "activity") {
-        // 用户活跃度：调用activity接口获取DAU数据
-        networkManager->getActivityStats(startDate, endDate,
-            [this, title](const QJsonObject &response) {
-                QJsonObject data = response["data"].toObject();
-                QJsonArray dauStats = data["dauStats"].toArray();
-                // 转换为趋势图表格式
-                QJsonArray trendData;
-                for (const QJsonValue &value : dauStats) {
-                    QJsonObject item = value.toObject();
-                    QJsonObject trendItem;
-                    trendItem["time_bucket"] = item["date"].toString();
-                    trendItem["count"] = item["dau"].toInt();
-                    trendData.append(trendItem);
-                }
-                updateTrendChart(trendData, title);
-            },
-            [this](const QString &error) {
-                qWarning() << "加载用户活跃度失败:" << error;
-            });
-    } else if (metric == "pageview") {
-        // 页面访问：调用page-views接口
-        networkManager->getPageViewStats(startDate, endDate,
-            [this, title](const QJsonObject &response) {
-                QJsonArray pageStats = response["data"].toArray();
-                // 转换为趋势图表格式（按日期汇总）
-                QMap<QString, int> dailyCounts;
-                for (const QJsonValue &value : pageStats) {
-                    QJsonObject page = value.toObject();
-                    QString date = page["date"].toString();
-                    if (date.isEmpty()) {
-                        // 如果没有date字段，从timeBucket提取
-                        QString timeBucket = page["timeBucket"].toString();
-                        date = timeBucket.left(10); // 取日期部分
-                    }
-                    dailyCounts[date] += page["pv"].toInt();
-                }
-                
-                QJsonArray trendData;
-                for (auto it = dailyCounts.begin(); it != dailyCounts.end(); ++it) {
-                    QJsonObject trendItem;
-                    trendItem["time_bucket"] = it.key();
-                    trendItem["count"] = it.value();
-                    trendData.append(trendItem);
-                }
-                updateTrendChart(trendData, title);
-            },
-            [this](const QString &error) {
-                qWarning() << "加载页面访问统计失败:" << error;
-            });
-    } else if (metric == "event") {
-        // 事件统计：调用event-stats接口
-        networkManager->getEventStats(startDate, endDate,
-            [this, title](const QJsonObject &response) {
-                QJsonArray eventStats = response["data"].toArray();
-                // 转换为趋势图表格式（按日期汇总）
-                QMap<QString, int> dailyCounts;
-                for (const QJsonValue &value : eventStats) {
-                    QJsonObject event = value.toObject();
-                    QString date = event["date"].toString();
-                    if (date.isEmpty()) {
-                        // 如果没有date字段，从timeBucket提取
-                        QString timeBucket = event["timeBucket"].toString();
-                        date = timeBucket.left(10); // 取日期部分
-                    }
-                    dailyCounts[date] += event["count"].toInt();
-                }
-                
-                QJsonArray trendData;
-                for (auto it = dailyCounts.begin(); it != dailyCounts.end(); ++it) {
-                    QJsonObject trendItem;
-                    trendItem["time_bucket"] = it.key();
-                    trendItem["count"] = it.value();
-                    trendData.append(trendItem);
-                }
-                updateTrendChart(trendData, title);
-            },
-            [this](const QString &error) {
-                qWarning() << "加载事件统计失败:" << error;
-            });
-    } else if (metric == "retention") {
-        // 留存率：调用retention接口
-        networkManager->getRetentionStats(
-            [this, title](const QJsonObject &response) {
-                QJsonObject data = response["data"].toObject();
-                // 留存率是单个数值，创建一个简单的趋势数据
-                QJsonArray trendData;
-                QJsonObject trendItem;
-                trendItem["time_bucket"] = QDate::currentDate().toString("yyyy-MM-dd");
-                double retention = 0.0;
-                if (data.contains("day7Retention")) {
-                    retention = data["day7Retention"].toString().toDouble();
-                } else if (data.contains("day1Retention")) {
-                    retention = data["day1Retention"].toString().toDouble();
-                } else if (data.contains("day30Retention")) {
-                    retention = data["day30Retention"].toString().toDouble();
-                }
-                trendItem["count"] = static_cast<int>(retention);
-                trendData.append(trendItem);
-                updateTrendChart(trendData, title);
-            },
-            [this](const QString &error) {
-                qWarning() << "加载留存率统计失败:" << error;
-            });
+    // 将前端报表类型映射到后端metric类型
+    // 根据API文档，metric参数支持：events, dau, page_views, unique_users, retention, performance
+    QString metric;
+    if (reportType == "events") {
+        metric = "events";  // 事件总数趋势
+    } else if (reportType == "activity") {
+        metric = "dau";  // 日活跃用户数趋势
+    } else if (reportType == "pageview") {
+        metric = "page_views";  // 页面访问量趋势
+    } else if (reportType == "unique_users") {
+        metric = "unique_users";  // 唯一用户数趋势
+    } else if (reportType == "retention") {
+        metric = "retention";  // 留存率趋势
+    } else if (reportType == "performance") {
+        metric = "performance";  // 性能指标趋势
     } else {
-        // 默认：调用trends接口（事件总数趋势）
-        networkManager->getTrendAnalysis("day", startDate, endDate,
-            [this, title](const QJsonObject &response) {
-                QJsonArray trendData = response["data"].toArray();
-                updateTrendChart(trendData, title);
-            },
-            [this](const QString &error) {
-                qWarning() << "加载趋势分析失败:" << error;
-            });
+        metric = "events";  // 默认为事件总数
     }
+    
+    // 调用统一的trends接口
+    networkManager->getTrendAnalysis(metric, startDate, endDate,
+        [this, title, metric](const QJsonObject &response) {
+            QJsonArray trendData = response["data"].toArray();
+            
+            // 根据不同的metric类型，提取相应的数值字段
+            QJsonArray chartData;
+            for (const QJsonValue &value : trendData) {
+                QJsonObject item = value.toObject();
+                QJsonObject chartItem;
+                
+                // 提取时间
+                QString timeBucket = item["timeBucket"].toString();
+                chartItem["time_bucket"] = timeBucket.left(10);
+                
+                // 根据metric类型提取对应的数值字段
+                if (metric == "events") {
+                    // 事件总数趋势：使用count字段
+                    chartItem["count"] = item["count"].toInt();
+                } else if (metric == "dau") {
+                    // 日活跃用户数趋势：使用dau字段
+                    chartItem["count"] = item["dau"].toInt();
+                } else if (metric == "page_views") {
+                    // 页面访问量趋势：使用pageViews字段
+                    chartItem["count"] = item["pageViews"].toInt();
+                } else if (metric == "unique_users") {
+                    // 唯一用户数趋势：使用uniqueUsers字段
+                    chartItem["count"] = item["uniqueUsers"].toInt();
+                } else if (metric == "retention") {
+                    // 留存率趋势：优先使用7日留存率，其次使用次日留存率
+                    if (item.contains("day7RetentionRate")) {
+                        chartItem["count"] = static_cast<int>(item["day7RetentionRate"].toString().toDouble());
+                    } else if (item.contains("day1RetentionRate")) {
+                        chartItem["count"] = static_cast<int>(item["day1RetentionRate"].toString().toDouble());
+                    } else {
+                        chartItem["count"] = 0;
+                    }
+                } else if (metric == "performance") {
+                    // 性能指标趋势：使用avgDuration字段
+                    chartItem["count"] = static_cast<int>(item["avgDuration"].toString().toDouble());
+                } else {
+                    // 默认：使用count字段
+                    chartItem["count"] = item["count"].toInt();
+                }
+                
+                chartData.append(chartItem);
+            }
+            
+            updateTrendChart(chartData, title);
+        },
+        [this](const QString &error) {
+            qWarning() << "加载趋势分析失败:" << error;
+        });
 }
 
 void ReportsTab::loadTopPages()
