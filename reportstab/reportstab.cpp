@@ -67,12 +67,13 @@ void ReportsTab::setupUI()
 void ReportsTab::setupToolbar()
 {
     // 时间范围选择
-    m_startDateEdit = new QDateEdit(QDate::currentDate().addDays(-30));
+    // 设置默认时间范围为包含实际数据的时间范围
+    m_startDateEdit = new QDateEdit(QDate(2025, 12, 31));
     m_startDateEdit->setCalendarPopup(true);
     m_startDateEdit->setDisplayFormat("yyyy-MM-dd");
     connect(m_startDateEdit, &QDateEdit::dateChanged, this, &ReportsTab::onDateRangeChanged);
     
-    m_endDateEdit = new QDateEdit(QDate::currentDate());
+    m_endDateEdit = new QDateEdit(QDate(2026, 1, 1));
     m_endDateEdit->setCalendarPopup(true);
     m_endDateEdit->setDisplayFormat("yyyy-MM-dd");
     connect(m_endDateEdit, &QDateEdit::dateChanged, this, &ReportsTab::onDateRangeChanged);
@@ -235,8 +236,30 @@ void ReportsTab::loadRetentionStats()
     
     networkManager->getRetentionStats(
         [this](const QJsonObject &response) {
-            double retention = response["data"].toObject()["retentionRate"].toDouble();
-            m_retentionLabel->setText(QString("留存率: %1%").arg(retention * 100, 0, 'f', 2));
+           // LOG_DEBUG() << "留存率API返回数据:" << QJsonDocument(response).toJson(QJsonDocument::Compact);
+            QJsonObject data = response["data"].toObject();
+          //  LOG_DEBUG() << "留存率data数据:" << QJsonDocument(data).toJson(QJsonDocument::Compact);
+            
+            // API返回的是day1Retention、day7Retention、day30Retention三个字段
+            // 优先显示7日留存率
+            double retention = 0.0;
+            QString retentionKey;
+            
+            if (data.contains("day7Retention")) {
+                retentionKey = "day7Retention";
+            } else if (data.contains("day1Retention")) {
+                retentionKey = "day1Retention";
+            } else if (data.contains("day30Retention")) {
+                retentionKey = "day30Retention";
+            }
+            
+            if (!retentionKey.isEmpty()) {
+                QString retentionStr = data[retentionKey].toString();
+                retention = retentionStr.toDouble();
+                LOG_DEBUG() << "留存率(" << retentionKey << "):" << retention;
+            }
+            
+            m_retentionLabel->setText(QString("留存率: %1%").arg(retention, 0, 'f', 2));
         },
         [this](const QString &error) {
             qWarning() << "加载留存率统计失败:" << error;
