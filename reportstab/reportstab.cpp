@@ -119,6 +119,7 @@ void ReportsTab::setupKeyMetrics()
     m_conversionLabel = new QLabel("转化率: -");
     m_onlineUsersLabel = new QLabel("在线用户: -");
     m_todayEventsLabel = new QLabel("今日事件: -");
+    m_totalEventsLabel = new QLabel("总事件数: -");
     
     // 设置样式
     QString metricStyle = "QLabel { padding: 15px; border-radius: 10px; font-size: 16px; font-weight: bold; background-color: #f8f9fa; }";
@@ -128,6 +129,7 @@ void ReportsTab::setupKeyMetrics()
     m_conversionLabel->setStyleSheet(metricStyle);
     m_onlineUsersLabel->setStyleSheet(metricStyle);
     m_todayEventsLabel->setStyleSheet(metricStyle);
+    m_totalEventsLabel->setStyleSheet(metricStyle);
     
     QGridLayout *metricsLayout = new QGridLayout();
     metricsLayout->addWidget(m_dauLabel, 0, 0);
@@ -136,6 +138,7 @@ void ReportsTab::setupKeyMetrics()
     metricsLayout->addWidget(m_conversionLabel, 1, 0);
     metricsLayout->addWidget(m_onlineUsersLabel, 1, 1);
     metricsLayout->addWidget(m_todayEventsLabel, 1, 2);
+    metricsLayout->addWidget(m_totalEventsLabel, 2, 0, 1, 3); // 总事件数占满第三行
 }
 
 void ReportsTab::setupTrendCharts()
@@ -207,6 +210,22 @@ void ReportsTab::loadActivityStats()
         },
         [this](const QString &error) {
             qWarning() << "加载活跃度统计失败:" << error;
+        });
+    
+    // 加载事件统计以获取总事件数
+    networkManager = new NetworkManager(this);
+    networkManager->getEventStats(startDate, endDate,
+        [this](const QJsonObject &response) {
+            QJsonArray eventStats = response["data"].toArray();
+            int totalEvents = 0;
+            for (const QJsonValue &value : eventStats) {
+                totalEvents += value.toObject()["count"].toInt();
+            }
+            // 更新总事件数标签
+            m_totalEventsLabel->setText(QString("总事件数: %1").arg(totalEvents));
+        },
+        [this](const QString &error) {
+            qWarning() << "加载事件统计失败:" << error;
         });
 }
 
@@ -358,7 +377,7 @@ void ReportsTab::loadRealTimeStats()
     
     networkManager->getRealTimeStats(
         [this](const QJsonObject &response) {
-            updateRealTimeStats(response["data"].toObject());
+            updateRealTimeStats(response["data"].toArray());
         },
         [this](const QString &error) {
             qWarning() << "加载实时统计失败:" << error;
@@ -371,23 +390,25 @@ void ReportsTab::updateKeyMetricsDisplay(const QJsonObject &metrics)
     QJsonArray dauStats = metrics["dauStats"].toArray();
     QJsonArray mauStats = metrics["mauStats"].toArray();
     
+    int latestDau = 0;
+    int latestMau = 0;
+    
     if (!dauStats.isEmpty()) {
-        int latestDau = dauStats.last().toObject()["dau"].toInt();
+        latestDau = dauStats.last().toObject()["dau"].toInt();
         m_dauLabel->setText(QString("DAU: %1").arg(latestDau));
     }
     
     if (!mauStats.isEmpty()) {
-        int latestMau = mauStats.last().toObject()["mau"].toInt();
+        latestMau = mauStats.last().toObject()["mau"].toInt();
         m_mauLabel->setText(QString("MAU: %1").arg(latestMau));
     }
     
-    // 检查是否有转化率数据
-    if (metrics.contains("conversionRate")) {
-        double conversionRate = metrics["conversionRate"].toDouble();
-        m_conversionLabel->setText(QString("转化率: %1%").arg(conversionRate * 100, 0, 'f', 2));
-    } else {
-        m_conversionLabel->setText("转化率: -");
+    // 计算转化率：DAU / MAU
+    double conversionRate = 0.0;
+    if (latestMau > 0) {
+        conversionRate = (static_cast<double>(latestDau) / latestMau) * 100.0;
     }
+    m_conversionLabel->setText(QString("转化率: %1%").arg(conversionRate, 0, 'f', 2));
 }
 
 void ReportsTab::updateTrendChart(const QJsonArray &trendData, const QString &title)
@@ -442,12 +463,20 @@ void ReportsTab::updateTopUsersTable(const QJsonArray &users)
     }
 }
 
-void ReportsTab::updateRealTimeStats(const QJsonObject &stats)
+void ReportsTab::updateRealTimeStats(const QJsonArray &stats)
 {
-    int onlineUsers = stats["onlineUsers"].toInt();
-    int todayEvents = stats["todayEvents"].toInt();
+    int todayEvents = 0;
+    int uniqueUsers = 0;
     
-    m_onlineUsersLabel->setText(QString("在线用户: %1").arg(onlineUsers));
+    if (!stats.isEmpty()) {
+        // 获取第一条数据（今日的统计）
+        QJsonObject todayData = stats.first().toObject();
+        todayEvents = todayData["count"].toInt();
+        uniqueUsers = todayData["uniqueUsers"].toInt();
+    }
+    
+    // 在线用户数使用独立用户数作为近似值
+    m_onlineUsersLabel->setText(QString("在线用户: %1").arg(uniqueUsers));
     m_todayEventsLabel->setText(QString("今日事件: %1").arg(todayEvents));
 }
 

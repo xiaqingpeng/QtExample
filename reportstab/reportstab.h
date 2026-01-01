@@ -60,7 +60,7 @@ private:
     void updateTopPagesTable(const QJsonArray &pages);
     void updateTopEventsTable(const QJsonArray &events);
     void updateTopUsersTable(const QJsonArray &users);
-    void updateRealTimeStats(const QJsonObject &stats);
+    void updateRealTimeStats(const QJsonArray &stats);
     
     // 图表渲染方法
     void renderTrendChart(const QJsonArray &trendData, const QString &title, const QString &chartType);
@@ -93,6 +93,7 @@ private:
     QLabel *m_conversionLabel;
     QLabel *m_onlineUsersLabel;
     QLabel *m_todayEventsLabel;
+    QLabel *m_totalEventsLabel;
     
     // 趋势图表组件
     QWebEngineView *m_trendChartView;

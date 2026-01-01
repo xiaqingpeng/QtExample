@@ -361,10 +361,13 @@ void NetworkManager::getTopUsers(int page, int pageSize,
 void NetworkManager::getRealTimeStats(const SuccessCallback &successCallback,
                                      const ErrorCallback &errorCallback)
 {
+    // 获取今日事件总数和独立用户数
+    QString today = QDate::currentDate().toString("yyyy-MM-dd");
     QUrlQuery queryParams;
-    queryParams.addQueryItem("startDate", QDate::currentDate().toString("yyyy-MM-dd"));
-    queryParams.addQueryItem("endDate", QDate::currentDate().toString("yyyy-MM-dd"));
-    queryParams.addQueryItem("interval", "hour");
+    queryParams.addQueryItem("startDate", today);
+    queryParams.addQueryItem("endDate", today);
+    queryParams.addQueryItem("interval", "day");
+    
     get("/api/analytics/trends", successCallback, errorCallback, queryParams);
 }
 
