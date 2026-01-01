@@ -9,43 +9,37 @@ QPixmap AvatarUtils::createCircularAvatar(const QPixmap &source, int size)
     }
     
     // 创建指定大小的圆形图片
-    QPixmap circularPixmap(size, size);
-    circularPixmap.fill(Qt::transparent);
+    QPixmap result(size, size);
+    result.fill(Qt::transparent);
     
-    // 计算缩放比例，确保图片完全填充圆形区域
-    qreal scale = qMax(static_cast<qreal>(size) / source.width(), 
-                       static_cast<qreal>(size) / source.height());
+    QPainter painter(&result);
+    painter.setRenderHint(QPainter::Antialiasing);
     
-    // 缩放图片
-    QPixmap scaledPixmap = source.scaled(
-        source.width() * scale, 
-        source.height() * scale, 
-        Qt::KeepAspectRatio, 
-        Qt::SmoothTransformation
-    );
-    
-    // 计算居中位置
-    int x = (scaledPixmap.width() - size) / 2;
-    int y = (scaledPixmap.height() - size) / 2;
-    
-    // 裁剪到指定大小
-    QPixmap croppedPixmap = scaledPixmap.copy(x, y, size, size);
-    
-    // 创建最终的圆形图片
-    QPainter finalPainter(&circularPixmap);
-    finalPainter.setRenderHint(QPainter::Antialiasing);
-    finalPainter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    
-    // 设置圆形裁剪路径
+    // 设置圆形裁剪区域
     QPainterPath clipPath;
     clipPath.addEllipse(0, 0, size, size);
-    finalPainter.setClipPath(clipPath);
+    painter.setClipPath(clipPath);
     
-    // 绘制图片
-    finalPainter.drawPixmap(0, 0, croppedPixmap);
-    finalPainter.end();
+    // 计算缩放，确保图片能够完全覆盖圆形区域
+    qreal scaleX = static_cast<qreal>(size) / source.width();
+    qreal scaleY = static_cast<qreal>(size) / source.height();
+    qreal scale = qMax(scaleX, scaleY); // 使用较大的缩放比例确保完全覆盖
     
-    return circularPixmap;
+    int scaledWidth = static_cast<int>(source.width() * scale);
+    int scaledHeight = static_cast<int>(source.height() * scale);
+    
+    // 缩放图片
+    QPixmap scaledPixmap = source.scaled(scaledWidth, scaledHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    
+    // 计算居中位置
+    int x = (size - scaledWidth) / 2;
+    int y = (size - scaledHeight) / 2;
+    
+    // 绘制图片，确保完全填充圆形
+    painter.drawPixmap(x, y, scaledPixmap);
+    painter.end();
+    
+    return result;
 }
 
 QPixmap AvatarUtils::createDefaultAvatar(int size)

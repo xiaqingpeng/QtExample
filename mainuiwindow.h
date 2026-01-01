@@ -23,6 +23,7 @@ class MainUIWindow : public QWidget
 
 public:
     MainUIWindow(QWidget *parent = nullptr);
+    void forceAvatarSync(); // 公共方法，用于强制头像同步
 
 private slots:
     void onMainMenuClicked(QListWidgetItem *item);
@@ -30,6 +31,7 @@ private slots:
     void onLoginSuccess(const QString &token);
     void onLogoutClicked();
     void updateUserInfo();
+    void updateUserInfoSafe();
 
 private:
     void setupUI(QWidget *parent = nullptr);
@@ -37,6 +39,8 @@ private:
     void setupSubMenu(const QString &mainMenu);
     void setupContent();
     QPixmap createCircularPixmap(const QPixmap &pixmap, int size);
+    void setDefaultAvatar();
+    void loadNetworkAvatar(const QString &avatarUrl);
 
     QGridLayout *mainLayout;
     QLabel *titleLabel;

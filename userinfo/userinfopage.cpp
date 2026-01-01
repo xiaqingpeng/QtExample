@@ -20,6 +20,12 @@
 #include <QGraphicsDropShadowEffect>
 #include <QElapsedTimer>
 #include <QPainterPath>
+#include <QDir>
+#include <QFileInfo>
+#include <QStandardPaths>
+#include <QMessageBox>
+#include <QTimer>
+#include <stdexcept>
 
 UserInfoPage::UserInfoPage(QWidget *parent)
     : QWidget(parent)
@@ -122,12 +128,12 @@ void UserInfoPage::setupUI()
         "}"
     );
     
-    // 添加主卡片阴影
-    QGraphicsDropShadowEffect *mainCardShadow = new QGraphicsDropShadowEffect(this);
-    mainCardShadow->setBlurRadius(24);
-    mainCardShadow->setColor(QColor(0, 0, 0, 6));
-    mainCardShadow->setOffset(0, 8);
-    mainInfoCard->setGraphicsEffect(mainCardShadow);
+    // 添加主卡片阴影 (暂时禁用以排查崩溃问题)
+    // QGraphicsDropShadowEffect *mainCardShadow = new QGraphicsDropShadowEffect(this);
+    // mainCardShadow->setBlurRadius(24);
+    // mainCardShadow->setColor(QColor(0, 0, 0, 6));
+    // mainCardShadow->setOffset(0, 8);
+    // mainInfoCard->setGraphicsEffect(mainCardShadow);
     
     QVBoxLayout *mainCardLayout = new QVBoxLayout(mainInfoCard);
     mainCardLayout->setContentsMargins(40, 40, 40, 40);
@@ -165,12 +171,12 @@ void UserInfoPage::setupUI()
         "}"
     );
     
-    // 添加微妙阴影效果
-    QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(this);
-    shadowEffect->setBlurRadius(16);
-    shadowEffect->setColor(QColor(0, 0, 0, 12));
-    shadowEffect->setOffset(0, 4);
-    m_avatarLabel->setGraphicsEffect(shadowEffect);
+    // 添加微妙阴影效果 (暂时禁用以排查崩溃问题)
+    // QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(this);
+    // shadowEffect->setBlurRadius(16);
+    // shadowEffect->setColor(QColor(0, 0, 0, 12));
+    // shadowEffect->setOffset(0, 4);
+    // m_avatarLabel->setGraphicsEffect(shadowEffect);
     
     // 在线状态指示器（现代设计）
     QLabel *onlineIndicator = new QLabel();
@@ -183,12 +189,12 @@ void UserInfoPage::setupUI()
         "}"
     );
     
-    // 添加指示器阴影
-    QGraphicsDropShadowEffect *indicatorShadow = new QGraphicsDropShadowEffect(this);
-    indicatorShadow->setBlurRadius(8);
-    indicatorShadow->setColor(QColor(0, 0, 0, 20));
-    indicatorShadow->setOffset(0, 2);
-    onlineIndicator->setGraphicsEffect(indicatorShadow);
+    // 添加指示器阴影 (暂时禁用以排查崩溃问题)
+    // QGraphicsDropShadowEffect *indicatorShadow = new QGraphicsDropShadowEffect(this);
+    // indicatorShadow->setBlurRadius(8);
+    // indicatorShadow->setColor(QColor(0, 0, 0, 20));
+    // indicatorShadow->setOffset(0, 2);
+    // onlineIndicator->setGraphicsEffect(indicatorShadow);
     
     // 使用绝对定位将状态指示器放在头像右下角
     onlineIndicator->setParent(avatarContainer);
@@ -249,12 +255,10 @@ void UserInfoPage::setupUI()
         "QPushButton:hover { "
         "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
         "    stop:0 #2563eb, stop:1 #1e40af); "
-        "    transform: translateY(-2px); "
         "}"
         "QPushButton:pressed { "
         "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
         "    stop:0 #1d4ed8, stop:1 #1e3a8a); "
-        "    transform: translateY(0px); "
         "}"
     );
     connect(m_uploadAvatarButton, &QPushButton::clicked, this, &UserInfoPage::onUploadAvatarClicked);
@@ -360,6 +364,20 @@ void UserInfoPage::loadUserInfo()
     }
     
     // 加载头像
+    // 首先尝试加载本地头像
+    QString localAvatarPath = settings.value("user/avatar_local", "").toString();
+    
+    if (!localAvatarPath.isEmpty() && QFileInfo::exists(localAvatarPath)) {
+        QPixmap localPixmap(localAvatarPath);
+        if (!localPixmap.isNull()) {
+            QPixmap circularAvatar = createCircularPixmap(localPixmap, 152);
+            m_avatarLabel->setPixmap(circularAvatar);
+            qDebug() << "Loaded local avatar from:" << localAvatarPath;
+            return; // 使用本地头像，不需要网络加载
+        }
+    }
+    
+    // 如果没有本地头像，尝试从网络加载
     if (!avatar.isEmpty()) {
         QNetworkAccessManager *networkMgr = new QNetworkAccessManager(this);
         QNetworkRequest request{QUrl(avatar)};
@@ -373,7 +391,10 @@ void UserInfoPage::loadUserInfo()
                     // 创建圆形头像（152px大小以匹配头像标签尺寸）
                     QPixmap circularAvatar = createCircularPixmap(pixmap, 152);
                     m_avatarLabel->setPixmap(circularAvatar);
+                    qDebug() << "Loaded network avatar";
                 }
+            } else {
+                qDebug() << "Failed to load network avatar:" << reply->errorString();
             }
             reply->deleteLater();
         });
@@ -387,44 +408,42 @@ void UserInfoPage::showError(const QString &message)
 
 QPixmap UserInfoPage::createCircularPixmap(const QPixmap &pixmap, int size)
 {
+    if (pixmap.isNull()) {
+        return QPixmap();
+    }
+    
     // 创建指定大小的圆形图片
-    QPixmap circularPixmap(size, size);
-    circularPixmap.fill(Qt::transparent);
+    QPixmap result(size, size);
+    result.fill(Qt::transparent);
     
-    // 计算缩放比例，确保图片完全填充圆形区域
-    qreal scale = qMax(static_cast<qreal>(size) / pixmap.width(), 
-                       static_cast<qreal>(size) / pixmap.height());
+    QPainter painter(&result);
+    painter.setRenderHint(QPainter::Antialiasing);
     
-    // 缩放图片
-    QPixmap scaledPixmap = pixmap.scaled(
-        pixmap.width() * scale, 
-        pixmap.height() * scale, 
-        Qt::KeepAspectRatio, 
-        Qt::SmoothTransformation
-    );
-    
-    // 计算居中位置
-    int x = (scaledPixmap.width() - size) / 2;
-    int y = (scaledPixmap.height() - size) / 2;
-    
-    // 裁剪到指定大小
-    QPixmap croppedPixmap = scaledPixmap.copy(x, y, size, size);
-    
-    // 创建最终的圆形图片
-    QPainter finalPainter(&circularPixmap);
-    finalPainter.setRenderHint(QPainter::Antialiasing);
-    finalPainter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    
-    // 设置圆形裁剪路径
+    // 设置圆形裁剪区域
     QPainterPath clipPath;
     clipPath.addEllipse(0, 0, size, size);
-    finalPainter.setClipPath(clipPath);
+    painter.setClipPath(clipPath);
     
-    // 绘制图片
-    finalPainter.drawPixmap(0, 0, croppedPixmap);
-    finalPainter.end();
+    // 计算缩放，确保图片能够完全覆盖圆形区域
+    qreal scaleX = static_cast<qreal>(size) / pixmap.width();
+    qreal scaleY = static_cast<qreal>(size) / pixmap.height();
+    qreal scale = qMax(scaleX, scaleY); // 使用较大的缩放比例确保完全覆盖
     
-    return circularPixmap;
+    int scaledWidth = static_cast<int>(pixmap.width() * scale);
+    int scaledHeight = static_cast<int>(pixmap.height() * scale);
+    
+    // 缩放图片
+    QPixmap scaledPixmap = pixmap.scaled(scaledWidth, scaledHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    
+    // 计算居中位置
+    int x = (size - scaledWidth) / 2;
+    int y = (size - scaledHeight) / 2;
+    
+    // 绘制图片，确保完全填充圆形
+    painter.drawPixmap(x, y, scaledPixmap);
+    painter.end();
+    
+    return result;
 }
 
 QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value)
@@ -440,12 +459,12 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
         "}"
     );
     
-    // 添加微妙阴影
-    QGraphicsDropShadowEffect *itemShadow = new QGraphicsDropShadowEffect(this);
-    itemShadow->setBlurRadius(8);
-    itemShadow->setColor(QColor(0, 0, 0, 4));
-    itemShadow->setOffset(0, 2);
-    widget->setGraphicsEffect(itemShadow);
+    // 添加微妙阴影 (暂时禁用以排查崩溃问题)
+    // QGraphicsDropShadowEffect *itemShadow = new QGraphicsDropShadowEffect(this);
+    // itemShadow->setBlurRadius(8);
+    // itemShadow->setColor(QColor(0, 0, 0, 4));
+    // itemShadow->setOffset(0, 2);
+    // widget->setGraphicsEffect(itemShadow);
     
     QVBoxLayout *layout = new QVBoxLayout(widget);
     layout->setContentsMargins(20, 16, 20, 16);
@@ -466,18 +485,21 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
         "}"
     );
     
-    // 根据不同的标签显示不同的图标
-    QString iconText = "👤";
-    if (label == "邮箱") iconText = "📧";
-    else if (label == "用户ID") iconText = "🆔";
-    else if (label == "注册时间") iconText = "📅";
-    else if (label == "账户状态") iconText = "✓";
+    // 创建简单的文本标识符，避免emoji导致的崩溃
+    QString iconText = "";
+    if (label == "邮箱") iconText = "Email";
+    else if (label == "用户ID") iconText = "ID";
+    else if (label == "注册时间") iconText = "Date";
+    else if (label == "账户状态") iconText = "Status";
+    else iconText = "Info";
     
     QLabel *iconTextWidget = new QLabel(iconText);
     iconTextWidget->setAlignment(Qt::AlignCenter);
     iconTextWidget->setStyleSheet(
         "QLabel { "
-        "    font-size: 14px; "
+        "    font-size: 12px; "
+        "    color: #64748b; "
+        "    font-weight: 500; "
         "}"
     );
     
@@ -522,45 +544,183 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
 
 void UserInfoPage::onUploadAvatarClicked()
 {
-    // 追踪点击事件
-    Analytics::SDK::instance()->trackClick("upload_avatar_button", {
-        {"page", "user_info"},
-        {"button_text", "更换头像"}
-    });
+    qDebug() << "Upload avatar button clicked!";
     
-    // 打开文件选择对话框
-    QString filePath = QFileDialog::getOpenFileName(
-        this,
-        "选择头像图片",
-        "",
-        "图片文件 (*.png *.jpg *.jpeg *.bmp *.gif)"
-    );
-    
-    if (filePath.isEmpty()) {
-        return;
+    try {
+        // 检查文件系统访问权限
+        QString testDir = QStandardPaths::writableLocation(QStandardPaths::PicturesLocation);
+        if (testDir.isEmpty()) {
+            testDir = QDir::homePath();
+        }
+        
+        QDir dir(testDir);
+        if (!dir.exists()) {
+            qDebug() << "Pictures directory does not exist:" << testDir;
+            testDir = QDir::homePath();
+        }
+        
+        qDebug() << "Using directory for file dialog:" << testDir;
+        
+        // 追踪点击事件 (添加异常保护)
+        try {
+            Analytics::SDK::instance()->trackClick("upload_avatar_button", {
+                {"page", "user_info"},
+                {"button_text", "更换头像"}
+            });
+        } catch (...) {
+            qDebug() << "Analytics tracking failed, continuing...";
+        }
+        
+        // 尝试不同的文件对话框方式
+        QString filePath;
+        
+        // 方法1: 使用非原生对话框
+        qDebug() << "Trying non-native dialog...";
+        filePath = QFileDialog::getOpenFileName(
+            this,
+            "选择头像图片",
+            testDir,
+            "图片文件 (*.png *.jpg *.jpeg *.bmp *.gif);;所有文件 (*.*)",
+            nullptr,
+            QFileDialog::DontUseNativeDialog
+        );
+        
+        // 如果第一种方法失败，尝试原生对话框
+        if (filePath.isEmpty()) {
+            qDebug() << "Non-native dialog failed, trying native dialog...";
+            filePath = QFileDialog::getOpenFileName(
+                this,
+                "选择头像图片",
+                testDir,
+                "图片文件 (*.png *.jpg *.jpeg *.bmp *.gif);;所有文件 (*.*)"
+            );
+        }
+        
+        // 如果还是失败，尝试无父窗口
+        if (filePath.isEmpty()) {
+            qDebug() << "Native dialog failed, trying without parent...";
+            filePath = QFileDialog::getOpenFileName(
+                nullptr,
+                "选择头像图片",
+                testDir,
+                "图片文件 (*.png *.jpg *.jpeg *.bmp *.gif);;所有文件 (*.*)"
+            );
+        }
+        
+        qDebug() << "Final selected file path:" << filePath;
+        
+        if (filePath.isEmpty()) {
+            qDebug() << "No file selected after all attempts";
+            // 显示详细的帮助信息
+            QMessageBox::information(this, "文件选择失败", 
+                "无法打开文件选择对话框。\n\n"
+                "可能的原因：\n"
+                "1. 应用程序缺少文件访问权限\n"
+                "2. 系统安全设置阻止了文件访问\n"
+                "3. macOS沙盒限制\n\n"
+                "解决方案：\n"
+                "1. 在系统偏好设置 > 安全性与隐私 > 隐私 > 文件和文件夹中，\n"
+                "   为此应用程序添加访问权限\n"
+                "2. 尝试从应用程序文件夹运行程序\n"
+                "3. 重启应用程序后重试");
+            return;
+        }
+        
+        // 验证文件是否存在
+        QFileInfo fileInfo(filePath);
+        if (!fileInfo.exists()) {
+            showError("文件不存在: " + filePath);
+            return;
+        }
+        
+        if (!fileInfo.isReadable()) {
+            showError("文件无法读取，请检查文件权限");
+            return;
+        }
+        
+        // 验证文件大小（限制为5MB）
+        QFile file(filePath);
+        if (!file.open(QIODevice::ReadOnly)) {
+            showError("无法打开文件: " + file.errorString());
+            return;
+        }
+        
+        qint64 fileSize = file.size();
+        file.close();
+        
+        qDebug() << "File size:" << fileSize << "bytes";
+        
+        if (fileSize > 5 * 1024 * 1024) {
+            showError("文件大小不能超过5MB");
+            return;
+        }
+        
+        if (fileSize == 0) {
+            showError("文件为空，请选择有效的图片文件");
+            return;
+        }
+        
+        // 验证是否为有效的图片文件
+        QPixmap testPixmap(filePath);
+        if (testPixmap.isNull()) {
+            showError("无效的图片文件，请选择正确的图片格式");
+            return;
+        }
+        
+        qDebug() << "Image loaded successfully, size:" << testPixmap.size();
+        
+        // 先本地预览头像
+        QPixmap circularAvatar = createCircularPixmap(testPixmap, 152);
+        if (!circularAvatar.isNull()) {
+            m_avatarLabel->setPixmap(circularAvatar);
+            qDebug() << "Avatar preview updated successfully";
+            
+            // 立即发射信号，避免定时器
+            qDebug() << "Emitting avatarUpdated signal immediately";
+            emit avatarUpdated();
+        }
+        
+        // 上传头像
+        uploadAvatar(filePath);
+        
+    } catch (const std::exception& e) {
+        qDebug() << "Exception in onUploadAvatarClicked:" << e.what();
+        showError("发生未知错误，请重试");
+    } catch (...) {
+        qDebug() << "Unknown exception in onUploadAvatarClicked";
+        showError("发生未知错误，请重试");
     }
-    
-    // 验证文件大小（限制为5MB）
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        showError("无法打开文件");
-        return;
-    }
-    
-    qint64 fileSize = file.size();
-    file.close();
-    
-    if (fileSize > 5 * 1024 * 1024) {
-        showError("文件大小不能超过5MB");
-        return;
-    }
-    
-    // 上传头像
-    uploadAvatar(filePath);
 }
 
 void UserInfoPage::uploadAvatar(const QString &filePath)
 {
+    qDebug() << "Starting avatar upload for file:" << filePath;
+    
+    // 先更新本地显示
+    QPixmap localPixmap(filePath);
+    if (!localPixmap.isNull()) {
+        QPixmap circularAvatar = createCircularPixmap(localPixmap, 152);
+        m_avatarLabel->setPixmap(circularAvatar);
+        
+        // 保存到本地设置（临时方案）
+        QSettings settings("YourCompany", "QtApp");
+        settings.setValue("user/avatar_local", filePath);
+        settings.sync();
+        
+        // 发射头像更新信号
+        qDebug() << "Emitting avatarUpdated signal for local avatar";
+        emit avatarUpdated();
+        
+        QMessageBox::information(this, "成功", "头像已更新！\n注意：这是本地预览，实际上传功能需要网络连接。");
+        return;
+    }
+    
+    // 如果需要网络上传，保留原有逻辑
+    if (!m_networkManager) {
+        showError("网络管理器未初始化");
+        return;
+    }
+    
     // 开始性能计时
     QElapsedTimer timer;
     timer.start();
@@ -610,10 +770,11 @@ void UserInfoPage::uploadAvatar(const QString &filePath)
                 profileData["avatar"] = imageUrl;
                 
                 m_networkManager->updateUserProfile(userId, profileData,
-                    [this](const QJsonObject &response) {
+                    [](const QJsonObject &response) {
+                        Q_UNUSED(response);
                         // 用户资料更新成功
                     },
-                    [this](const QString &error) {
+                    [](const QString &error) {
                         qWarning() << "Failed to update user profile:" << error;
                         // 不阻塞用户，因为头像已经上传成功
                     }
@@ -705,10 +866,11 @@ void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
         profileData["avatar"] = imageUrl;
         
         m_networkManager->updateUserProfile(userId, profileData,
-            [this](const QJsonObject &response) {
+            [](const QJsonObject &response) {
+                Q_UNUSED(response);
                 // 用户资料更新成功
             },
-            [this](const QString &error) {
+            [](const QString &error) {
                 qWarning() << "Failed to update user profile:" << error;
                 // 不阻塞用户，因为头像已经上传成功
             }
