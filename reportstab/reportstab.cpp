@@ -256,9 +256,9 @@ void ReportsTab::loadRetentionStats()
             }
             
             if (!retentionKey.isEmpty()) {
-                QString retentionStr = data[retentionKey].toString();
-                retention = retentionStr.toDouble();
-               // LOG_DEBUG() << "留存率(" << retentionKey << "):" << retention;
+                // API返回的是字符串类型，需要先转换为QString，再转换为double
+                retention = data[retentionKey].toString().toDouble();
+                qDebug() << "关键指标留存率(" << retentionKey << "):" << data[retentionKey].toString() << "->" << retention;
             }
             
             m_retentionLabel->setText(QString("留存率: %1%").arg(retention, 0, 'f', 2));
@@ -356,14 +356,21 @@ void ReportsTab::loadTrendAnalysis()
                     // 唯一用户数趋势：使用uniqueUsers字段
                     chartItem["count"] = item["uniqueUsers"].toInt();
                 } else if (metric == "retention") {
-                    // 留存率趋势：优先使用7日留存率，其次使用次日留存率
-                    if (item.contains("day7RetentionRate")) {
-                        chartItem["count"] = static_cast<int>(item["day7RetentionRate"].toString().toDouble());
-                    } else if (item.contains("day1RetentionRate")) {
-                        chartItem["count"] = static_cast<int>(item["day1RetentionRate"].toString().toDouble());
-                    } else {
-                        chartItem["count"] = 0;
+                    // 留存率趋势：优先使用次日留存率，其次使用7日留存率
+                    double retentionValue = 0.0;
+                    if (item.contains("day1RetentionRate")) {
+                        // 先转换为QString，再转换为double，确保字符串类型数值能正确转换
+                        retentionValue = item["day1RetentionRate"].toString().toDouble();
+                        qDebug() << "提取day1RetentionRate:" << item["day1RetentionRate"].toString() << "->" << retentionValue;
+                    } else if (item.contains("day7RetentionRate")) {
+                        // 先转换为QString，再转换为double，确保字符串类型数值能正确转换
+                        retentionValue = item["day7RetentionRate"].toString().toDouble();
+                        qDebug() << "提取day7RetentionRate:" << item["day7RetentionRate"].toString() << "->" << retentionValue;
                     }
+                    // 保留小数精度，乘以100转换为百分比数值用于图表显示
+                    // 直接赋值，QJsonObject会自动将double转换为QJsonValue::Double类型
+                    chartItem["count"] = retentionValue;
+                    qDebug() << "存储到chartItem[\"count\"]:" << retentionValue << "类型:" << chartItem["count"].type();
                 } else if (metric == "performance") {
                     // 性能指标趋势：使用avgDuration字段
                     chartItem["count"] = static_cast<int>(item["avgDuration"].toString().toDouble());
@@ -577,7 +584,14 @@ void ReportsTab::renderTrendChart(const QJsonArray &trendData, const QString &ti
     for (const QJsonValue &value : trendData) {
         QJsonObject item = value.toObject();
         QString timeBucket = item["time_bucket"].toString();
-        int count = item["count"].toInt();
+        
+        // 检查count字段的类型
+        QJsonValue countValue = item["count"];
+        double count = countValue.toDouble();
+        qDebug() << "renderTrendChart - timeBucket:" << timeBucket 
+                 << "count值:" << count 
+                 << "count类型:" << countValue.type()
+                 << "count是否为Double:" << (countValue.type() == QJsonValue::Double);
         
         xAxisData += QString("'%1',").arg(timeBucket.left(10)); // 只取日期部分
         seriesData += QString("%1,").arg(count);
