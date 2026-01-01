@@ -9,6 +9,7 @@
 #include <QStatusBar>
 #include <QGridLayout>
 #include <QPushButton>
+#include <QComboBox>
 #include <QGraphicsDropShadowEffect>
 #include "echarts/echartstab.h"
 #include "echarts/logstatstab.h"
@@ -16,6 +17,7 @@
 #include "reportstab/reportstab.h"
 #include "loginpage.h"
 #include "changepasswordpage.h"
+#include "styles/theme_manager.h"
 
 class MainUIWindow : public QWidget
 {
@@ -32,34 +34,46 @@ private slots:
     void onLogoutClicked();
     void updateUserInfo();
     void updateUserInfoSafe();
+    void applyTheme();
 
 private:
     void setupUI(QWidget *parent = nullptr);
+    void setupNavigationBar();
     void setupMainMenu();
+    void setupSubMenu();
     void setupSubMenu(const QString &mainMenu);
+    void setupSubMenuContent(const QString &mainMenu);
     void setupContent();
+    void setupStatusBar();
     QPixmap createCircularPixmap(const QPixmap &pixmap, int size);
     void setDefaultAvatar();
     void loadNetworkAvatar(const QString &avatarUrl);
 
     QGridLayout *mainLayout;
-    QLabel *titleLabel;
+    
+    // 导航栏组件
+    QWidget *navigationBar;
     QLabel *avatarLabel;
     QLabel *usernameLabel;
     QPushButton *logoutButton;
+    QComboBox *themeComboBox;
+    
+    // 菜单组件
     QListWidget *mainMenuList;
     QListWidget *subMenuList;
-    QStackedWidget *contentStack;
-    QStatusBar *statusBar;
-    LoginPage *loginPage;
-    QStackedWidget *mainStack;
     
-    // 状态栏元素
+    // 内容区域
+    QStackedWidget *contentStack;
+    
+    // 状态栏组件
+    QWidget *statusBar;
     QLabel *statusIndicator;
     QLabel *statusText;
-    QLabel *networkStatus;
-    QLabel *timeLabel;
     QLabel *statusMessage;
+    
+    // 其他组件
+    LoginPage *loginPage;
+    QStackedWidget *mainStack;
 };
 
 #endif // MAINUIWINDOW_H

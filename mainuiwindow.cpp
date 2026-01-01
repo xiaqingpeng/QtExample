@@ -13,6 +13,7 @@
 #include "loginpage.h"
 #include "changepasswordpage.h"
 #include "userinfopage.h"
+#include "styles/theme_manager.h"
 #include <QFont>
 #include <QListWidgetItem>
 #include <QScrollArea>
@@ -72,115 +73,25 @@ void MainUIWindow::setupUI(QWidget *parent)
         }
         mainLayout = new QGridLayout();
         
-        // 1. 创建简单的标题栏
-        QWidget *titleBarWidget = new QWidget();
-        titleBarWidget->setFixedHeight(60);
-        titleBarWidget->setStyleSheet("background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;");
+        // 1. 创建现代化的导航栏
+        setupNavigationBar();
+        mainLayout->addWidget(navigationBar, 0, 0, 1, 3);
         
-        QHBoxLayout *titleBarLayout = new QHBoxLayout(titleBarWidget);
-        titleBarLayout->setContentsMargins(20, 10, 20, 10);
-        
-        // 用户头像（简化版）
-        avatarLabel = new QLabel();
-        avatarLabel->setFixedSize(40, 40);
-        avatarLabel->setAlignment(Qt::AlignCenter);
-        avatarLabel->setStyleSheet(
-            "QLabel { "
-            "    background-color: #e2e8f0; "
-            "    border-radius: 20px; "
-            "    border: 2px solid #ffffff; "
-            "}"
-        );
-        
-        // 用户名
-        usernameLabel = new QLabel("未登录");
-        usernameLabel->setStyleSheet("font-size: 16px; font-weight: 600; color: #1e293b; padding: 0 15px;");
-        
-        // 登出按钮（简化版）
-        logoutButton = new QPushButton("登出");
-        logoutButton->setStyleSheet(
-            "QPushButton { "
-            "    background-color: #f1f5f9; "
-            "    color: #475569; "
-            "    border: 1px solid #cbd5e1; "
-            "    padding: 8px 16px; "
-            "    border-radius: 6px; "
-            "    font-size: 14px; "
-            "}"
-            "QPushButton:hover { "
-            "    background-color: #e2e8f0; "
-            "}"
-        );
-        connect(logoutButton, &QPushButton::clicked, this, &MainUIWindow::onLogoutClicked);
-        
-        titleBarLayout->addWidget(avatarLabel);
-        titleBarLayout->addWidget(usernameLabel);
-        titleBarLayout->addStretch();
-        titleBarLayout->addWidget(logoutButton);
-        
-        mainLayout->addWidget(titleBarWidget, 0, 0, 1, 3);
-        
-        // 2. 创建简单的一级菜单
+        // 2. 创建一级菜单
         setupMainMenu();
         mainLayout->addWidget(mainMenuList, 1, 0);
         
-        // 3. 创建简单的二级菜单
-        subMenuList = new QListWidget();
-        subMenuList->setMaximumWidth(200);
-        subMenuList->setStyleSheet(
-            "QListWidget { "
-            "    background-color: #ffffff; "
-            "    border: none; "
-            "    border-right: 1px solid #e2e8f0; "
-            "    padding: 10px; "
-            "} "
-            "QListWidget::item { "
-            "    padding: 10px 15px; "
-            "    margin: 2px 0; "
-            "    border-radius: 6px; "
-            "    color: #64748b; "
-            "} "
-            "QListWidget::item:hover { "
-            "    background-color: #f1f5f9; "
-            "    color: #475569; "
-            "} "
-            "QListWidget::item:selected { "
-            "    background-color: #dbeafe; "
-            "    color: #1e40af; "
-            "    font-weight: 600; "
-            "}"
-        );
-        connect(subMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onSubMenuClicked);
+        // 3. 创建二级菜单
+        setupSubMenu();
         mainLayout->addWidget(subMenuList, 1, 1);
         
         // 4. 创建内容区域
         setupContent();
         mainLayout->addWidget(contentStack, 1, 2);
         
-        // 5. 创建简单的状态栏
-        QWidget *statusBarWidget = new QWidget();
-        statusBarWidget->setFixedHeight(30);
-        statusBarWidget->setStyleSheet("background-color: #f8fafc; border-top: 1px solid #e2e8f0;");
-        
-        QHBoxLayout *statusBarLayout = new QHBoxLayout(statusBarWidget);
-        statusBarLayout->setContentsMargins(15, 5, 15, 5);
-        
-        statusIndicator = new QLabel();
-        statusIndicator->setFixedSize(8, 8);
-        statusIndicator->setStyleSheet("background-color: #10b981; border-radius: 4px;");
-        
-        statusText = new QLabel("离线");
-        statusText->setStyleSheet("font-size: 12px; color: #64748b;");
-        
-        statusMessage = new QLabel("就绪");
-        statusMessage->setStyleSheet("font-size: 12px; color: #64748b;");
-        
-        statusBarLayout->addWidget(statusIndicator);
-        statusBarLayout->addWidget(statusText);
-        statusBarLayout->addStretch();
-        statusBarLayout->addWidget(statusMessage);
-        
-        mainLayout->addWidget(statusBarWidget, 2, 0, 1, 3);
+        // 5. 创建状态栏
+        setupStatusBar();
+        mainLayout->addWidget(statusBar, 2, 0, 1, 3);
         
         // 设置布局比例
         mainLayout->setColumnStretch(0, 1);  // 一级菜单
@@ -196,10 +107,17 @@ void MainUIWindow::setupUI(QWidget *parent)
             parent->setLayout(mainLayout);
         }
         
+        // 应用主题
+        applyTheme();
+        
+        // 连接主题变化信号
+        connect(ThemeManager::instance(), &ThemeManager::themeChanged,
+                this, &MainUIWindow::applyTheme);
+        
         // 初始化菜单
         if (mainMenuList && mainMenuList->count() > 0) {
             mainMenuList->setCurrentRow(0);
-            setupSubMenu(mainMenuList->currentItem()->text());
+            setupSubMenuContent(mainMenuList->currentItem()->text());
         }
         
         qDebug() << "setupUI completed successfully";
@@ -211,42 +129,74 @@ void MainUIWindow::setupUI(QWidget *parent)
     }
 }
 
+void MainUIWindow::setupNavigationBar()
+{
+    navigationBar = new QWidget();
+    navigationBar->setObjectName("navigationBar");
+    navigationBar->setFixedHeight(70);
+    
+    QHBoxLayout *navLayout = new QHBoxLayout(navigationBar);
+    navLayout->setContentsMargins(24, 12, 24, 12);
+    navLayout->setSpacing(16);
+    
+    // 应用标题
+    QLabel *appTitle = new QLabel("Qt 现代化应用");
+    appTitle->setStyleSheet(QString(
+        "QLabel { "
+        "    font-family: %1; "
+        "    font-size: %2px; "
+        "    font-weight: 700; "
+        "    color: %3; "
+        "}"
+    ).arg(ThemeManager::Typography::FONT_FAMILY)
+     .arg(ThemeManager::Typography::FONT_SIZE_XL)
+     .arg(ThemeManager::instance()->colors().TEXT_PRIMARY));
+    
+    navLayout->addWidget(appTitle);
+    navLayout->addStretch();
+    
+    // 主题切换器
+    themeComboBox = new QComboBox();
+    themeComboBox->addItem("浅色主题", static_cast<int>(ThemeManager::LIGHT));
+    themeComboBox->addItem("深色主题", static_cast<int>(ThemeManager::DARK));
+    themeComboBox->addItem("蓝色主题", static_cast<int>(ThemeManager::BLUE));
+    themeComboBox->addItem("绿色主题", static_cast<int>(ThemeManager::GREEN));
+    
+    // 设置当前主题
+    themeComboBox->setCurrentIndex(static_cast<int>(ThemeManager::instance()->getCurrentTheme()));
+    
+    connect(themeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            [](int index) {
+                ThemeManager::instance()->setTheme(static_cast<ThemeManager::ThemeType>(index));
+            });
+    
+    navLayout->addWidget(themeComboBox);
+    
+    // 用户头像
+    avatarLabel = new QLabel();
+    avatarLabel->setObjectName("avatarLabel");
+    avatarLabel->setFixedSize(44, 44);
+    avatarLabel->setAlignment(Qt::AlignCenter);
+    
+    navLayout->addWidget(avatarLabel);
+    
+    // 用户名
+    usernameLabel = new QLabel("未登录");
+    usernameLabel->setObjectName("usernameLabel");
+    
+    navLayout->addWidget(usernameLabel);
+    
+    // 登出按钮
+    logoutButton = new QPushButton("登出");
+    connect(logoutButton, &QPushButton::clicked, this, &MainUIWindow::onLogoutClicked);
+    
+    navLayout->addWidget(logoutButton);
+}
+
 void MainUIWindow::setupMainMenu()
 {
     mainMenuList = new QListWidget();
-    mainMenuList->setMaximumWidth(200);
-    mainMenuList->setStyleSheet(
-        "QListWidget { "
-        "    border: none; "
-        "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
-        "    stop:0 #f8fafc, stop:1 #e2e8f0); "
-        "    padding: 16px 8px; "
-        "    border-right: 1px solid #e2e8f0; "
-        "} "
-        "QListWidget::item { "
-        "    padding: 16px 20px; "
-        "    margin: 2px 0; "
-        "    color: #475569; "
-        "    border-radius: 12px; "
-        "    font-size: 15px; "
-        "    font-weight: 500; "
-        "    background-color: transparent; "
-        "    border: 1px solid transparent; "
-        "} "
-        "QListWidget::item:hover { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 #f1f5f9, stop:1 #e2e8f0); "
-        "    color: #334155; "
-        "    border: 1px solid #cbd5e1; "
-        "} "
-        "QListWidget::item:selected { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 #3b82f6, stop:1 #1d4ed8); "
-        "    color: white; "
-        "    font-weight: 600; "
-        "    border: 1px solid #2563eb; "
-        "}"
-    );
+    mainMenuList->setMaximumWidth(220);
 
     // 添加一级菜单项（移除emoji图标避免崩溃）
     QListWidgetItem *item1 = new QListWidgetItem("控件示例");
@@ -275,9 +225,125 @@ void MainUIWindow::setupMainMenu()
 
     connect(mainMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onMainMenuClicked);
 
-    // 默认选择第一个一级菜单，但不立即触发二级菜单设置
+    // 默认选择第一个一级菜单
     mainMenuList->setCurrentRow(0);
-    // 注意：setupSubMenu将在setupUI函数末尾调用，确保contentStack已初始化
+}
+
+void MainUIWindow::setupSubMenu()
+{
+    subMenuList = new QListWidget();
+    subMenuList->setMaximumWidth(220);
+    connect(subMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onSubMenuClicked);
+}
+
+void MainUIWindow::setupSubMenuContent(const QString &mainMenu)
+{
+    subMenuList->clear();
+
+    if (mainMenu.contains("控件示例")) {
+        new QListWidgetItem("基本控件", subMenuList);
+        new QListWidgetItem("高级控件", subMenuList);
+        new QListWidgetItem("数据显示", subMenuList);
+    } else if (mainMenu.contains("布局示例")) {
+        new QListWidgetItem("布局示例1", subMenuList);
+        new QListWidgetItem("布局示例2", subMenuList);
+        new QListWidgetItem("布局示例3", subMenuList);
+    } else if (mainMenu.contains("对话框示例")) {
+        new QListWidgetItem("对话框", subMenuList);
+    } else if (mainMenu.contains("图表示例")) {
+        new QListWidgetItem("ECharts示例", subMenuList);
+        new QListWidgetItem("日志统计", subMenuList);
+    } else if (mainMenu.contains("数据分析")) {
+        new QListWidgetItem("用户画像", subMenuList);
+        new QListWidgetItem("统计报表", subMenuList);
+    } else if (mainMenu.contains("个人中心")) {
+        new QListWidgetItem("用户信息", subMenuList);
+        new QListWidgetItem("修改密码", subMenuList);
+    }
+
+    // 默认选择第一个二级菜单
+    if (subMenuList->count() > 0) {
+        subMenuList->setCurrentRow(0);
+        // 触发二级菜单点击事件，显示对应的内容
+        onSubMenuClicked(subMenuList->currentItem());
+    }
+}
+
+void MainUIWindow::setupStatusBar()
+{
+    statusBar = new QWidget();
+    statusBar->setObjectName("statusBar");
+    statusBar->setFixedHeight(32);
+    
+    QHBoxLayout *statusLayout = new QHBoxLayout(statusBar);
+    statusLayout->setContentsMargins(20, 6, 20, 6);
+    statusLayout->setSpacing(12);
+    
+    statusIndicator = new QLabel();
+    statusIndicator->setObjectName("statusIndicator");
+    statusIndicator->setFixedSize(8, 8);
+    statusIndicator->setStyleSheet("background-color: #10b981; border-radius: 4px;");
+    
+    statusText = new QLabel("离线");
+    statusText->setObjectName("statusText");
+    
+    statusMessage = new QLabel("就绪");
+    statusMessage->setObjectName("statusMessage");
+    
+    statusLayout->addWidget(statusIndicator);
+    statusLayout->addWidget(statusText);
+    statusLayout->addStretch();
+    statusLayout->addWidget(statusMessage);
+}
+
+void MainUIWindow::applyTheme()
+{
+    ThemeManager *theme = ThemeManager::instance();
+    
+    // 应用整体背景
+    this->setStyleSheet(QString(
+        "QWidget { "
+        "    background-color: %1; "
+        "    color: %2; "
+        "    font-family: %3; "
+        "}"
+    ).arg(theme->colors().BACKGROUND)
+     .arg(theme->colors().TEXT_PRIMARY)
+     .arg(ThemeManager::Typography::FONT_FAMILY));
+    
+    // 应用导航栏样式
+    if (navigationBar) {
+        navigationBar->setStyleSheet(theme->getNavigationStyle());
+    }
+    
+    // 应用主题切换器样式
+    if (themeComboBox) {
+        themeComboBox->setStyleSheet(theme->getThemeSwitcherStyle());
+    }
+    
+    // 应用按钮样式
+    if (logoutButton) {
+        logoutButton->setStyleSheet(theme->getButtonStyle("secondary"));
+    }
+    
+    // 应用菜单样式
+    if (mainMenuList) {
+        mainMenuList->setStyleSheet(theme->getMenuStyle());
+    }
+    
+    if (subMenuList) {
+        subMenuList->setStyleSheet(theme->getListStyle());
+    }
+    
+    // 应用状态栏样式
+    if (statusBar) {
+        statusBar->setStyleSheet(theme->getStatusBarStyle());
+    }
+    
+    // 应用内容区域样式
+    if (contentStack) {
+        contentStack->setStyleSheet(theme->getScrollBarStyle());
+    }
 }
 
 void MainUIWindow::setupSubMenu(const QString &mainMenu)
@@ -335,7 +401,7 @@ void MainUIWindow::onMainMenuClicked(QListWidgetItem *item)
         {"menu_name", mainMenu}
     });
     
-    setupSubMenu(mainMenu);
+    setupSubMenuContent(mainMenu);
 }
 
 void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
@@ -689,7 +755,7 @@ void MainUIWindow::loadNetworkAvatar(const QString &avatarUrl)
         
         // 创建网络请求
         QUrl url(avatarUrl);
-        QNetworkRequest request(url);
+        QNetworkRequest request{url};
         request.setRawHeader("User-Agent", "Qt Application");
         request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
         

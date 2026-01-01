@@ -775,7 +775,7 @@ void UserInfoPage::uploadAvatar(const QString &filePath)
                         // 用户资料更新成功
                     },
                     [](const QString &error) {
-                        qWarning() << "Failed to update user profile:" << error;
+                        Q_UNUSED(error);
                         // 不阻塞用户，因为头像已经上传成功
                     }
                 );
@@ -871,7 +871,7 @@ void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
                 // 用户资料更新成功
             },
             [](const QString &error) {
-                qWarning() << "Failed to update user profile:" << error;
+                Q_UNUSED(error);
                 // 不阻塞用户，因为头像已经上传成功
             }
         );

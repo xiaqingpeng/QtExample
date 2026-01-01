@@ -188,6 +188,20 @@ add_subdirectory(userinfo)
 # Analytics埋点SDK模块
 add_subdirectory(analytics)
 
+# Styles主题管理模块
+qt_add_library(Styles STATIC
+    styles/theme_manager.cpp
+    styles/theme_manager.h
+)
+target_link_libraries(Styles PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+)
+target_include_directories(Styles PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 # 添加依赖关系，确保 NetworkManager 先于依赖它的模块构建
 add_dependencies(ChangePasswordPage NetworkManager)
 add_dependencies(LoginPage NetworkManager)
@@ -250,6 +264,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ChangePasswordPage
     UserInfo
     Analytics
+    Styles
 )
 
 # 包含模块头文件目录
@@ -269,6 +284,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/changepasswordpage
     ${CMAKE_CURRENT_SOURCE_DIR}/userinfo
     ${CMAKE_CURRENT_SOURCE_DIR}/analytics
+    ${CMAKE_CURRENT_SOURCE_DIR}/styles
 )
 
 # 安装规则
@@ -279,7 +295,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # 安装模块库
-install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts UserProfileTab ReportsTab LoginPage ChangePasswordPage UserInfo
+install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts UserProfileTab ReportsTab LoginPage ChangePasswordPage UserInfo Analytics Styles
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

@@ -48,6 +48,7 @@ LIBS += -L$$OUT_PWD/../layoutexamples2 -llayoutexamplestab2
 LIBS += -L$$OUT_PWD/../layoutexamples3 -llayoutexamplestab3
 LIBS += -L$$OUT_PWD/../reportstab -lreportstab
 LIBS += -L$$OUT_PWD/../userprofiletab -luserprofiletab
+LIBS += -L$$OUT_PWD/../styles -lstyles
 
 # 包含模块头文件路径
 INCLUDEPATH += ../loginpage
@@ -65,6 +66,7 @@ INCLUDEPATH += ../layoutexamples2
 INCLUDEPATH += ../layoutexamples3
 INCLUDEPATH += ../reportstab
 INCLUDEPATH += ../userprofiletab
+INCLUDEPATH += ../styles
 
 # 包含资源文件
 RESOURCES += ../layoutexamplestab.qrc
