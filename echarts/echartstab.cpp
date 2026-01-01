@@ -328,9 +328,10 @@ EChartsTab::EChartsTab(QWidget *parent)
     connect(m_chartTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), 
             this, &EChartsTab::onChartTypeChanged);
     
+    // 已取消定时器功能，不再自动刷新数据
     // 创建定时器（但不启动，等待首次手动获取数据后才启动）
-    m_apiTimer = new QTimer(this);
-    connect(m_apiTimer, &QTimer::timeout, this, &EChartsTab::fetchApiData);
+    // m_apiTimer = new QTimer(this);
+    // connect(m_apiTimer, &QTimer::timeout, this, &EChartsTab::fetchApiData);
     
     // 初始化默认选择"今天"
     onTimeShortcutClicked(0);
@@ -530,10 +531,11 @@ void EChartsTab::fetchApiData()
         {"page", "echarts_page"}
     });
     
+    // 已取消定时器自动刷新功能，只在手动操作时获取数据
     // 首次获取数据后启动定时器（每30秒自动刷新）
-    if (!m_apiTimer->isActive()) {
-        m_apiTimer->start(30000); // 30秒
-    }
+    // if (!m_apiTimer->isActive()) {
+    //     m_apiTimer->start(30000); // 30秒
+    // }
     
     // 从下拉框获取筛选条件
     QString method = m_methodCombo->currentData().toString();

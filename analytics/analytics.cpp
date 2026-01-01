@@ -180,6 +180,8 @@ void SDK::trackPerformance(const QString& metricName, qint64 value, const QVaria
     QVariantMap props = properties;
     props["metric_name"] = metricName;
     props["metric_value"] = value;
+    // 添加duration_ms字段，以便后端API能够识别duration字段用于性能指标统计
+    props["duration_ms"] = value;
     track(EventType::PERFORMANCE, "performance_metric", props);
 }
 
