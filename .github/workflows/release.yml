@@ -55,7 +55,7 @@ jobs:
         target: desktop
         arch: ${{ matrix.qt_arch }}
         cache: true
-        modules: 'qtwebengine qtwebchannel qtwebsockets qtpositioning qtnetworkauth'
+        modules: 'qtwebengine qtwebchannel'
 
     - name: Install system dependencies (Linux)
       if: matrix.os == 'ubuntu-latest'
