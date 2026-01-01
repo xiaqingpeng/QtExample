@@ -90,26 +90,31 @@ jobs:
       run: |
         cmake --build build --config ${{ matrix.cmake_config }} --parallel
 
-    - name: Package application
-      id: package
+    - name: Package application (Windows)
+      if: matrix.os == 'windows-latest'
       env:
         ARCHIVE_NAME: example-${{ github.ref_name }}-${{ runner.os }}-qt${{ matrix.qt_version }}
       run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          mkdir -p "$env:ARCHIVE_NAME"
-          cp build/example.exe "$env:ARCHIVE_NAME/"
-          cp build/*.dll "$env:ARCHIVE_NAME/" 2>/dev/null || true
-          cp -r images "$env:ARCHIVE_NAME/"
-          Compress-Archive -Path "$env:ARCHIVE_NAME" -DestinationPath "$env:ARCHIVE_NAME.zip" -Force
-          echo "ASSET_PATH=$env:ARCHIVE_NAME.zip" >> $env:GITHUB_ENV
-        elif [ "$RUNNER_OS" == "macOS" ]; then
-          mkdir -p "$ARCHIVE_NAME"
+        New-Item -ItemType Directory -Path "$env:ARCHIVE_NAME" -Force
+        Copy-Item "build/example.exe" "$env:ARCHIVE_NAME/"
+        Get-ChildItem "build/*.dll" -ErrorAction SilentlyContinue | Copy-Item -Destination "$env:ARCHIVE_NAME/"
+        Copy-Item "images" "$env:ARCHIVE_NAME/" -Recurse -Force
+        Compress-Archive -Path "$env:ARCHIVE_NAME" -DestinationPath "$env:ARCHIVE_NAME.zip" -Force
+        echo "ASSET_PATH=$env:ARCHIVE_NAME.zip" >> $env:GITHUB_ENV
+      shell: pwsh
+
+    - name: Package application (macOS/Linux)
+      if: matrix.os != 'windows-latest'
+      env:
+        ARCHIVE_NAME: example-${{ github.ref_name }}-${{ runner.os }}-qt${{ matrix.qt_version }}
+      run: |
+        mkdir -p "$ARCHIVE_NAME"
+        if [ "$RUNNER_OS" == "macOS" ]; then
           cp -R build/example.app "$ARCHIVE_NAME/"
           cp -r images "$ARCHIVE_NAME/"
           zip -r "$ARCHIVE_NAME.zip" "$ARCHIVE_NAME"
           echo "ASSET_PATH=$ARCHIVE_NAME.zip" >> $GITHUB_ENV
         else
-          mkdir -p "$ARCHIVE_NAME"
           cp build/example "$ARCHIVE_NAME/"
           cp build/*.so* "$ARCHIVE_NAME/" 2>/dev/null || true
           cp -r images "$ARCHIVE_NAME/"
