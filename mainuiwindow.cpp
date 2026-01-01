@@ -27,6 +27,7 @@
 #include <QTimer>
 #include <QDebug>
 #include <QGraphicsDropShadowEffect>
+#include <QPainterPath>
 
 MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
 {
@@ -720,27 +721,37 @@ QPixmap MainUIWindow::createCircularPixmap(const QPixmap &pixmap, int size)
     QPixmap circularPixmap(size, size);
     circularPixmap.fill(Qt::transparent);
     
-    // 缩放原始图片以适应圆形（忽略宽高比，确保大小完全匹配）
-    QPixmap scaledPixmap = pixmap.scaled(size, size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    // 计算缩放比例，确保图片完全填充圆形区域
+    qreal scale = qMax(static_cast<qreal>(size) / pixmap.width(), 
+                       static_cast<qreal>(size) / pixmap.height());
     
-    // 创建圆形遮罩
-    QBitmap mask(size, size);
-    mask.fill(Qt::transparent);
+    // 缩放图片
+    QPixmap scaledPixmap = pixmap.scaled(
+        pixmap.width() * scale, 
+        pixmap.height() * scale, 
+        Qt::KeepAspectRatio, 
+        Qt::SmoothTransformation
+    );
     
-    QPainter painter(&mask);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setBrush(Qt::black);
-    painter.setPen(Qt::NoPen);
-    painter.drawEllipse(0, 0, size, size);
-    painter.end();
+    // 计算居中位置
+    int x = (scaledPixmap.width() - size) / 2;
+    int y = (scaledPixmap.height() - size) / 2;
     
-    // 应用遮罩
-    scaledPixmap.setMask(mask);
+    // 裁剪到指定大小
+    QPixmap croppedPixmap = scaledPixmap.copy(x, y, size, size);
     
-    // 将遮罩后的图片绘制到透明背景上
+    // 创建最终的圆形图片
     QPainter finalPainter(&circularPixmap);
     finalPainter.setRenderHint(QPainter::Antialiasing);
-    finalPainter.drawPixmap(0, 0, scaledPixmap);
+    finalPainter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    
+    // 设置圆形裁剪路径
+    QPainterPath clipPath;
+    clipPath.addEllipse(0, 0, size, size);
+    finalPainter.setClipPath(clipPath);
+    
+    // 绘制图片
+    finalPainter.drawPixmap(0, 0, croppedPixmap);
     finalPainter.end();
     
     return circularPixmap;

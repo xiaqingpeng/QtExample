@@ -19,6 +19,7 @@
 #include <QRadialGradient>
 #include <QGraphicsDropShadowEffect>
 #include <QElapsedTimer>
+#include <QPainterPath>
 
 UserInfoPage::UserInfoPage(QWidget *parent)
     : QWidget(parent)
@@ -52,21 +53,21 @@ void UserInfoPage::setupUI()
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
     
-    // 设置页面渐变背景
+    // 设置页面现代简约背景
     this->setStyleSheet(
         "QWidget { "
-        "    background: qlinearg-gradient(x1:0, y1:0, x2:1, y2:1, "
-        "    stop:0 #667eea, stop:1 #764ba2); "
+        "    background: #f8fafc; "
         "}"
     );
     
-    // 顶部装饰区域
+    // 顶部装饰区域（现代简约设计）
     QWidget *headerWidget = new QWidget();
-    headerWidget->setFixedHeight(200);
+    headerWidget->setFixedHeight(160);
     headerWidget->setStyleSheet(
         "QWidget { "
-        "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
-        "    stop:0 rgba(255,255,255,0.1), stop:1 rgba(255,255,255,0.05)); "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 #3b82f6, stop:1 #1d4ed8); "
+        "    border-bottom: 1px solid #e2e8f0; "
         "}"
     );
     
@@ -78,11 +79,11 @@ void UserInfoPage::setupUI()
     titleLabel->setAlignment(Qt::AlignCenter);
     titleLabel->setStyleSheet(
         "QLabel { "
-        "    font-size: 32px; "
-        "    font-weight: bold; "
+        "    font-size: 28px; "
+        "    font-weight: 600; "
         "    color: white; "
-        "    padding: 40px 0 20px 0; "
-        "    letter-spacing: 2px; "
+        "    padding: 32px 0 12px 0; "
+        "    letter-spacing: 1px; "
         "}"
     );
     headerLayout->addWidget(titleLabel);
@@ -93,8 +94,9 @@ void UserInfoPage::setupUI()
     subtitleLabel->setStyleSheet(
         "QLabel { "
         "    font-size: 14px; "
-        "    color: rgba(255,255,255,0.8); "
-        "    padding: 0 0 20px 0; "
+        "    color: rgba(255,255,255,0.9); "
+        "    padding: 0 0 24px 0; "
+        "    font-weight: 400; "
         "}"
     );
     headerLayout->addWidget(subtitleLabel);
@@ -107,68 +109,84 @@ void UserInfoPage::setupUI()
     contentWidget->setStyleSheet("background-color: transparent;");
     
     QVBoxLayout *contentLayout = new QVBoxLayout(contentWidget);
-    contentLayout->setContentsMargins(40, 0, 40, 40);
+    contentLayout->setContentsMargins(24, 20, 24, 24);
     contentLayout->setSpacing(20);
     
-    // 信息卡片
-    QWidget *infoCard = new QWidget();
-    infoCard->setStyleSheet(
+    // 主信息卡片（现代简约设计）
+    QWidget *mainInfoCard = new QWidget();
+    mainInfoCard->setStyleSheet(
         "QWidget { "
-        "    background-color: white; "
+        "    background-color: #ffffff; "
         "    border-radius: 20px; "
-        "    padding: 30px; "
+        "    border: 1px solid #f1f5f9; "
         "}"
     );
     
-    QVBoxLayout *cardLayout = new QVBoxLayout(infoCard);
-    cardLayout->setSpacing(25);
+    // 添加主卡片阴影
+    QGraphicsDropShadowEffect *mainCardShadow = new QGraphicsDropShadowEffect(this);
+    mainCardShadow->setBlurRadius(24);
+    mainCardShadow->setColor(QColor(0, 0, 0, 6));
+    mainCardShadow->setOffset(0, 8);
+    mainInfoCard->setGraphicsEffect(mainCardShadow);
     
-    // 头像容器（带渐变边框和阴影）
+    QVBoxLayout *mainCardLayout = new QVBoxLayout(mainInfoCard);
+    mainCardLayout->setContentsMargins(40, 40, 40, 40);
+    mainCardLayout->setSpacing(32);
+    
+    // 头像和基本信息区域
+    QWidget *profileSection = new QWidget();
+    profileSection->setStyleSheet("background-color: transparent;");
+    QVBoxLayout *profileLayout = new QVBoxLayout(profileSection);
+    profileLayout->setSpacing(20);
+    
+    // 头像容器（现代简约设计）
     QWidget *avatarContainer = new QWidget();
     avatarContainer->setFixedSize(160, 160);
     avatarContainer->setStyleSheet(
         "QWidget { "
         "    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, "
-        "    stop:0 #667eea, stop:1 #764ba2); "
+        "    stop:0 #3b82f6, stop:1 #1d4ed8); "
         "    border-radius: 80px; "
         "}"
     );
     
     QVBoxLayout *avatarLayout = new QVBoxLayout(avatarContainer);
-    avatarLayout->setContentsMargins(5, 5, 5, 5);
+    avatarLayout->setContentsMargins(4, 4, 4, 4);
     
     m_avatarLabel = new QLabel();
     m_avatarLabel->setAlignment(Qt::AlignCenter);
-    m_avatarLabel->setFixedSize(150, 150);
-    // QQ风格头像：白色边框 + 阴影效果
+    m_avatarLabel->setFixedSize(152, 152);
+    // 现代简约头像样式
     m_avatarLabel->setStyleSheet(
         "QLabel { "
-        "    background-color: white; "
-        "    border-radius: 75px; "
-        "    border: 4px solid white; "
+        "    background-color: #f8fafc; "
+        "    border-radius: 76px; "
+        "    border: 3px solid #ffffff; "
         "}"
     );
-    // 添加阴影效果
+    
+    // 添加微妙阴影效果
     QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(this);
-    shadowEffect->setBlurRadius(15);
-    shadowEffect->setColor(QColor(0, 0, 0, 80));
+    shadowEffect->setBlurRadius(16);
+    shadowEffect->setColor(QColor(0, 0, 0, 12));
     shadowEffect->setOffset(0, 4);
     m_avatarLabel->setGraphicsEffect(shadowEffect);
     
-    // QQ风格在线状态指示器
+    // 在线状态指示器（现代设计）
     QLabel *onlineIndicator = new QLabel();
     onlineIndicator->setFixedSize(24, 24);
     onlineIndicator->setStyleSheet(
         "QLabel { "
-        "    background-color: #12B7F5; "
+        "    background-color: #10b981; "
         "    border-radius: 12px; "
-        "    border: 3px solid white; "
+        "    border: 4px solid white; "
         "}"
     );
-    // 添加阴影效果
+    
+    // 添加指示器阴影
     QGraphicsDropShadowEffect *indicatorShadow = new QGraphicsDropShadowEffect(this);
     indicatorShadow->setBlurRadius(8);
-    indicatorShadow->setColor(QColor(0, 0, 0, 60));
+    indicatorShadow->setColor(QColor(0, 0, 0, 20));
     indicatorShadow->setOffset(0, 2);
     onlineIndicator->setGraphicsEffect(indicatorShadow);
     
@@ -176,117 +194,131 @@ void UserInfoPage::setupUI()
     onlineIndicator->setParent(avatarContainer);
     onlineIndicator->move(132, 132);
     
-    // 设置默认头像（使用更美观的渐变和用户图标）
-    QPixmap defaultAvatar(142, 142);
+    // 设置默认头像（现代简约风格）
+    QPixmap defaultAvatar(146, 146);
     defaultAvatar.fill(Qt::transparent);
     QPainter painter(&defaultAvatar);
     painter.setRenderHint(QPainter::Antialiasing);
     
-    // 创建圆形渐变背景
-    QRadialGradient gradient(71, 71, 71);
-    gradient.setColorAt(0, QColor("#f8f9fa"));
-    gradient.setColorAt(1, QColor("#e9ecef"));
+    // 创建现代简约的渐变背景
+    QRadialGradient gradient(73, 73, 73);
+    gradient.setColorAt(0, QColor("#f1f5f9"));
+    gradient.setColorAt(1, QColor("#e2e8f0"));
     painter.setBrush(QBrush(gradient));
     painter.setPen(Qt::NoPen);
-    painter.drawEllipse(0, 0, 142, 142);
+    painter.drawEllipse(0, 0, 146, 146);
     
-    // 绘制用户图标
-    painter.setBrush(QBrush(QColor("#adb5bd")));
-    painter.drawEllipse(42, 36, 58, 58); // 头部
-    painter.drawEllipse(20, 101, 102, 58); // 身体
+    // 绘制现代用户图标
+    painter.setBrush(QBrush(QColor("#94a3b8")));
+    painter.drawEllipse(44, 38, 58, 58); // 头部
+    painter.drawEllipse(22, 102, 102, 58); // 身体
     
     m_avatarLabel->setPixmap(defaultAvatar);
     
     avatarLayout->addWidget(m_avatarLabel, 0, Qt::AlignCenter);
-    cardLayout->addWidget(avatarContainer, 0, Qt::AlignCenter);
+    profileLayout->addWidget(avatarContainer, 0, Qt::AlignCenter);
     
-    // 上传头像按钮
-    m_uploadAvatarButton = new QPushButton("更换头像");
-    m_uploadAvatarButton->setStyleSheet(
-        "QPushButton { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 #667eea, stop:1 #764ba2); "
-        "    color: white; "
-        "    border: none; "
-        "    padding: 10px 30px; "
-        "    border-radius: 20px; "
-        "    font-size: 14px; "
-        "    font-weight: bold; "
-        "}"
-        "QPushButton:hover { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 #5568d3, stop:1 #653a8a); "
-        "}"
-        "QPushButton:pressed { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 #4457c2, stop:1 #542978); "
-        "}"
-    );
-    connect(m_uploadAvatarButton, &QPushButton::clicked, this, &UserInfoPage::onUploadAvatarClicked);
-    cardLayout->addWidget(m_uploadAvatarButton, 0, Qt::AlignCenter);
-    
-    // 用户名
+    // 用户名（现代简约风格）
     m_usernameLabel = new QLabel("加载中...");
     m_usernameLabel->setAlignment(Qt::AlignCenter);
     m_usernameLabel->setStyleSheet(
         "QLabel { "
         "    font-size: 28px; "
-        "    font-weight: bold; "
-        "    color: #2c3e50; "
-        "    padding: 10px; "
+        "    font-weight: 700; "
+        "    color: #1e293b; "
+        "    padding: 8px; "
+        "    letter-spacing: 0.5px; "
         "}"
     );
-    cardLayout->addWidget(m_usernameLabel);
+    profileLayout->addWidget(m_usernameLabel);
     
-    // 装饰分隔线
+    // 上传头像按钮（现代简约设计）
+    m_uploadAvatarButton = new QPushButton("更换头像");
+    m_uploadAvatarButton->setStyleSheet(
+        "QPushButton { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 #3b82f6, stop:1 #1d4ed8); "
+        "    color: white; "
+        "    border: none; "
+        "    padding: 14px 36px; "
+        "    border-radius: 10px; "
+        "    font-size: 14px; "
+        "    font-weight: 600; "
+        "    letter-spacing: 0.3px; "
+        "}"
+        "QPushButton:hover { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 #2563eb, stop:1 #1e40af); "
+        "    transform: translateY(-2px); "
+        "}"
+        "QPushButton:pressed { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 #1d4ed8, stop:1 #1e3a8a); "
+        "    transform: translateY(0px); "
+        "}"
+    );
+    connect(m_uploadAvatarButton, &QPushButton::clicked, this, &UserInfoPage::onUploadAvatarClicked);
+    profileLayout->addWidget(m_uploadAvatarButton, 0, Qt::AlignCenter);
+    
+    mainCardLayout->addWidget(profileSection);
+    
+    // 装饰分隔线（现代简约设计）
     QFrame *line = new QFrame();
     line->setFrameShape(QFrame::HLine);
     line->setFrameShadow(QFrame::Sunken);
-    line->setFixedHeight(2);
+    line->setFixedHeight(1);
     line->setStyleSheet(
         "QFrame { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 #667eea, stop:1 #764ba2); "
-        "    border-radius: 1px; "
+        "    background-color: #f1f5f9; "
+        "    border: none; "
+        "    margin: 0 20px; "
         "}"
     );
-    cardLayout->addWidget(line);
+    mainCardLayout->addWidget(line);
+    
+    // 详细信息区域
+    QWidget *detailsSection = new QWidget();
+    detailsSection->setStyleSheet("background-color: transparent;");
+    QVBoxLayout *detailsLayout = new QVBoxLayout(detailsSection);
+    detailsLayout->setSpacing(16);
     
     // 信息项容器
     QWidget *infoItemsWidget = new QWidget();
-    QVBoxLayout *infoItemsLayout = new QVBoxLayout(infoItemsWidget);
-    infoItemsLayout->setSpacing(15);
+    QGridLayout *infoItemsLayout = new QGridLayout(infoItemsWidget);
+    infoItemsLayout->setSpacing(16);
+    infoItemsLayout->setContentsMargins(0, 0, 0, 0);
     
     // 用户ID
     QWidget *idWidget = createInfoItem("用户ID", "加载中...");
     m_idLabel = idWidget->findChild<QLabel*>("valueLabel");
-    infoItemsLayout->addWidget(idWidget);
+    infoItemsLayout->addWidget(idWidget, 0, 0);
     
     // 邮箱
     QWidget *emailWidget = createInfoItem("邮箱", "加载中...");
     m_emailLabel = emailWidget->findChild<QLabel*>("valueLabel");
-    infoItemsLayout->addWidget(emailWidget);
+    infoItemsLayout->addWidget(emailWidget, 0, 1);
     
-    // 创建时间
+    // 注册时间
     QWidget *timeWidget = createInfoItem("注册时间", "加载中...");
     m_createTimeLabel = timeWidget->findChild<QLabel*>("valueLabel");
-    infoItemsLayout->addWidget(timeWidget);
+    infoItemsLayout->addWidget(timeWidget, 1, 0);
     
     // 用户状态
     QWidget *statusWidget = createInfoItem("账户状态", "正常");
     m_statusLabel = statusWidget->findChild<QLabel*>("valueLabel");
     m_statusLabel->setStyleSheet(
         "QLabel { "
-        "    font-size: 15px; "
-        "    color: #28a745; "
-        "    font-weight: bold; "
+        "    font-size: 14px; "
+        "    color: #10b981; "
+        "    font-weight: 600; "
         "}"
     );
-    infoItemsLayout->addWidget(statusWidget);
+    infoItemsLayout->addWidget(statusWidget, 1, 1);
     
-    cardLayout->addWidget(infoItemsWidget);
-    cardLayout->addStretch();
-    contentLayout->addWidget(infoCard);
+    detailsLayout->addWidget(infoItemsWidget);
+    mainCardLayout->addWidget(detailsSection);
+    
+    contentLayout->addWidget(mainInfoCard);
     contentLayout->addStretch();
     mainLayout->addWidget(contentWidget);
 }
@@ -338,8 +370,8 @@ void UserInfoPage::loadUserInfo()
                 QByteArray imageData = reply->readAll();
                 QPixmap pixmap;
                 if (pixmap.loadFromData(imageData)) {
-                    // 创建圆形头像（142px大小以匹配头像标签尺寸）
-                    QPixmap circularAvatar = createCircularPixmap(pixmap, 142);
+                    // 创建圆形头像（152px大小以匹配头像标签尺寸）
+                    QPixmap circularAvatar = createCircularPixmap(pixmap, 152);
                     m_avatarLabel->setPixmap(circularAvatar);
                 }
             }
@@ -359,27 +391,37 @@ QPixmap UserInfoPage::createCircularPixmap(const QPixmap &pixmap, int size)
     QPixmap circularPixmap(size, size);
     circularPixmap.fill(Qt::transparent);
     
-    // 缩放原始图片以适应圆形
-    QPixmap scaledPixmap = pixmap.scaled(size, size, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    // 计算缩放比例，确保图片完全填充圆形区域
+    qreal scale = qMax(static_cast<qreal>(size) / pixmap.width(), 
+                       static_cast<qreal>(size) / pixmap.height());
     
-    // 创建圆形遮罩
-    QBitmap mask(size, size);
-    mask.fill(Qt::transparent);
+    // 缩放图片
+    QPixmap scaledPixmap = pixmap.scaled(
+        pixmap.width() * scale, 
+        pixmap.height() * scale, 
+        Qt::KeepAspectRatio, 
+        Qt::SmoothTransformation
+    );
     
-    QPainter painter(&mask);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setBrush(Qt::black);
-    painter.setPen(Qt::NoPen);
-    painter.drawEllipse(0, 0, size, size);
-    painter.end();
+    // 计算居中位置
+    int x = (scaledPixmap.width() - size) / 2;
+    int y = (scaledPixmap.height() - size) / 2;
     
-    // 应用遮罩
-    scaledPixmap.setMask(mask);
+    // 裁剪到指定大小
+    QPixmap croppedPixmap = scaledPixmap.copy(x, y, size, size);
     
-    // 将遮罩后的图片绘制到透明背景上
+    // 创建最终的圆形图片
     QPainter finalPainter(&circularPixmap);
     finalPainter.setRenderHint(QPainter::Antialiasing);
-    finalPainter.drawPixmap(0, 0, scaledPixmap);
+    finalPainter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    
+    // 设置圆形裁剪路径
+    QPainterPath clipPath;
+    clipPath.addEllipse(0, 0, size, size);
+    finalPainter.setClipPath(clipPath);
+    
+    // 绘制图片
+    finalPainter.drawPixmap(0, 0, croppedPixmap);
     finalPainter.end();
     
     return circularPixmap;
@@ -388,26 +430,39 @@ QPixmap UserInfoPage::createCircularPixmap(const QPixmap &pixmap, int size)
 QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value)
 {
     QWidget *widget = new QWidget();
+    widget->setFixedHeight(100);
     widget->setStyleSheet(
         "QWidget { "
-        "    background-color: #ffffff; "
+        "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
+        "    stop:0 #ffffff, stop:1 #f8fafc); "
         "    border-radius: 12px; "
-        "    border: 1px solid #e9ecef; "
+        "    border: 1px solid #f1f5f9; "
         "}"
     );
     
-    QHBoxLayout *layout = new QHBoxLayout(widget);
-    layout->setContentsMargins(20, 15, 20, 15);
-    layout->setSpacing(15);
+    // 添加微妙阴影
+    QGraphicsDropShadowEffect *itemShadow = new QGraphicsDropShadowEffect(this);
+    itemShadow->setBlurRadius(8);
+    itemShadow->setColor(QColor(0, 0, 0, 4));
+    itemShadow->setOffset(0, 2);
+    widget->setGraphicsEffect(itemShadow);
     
-    // 图标容器
+    QVBoxLayout *layout = new QVBoxLayout(widget);
+    layout->setContentsMargins(20, 16, 20, 16);
+    layout->setSpacing(8);
+    
+    // 图标和标签容器
+    QHBoxLayout *headerLayout = new QHBoxLayout();
+    headerLayout->setSpacing(10);
+    
+    // 图标容器（现代简约设计）
     QLabel *iconLabel = new QLabel();
-    iconLabel->setFixedSize(40, 40);
+    iconLabel->setFixedSize(32, 32);
     iconLabel->setStyleSheet(
         "QLabel { "
         "    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, "
-        "    stop:0 #667eea, stop:1 #764ba2); "
-        "    border-radius: 20px; "
+        "    stop:0 #3b82f6, stop:1 #1d4ed8); "
+        "    border-radius: 16px; "
         "}"
     );
     
@@ -422,7 +477,7 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
     iconTextWidget->setAlignment(Qt::AlignCenter);
     iconTextWidget->setStyleSheet(
         "QLabel { "
-        "    font-size: 18px; "
+        "    font-size: 14px; "
         "}"
     );
     
@@ -430,32 +485,37 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
     iconLayout->setContentsMargins(0, 0, 0, 0);
     iconLayout->addWidget(iconTextWidget, 0, Qt::AlignCenter);
     
-    // 标签
+    // 标签（现代简约风格）
     QLabel *labelWidget = new QLabel(label);
     labelWidget->setStyleSheet(
         "QLabel { "
-        "    font-size: 14px; "
-        "    font-weight: bold; "
-        "    color: #6c757d; "
-        "    min-width: 80px; "
+        "    font-size: 12px; "
+        "    font-weight: 600; "
+        "    color: #64748b; "
+        "    letter-spacing: 0.3px; "
         "}"
     );
     
-    // 值
+    headerLayout->addWidget(iconLabel);
+    headerLayout->addWidget(labelWidget);
+    headerLayout->addStretch();
+    
+    // 值（现代简约风格）
     QLabel *valueLabel = new QLabel(value);
     valueLabel->setObjectName("valueLabel");
     valueLabel->setStyleSheet(
         "QLabel { "
         "    font-size: 15px; "
-        "    color: #2c3e50; "
-        "    font-weight: 500; "
+        "    color: #1e293b; "
+        "    font-weight: 600; "
+        "    letter-spacing: 0.2px; "
         "}"
     );
     valueLabel->setWordWrap(true);
     
-    layout->addWidget(iconLabel);
-    layout->addWidget(labelWidget);
-    layout->addWidget(valueLabel, 1);
+    layout->addLayout(headerLayout);
+    layout->addWidget(valueLabel);
+    layout->addStretch();
     
     return widget;
 }
