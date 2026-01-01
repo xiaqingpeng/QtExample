@@ -17,10 +17,8 @@ UserProfileTab::UserProfileTab(QWidget *parent)
     , m_currentUserIndex(0)
 {
     setupUI();
-    // 默认加载第一个用户的数据
-    if (!m_userIdList.isEmpty()) {
-        setUserId(m_userIdList.first());
-    }
+    // 加载用户列表
+    loadUserList();
 }
 
 UserProfileTab::~UserProfileTab()
@@ -140,6 +138,53 @@ void UserProfileTab::setupValueAssessment()
 {
     m_valueRadarView = new QWebEngineView();
     m_valueRadarView->setMinimumHeight(300);
+}
+
+void UserProfileTab::loadUserList()
+{
+    NetworkManager *networkManager = new NetworkManager(this);
+    
+    // 获取用户列表（第一页，每页100个用户）
+    networkManager->getTopUsers(1, 100,
+        [this](const QJsonObject &response) {
+            if (response["success"].toBool()) {
+                QJsonObject data = response["data"].toObject();
+                QJsonArray users;
+                
+                // 尝试获取users或list字段
+                if (data.contains("list")) {
+                    users = data["list"].toArray();
+                } else if (data.contains("users")) {
+                    users = data["users"].toArray();
+                }
+                
+                // 提取用户ID列表
+                m_userIdList.clear();
+                for (const QJsonValue &userValue : users) {
+                    QJsonObject user = userValue.toObject();
+                    QString userId = user["userId"].toString();
+                    if (!userId.isEmpty()) {
+                        m_userIdList.append(userId);
+                    }
+                }
+                
+                // 默认加载第一个用户的数据
+                if (!m_userIdList.isEmpty()) {
+                    m_currentUserIndex = 0;
+                    setUserId(m_userIdList.first());
+                } else {
+                    qWarning() << "用户列表为空";
+                    QMessageBox::warning(this, "提示", "未找到用户数据，请检查后端API或数据库");
+                }
+            } else {
+                qWarning() << "获取用户列表失败:" << response["message"].toString();
+                QMessageBox::warning(this, "错误", "获取用户列表失败: " + response["message"].toString());
+            }
+        },
+        [this](const QString &error) {
+            qWarning() << "加载用户列表失败:" << error;
+            QMessageBox::warning(this, "错误", "加载用户列表失败: " + error);
+        });
 }
 
 void UserProfileTab::setUserId(const QString &userId)

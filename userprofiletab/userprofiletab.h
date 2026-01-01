@@ -40,6 +40,7 @@ private:
     void setupToolbar();
 
     // 数据加载方法
+    void loadUserList();
     void loadUserProfileData();
     void updateUserInfoDisplay(const QJsonObject &userInfo);
     void updateUserTagsDisplay(const QJsonArray &tags);

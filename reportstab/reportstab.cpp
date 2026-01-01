@@ -1,5 +1,6 @@
 #include "reportstab.h"
 #include "../networkmanager.h"
+#include "common.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -8,6 +9,10 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDateTime>
+#include <QDebug>
+#include <QPrinter>
+#include <QTextDocument>
+#include <QPageSetupDialog>
 #include <QHeaderView>
 #include <QTimer>
 #include <QDebug>
@@ -581,14 +586,200 @@ void ReportsTab::exportToCSV()
 
 void ReportsTab::exportToExcel()
 {
-    // Excel导出需要额外的库支持，这里暂时使用CSV格式
-    QMessageBox::information(this, "提示", "Excel导出功能正在开发中，请使用CSV格式导出。");
+    QString fileName = QFileDialog::getSaveFileName(this, "导出报表为Excel", 
+        QString("report_%1.xlsx").arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")), 
+        "Excel文件 (*.xlsx)");
+    
+    if (fileName.isEmpty()) {
+        return;
+    }
+    
+    // 使用CSV格式但保存为.xlsx文件（可以被Excel打开）
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, "错误", "无法打开文件: " + fileName);
+        return;
+    }
+    
+    QTextStream out(&file);
+    out.setEncoding(QStringConverter::Utf8);
+    
+    // 写入UTF-8 BOM以确保Excel正确显示中文
+    out << "\xEF\xBB\xBF";
+    
+    // 写入标题行
+    out << "报表导出时间," << QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss") << "\n";
+    out << "时间范围," << m_startDateEdit->date().toString("yyyy-MM-dd") << " 至 " 
+        << m_endDateEdit->date().toString("yyyy-MM-dd") << "\n";
+    out << "\n";
+    
+    // 写入关键指标
+    out << "关键指标\n";
+    out << "指标名称,数值\n";
+    out << "DAU," << m_dauLabel->text().replace("DAU: ", "") << "\n";
+    out << "MAU," << m_mauLabel->text().replace("MAU: ", "") << "\n";
+    out << "留存率," << m_retentionLabel->text().replace("留存率: ", "") << "\n";
+    out << "在线用户," << m_onlineUsersLabel->text().replace("在线用户: ", "") << "\n";
+    out << "今日事件," << m_todayEventsLabel->text().replace("今日事件: ", "") << "\n";
+    out << "\n";
+    
+    // 写入热门页面
+    out << "热门页面\n";
+    out << "排名,页面名称,访问次数\n";
+    for (int i = 0; i < m_topPagesTable->rowCount(); ++i) {
+        out << i + 1 << ","
+            << m_topPagesTable->item(i, 1)->text() << ","
+            << m_topPagesTable->item(i, 2)->text() << "\n";
+    }
+    out << "\n";
+    
+    // 写入热门事件
+    out << "热门事件\n";
+    out << "排名,事件名称,触发次数\n";
+    for (int i = 0; i < m_topEventsTable->rowCount(); ++i) {
+        out << i + 1 << ","
+            << m_topEventsTable->item(i, 1)->text() << ","
+            << m_topEventsTable->item(i, 2)->text() << "\n";
+    }
+    
+    file.close();
+    QMessageBox::information(this, "成功", "报表导出成功!\n\n注意：文件采用CSV格式保存为.xlsx扩展名，可被Excel打开。\n如需真正的Excel格式，请使用专业库（如QXlsx）。");
 }
 
 void ReportsTab::exportToPDF()
 {
-    // PDF导出需要额外的库支持，这里暂时提示用户
-    QMessageBox::information(this, "提示", "PDF导出功能正在开发中，请使用CSV格式导出。");
+    QString fileName = QFileDialog::getSaveFileName(this, "导出报表为PDF", 
+        QString("report_%1.pdf").arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")), 
+        "PDF文件 (*.pdf)");
+    
+    if (fileName.isEmpty()) {
+        return;
+    }
+    
+    // 创建HTML内容
+    QString html = QString(R"(
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #333; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; }
+                h2 { color: #666; margin-top: 30px; }
+                table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #4CAF50; color: white; }
+                tr:nth-child(even) { background-color: #f2f2f2; }
+                .info { background-color: #e7f3fe; padding: 10px; border-left: 6px solid #2196F3; margin-bottom: 20px; }
+                .metric { display: inline-block; margin: 10px 20px 10px 0; padding: 10px; background-color: #f9f9f9; border-radius: 5px; }
+                .metric-label { font-weight: bold; color: #666; }
+                .metric-value { font-size: 18px; color: #4CAF50; }
+            </style>
+        </head>
+        <body>
+            <h1>数据分析报表</h1>
+            
+            <div class="info">
+                <strong>导出时间:</strong> %1<br>
+                <strong>时间范围:</strong> %2 至 %3
+            </div>
+            
+            <h2>关键指标</h2>
+            <div>
+                <div class="metric">
+                    <span class="metric-label">DAU:</span>
+                    <span class="metric-value">%4</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">MAU:</span>
+                    <span class="metric-value">%5</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">留存率:</span>
+                    <span class="metric-value">%6</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">在线用户:</span>
+                    <span class="metric-value">%7</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">今日事件:</span>
+                    <span class="metric-value">%8</span>
+                </div>
+            </div>
+            
+            <h2>热门页面</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>页面名称</th>
+                        <th>访问次数</th>
+                    </tr>
+                </thead>
+                <tbody>
+    )").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"))
+      .arg(m_startDateEdit->date().toString("yyyy-MM-dd"))
+      .arg(m_endDateEdit->date().toString("yyyy-MM-dd"))
+      .arg(m_dauLabel->text().replace("DAU: ", ""))
+      .arg(m_mauLabel->text().replace("MAU: ", ""))
+      .arg(m_retentionLabel->text().replace("留存率: ", ""))
+      .arg(m_onlineUsersLabel->text().replace("在线用户: ", ""))
+      .arg(m_todayEventsLabel->text().replace("今日事件: ", ""));
+    
+    // 添加热门页面数据
+    for (int i = 0; i < m_topPagesTable->rowCount(); ++i) {
+        html += QString("<tr><td>%1</td><td>%2</td><td>%3</td></tr>")
+            .arg(i + 1)
+            .arg(m_topPagesTable->item(i, 1)->text())
+            .arg(m_topPagesTable->item(i, 2)->text());
+    }
+    
+    // 添加热门事件表格
+    html += R"(
+                </tbody>
+            </table>
+            
+            <h2>热门事件</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>事件名称</th>
+                        <th>触发次数</th>
+                    </tr>
+                </thead>
+                <tbody>
+    )";
+    
+    // 添加热门事件数据
+    for (int i = 0; i < m_topEventsTable->rowCount(); ++i) {
+        html += QString("<tr><td>%1</td><td>%2</td><td>%3</td></tr>")
+            .arg(i + 1)
+            .arg(m_topEventsTable->item(i, 1)->text())
+            .arg(m_topEventsTable->item(i, 2)->text());
+    }
+    
+    html += R"(
+                </tbody>
+            </table>
+        </body>
+        </html>
+    )";
+    
+    // 创建PDF文档
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setOutputFileName(fileName);
+    printer.setPageSize(QPageSize::A4);
+    printer.setPageMargins(QMarginsF(20, 20, 20, 20), QPageLayout::Millimeter);
+    
+    // 使用QTextDocument渲染HTML为PDF
+    QTextDocument document;
+    document.setHtml(html);
+    document.print(&printer);
+    
+    QMessageBox::information(this, "成功", "报表导出成功!");
 }
 
 QGroupBox *ReportsTab::createGroupBox(const QString &title, QWidget *content)

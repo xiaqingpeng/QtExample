@@ -11,7 +11,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # 查找Qt模块
-find_package(Qt6 COMPONENTS Core Gui Widgets WebEngineWidgets Network REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets WebEngineWidgets Network PrintSupport REQUIRED)
 
 # 设置MacOS特定选项
 if(APPLE)
@@ -168,6 +168,7 @@ target_link_libraries(ReportsTab PRIVATE
     Qt6::Widgets
     Qt6::WebEngineWidgets
     Qt6::Network
+    Qt6::PrintSupport
     NetworkManager
 )
 target_include_directories(ReportsTab PRIVATE
@@ -230,6 +231,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
     Qt6::WebEngineWidgets
     Qt6::Network
+    Qt6::PrintSupport
     NetworkManager
     BasicControls
     DataDisplay
