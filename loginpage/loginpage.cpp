@@ -111,7 +111,7 @@ void LoginPage::setupLoginUI()
     // 标题
     QLabel *titleLabel = new QLabel("欢迎登录");
     titleLabel->setAlignment(Qt::AlignLeft);
-    QFont titleFont("Helvetica Neue", 24, QFont::Bold);
+    QFont titleFont(".AppleSystemUIFont", 24, QFont::Bold);
     titleLabel->setFont(titleFont);
     titleLabel->setStyleSheet(
         "color: #333333;"
@@ -312,7 +312,7 @@ void LoginPage::setupRegisterUI()
     // 标题
     QLabel *titleLabel = new QLabel("注册账号");
     titleLabel->setAlignment(Qt::AlignLeft);
-    QFont titleFont("Arial", 24, QFont::Bold);
+    QFont titleFont(".AppleSystemUIFont", 24, QFont::Bold);
     titleLabel->setFont(titleFont);
     titleLabel->setStyleSheet(
         "color: #333333;"

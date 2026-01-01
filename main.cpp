@@ -9,8 +9,8 @@ int main(int argc, char *argv[])
     
     // 设置安全的UI配置，避免emoji渲染崩溃
     QFont defaultFont = QApplication::font();
-    // 使用macOS系统默认字体，避免字体解析延迟
-    defaultFont.setFamily("Helvetica Neue"); // 使用macOS上确实存在的字体
+    // 使用macOS上确实存在的系统字体
+    defaultFont.setFamily(".AppleSystemUIFont"); // macOS系统UI字体
     defaultFont.setPixelSize(13);
     QApplication::setFont(defaultFont);
     

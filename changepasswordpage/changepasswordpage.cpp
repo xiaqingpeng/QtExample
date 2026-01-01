@@ -16,7 +16,7 @@ ChangePasswordPage::ChangePasswordPage(QWidget *parent)
 
     // 标题
     QLabel *titleLabel = new QLabel("修改密码", this);
-    QFont titleFont("Arial", 18, QFont::Bold);
+    QFont titleFont(".AppleSystemUIFont", 18, QFont::Bold);
     titleLabel->setFont(titleFont);
     titleLabel->setAlignment(Qt::AlignCenter);
     titleLabel->setStyleSheet("color: #2c3e50; margin-bottom: 20px;");
