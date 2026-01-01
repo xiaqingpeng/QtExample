@@ -23,4 +23,4 @@ macx {
 }
 
 # 设置输出目录
-DESTDIR = ../$$OUT_PWD/..
+DESTDIR = $$OUT_PWD
