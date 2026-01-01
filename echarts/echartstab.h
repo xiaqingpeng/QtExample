@@ -21,6 +21,8 @@ public:
 public slots:
     // 接收ECharts的点击事件（供JS调用）
     void onChartClicked(const QString& name, const QVariant& value) {
+        Q_UNUSED(name);
+        Q_UNUSED(value);
         // ECharts点击事件
     }
 };

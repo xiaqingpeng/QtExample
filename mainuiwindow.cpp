@@ -13,7 +13,6 @@
 #include "loginpage.h"
 #include "changepasswordpage.h"
 #include "userinfopage.h"
-#include "analytics/analytics.h"
 #include <QFont>
 #include <QListWidgetItem>
 #include <QScrollArea>

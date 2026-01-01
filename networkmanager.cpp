@@ -8,6 +8,8 @@
 #include <QHttpMultiPart>
 #include <QHttpPart>
 #include <QFileInfo>
+#include <QTimer>
+#include <QTimer>
 
 // PersistentCookieJar 实现
 PersistentCookieJar::PersistentCookieJar(QObject *parent)
@@ -95,6 +97,8 @@ NetworkManager::NetworkManager(QObject *parent)
     : QObject(parent)
     , m_networkManager(new QNetworkAccessManager(this))
     , m_baseUrl("http://120.48.95.51:7001")
+    , m_timeout(30000)  // 默认30秒超时
+    , m_maxRetries(3)   // 默认最多重试3次
 {
     // 设置自定义CookieJar，支持持久化存储
     PersistentCookieJar *cookieJar = new PersistentCookieJar(this);
@@ -179,6 +183,15 @@ void NetworkManager::get(const QString &url,
                           const ErrorCallback &errorCallback,
                           const QUrlQuery &queryParams)
 {
+    getWithRetry(url, successCallback, errorCallback, queryParams, 0);
+}
+
+void NetworkManager::getWithRetry(const QString &url,
+                                   const SuccessCallback &successCallback,
+                                   const ErrorCallback &errorCallback,
+                                   const QUrlQuery &queryParams,
+                                   int retryCount)
+{
     QString fullUrl = buildFullUrl(url);
     if (!queryParams.isEmpty()) {
         fullUrl += "?" + queryParams.toString();
@@ -186,13 +199,60 @@ void NetworkManager::get(const QString &url,
     
     QNetworkRequest request = createRequest(fullUrl);
     
-    // 发送GET请求
+    // 打印GET请求信息（格式与POST保持一致）
+    QString queryData = queryParams.isEmpty() ? "(无查询参数)" : queryParams.toString();
+    LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << queryData;
     
+    // 发送GET请求
     QNetworkReply *reply = m_networkManager->get(request);
     
-    connect(reply, &QNetworkReply::finished, this, [this, reply, successCallback, errorCallback]() {
+    // 设置超时
+    setRequestTimeout(reply, m_timeout);
+    
+    connect(reply, &QNetworkReply::finished, this, [this, reply, successCallback, errorCallback, url, queryParams, retryCount]() {
+        // 检查是否是超时错误
+        if (reply->error() == QNetworkReply::OperationCanceledError) {
+            qWarning() << "NetworkManager - Request timed out for URL:" << url;
+            
+            // 如果还有重试次数，则重试
+            if (retryCount < m_maxRetries) {
+                qWarning() << "NetworkManager - Retrying... (" << (retryCount + 1) << "/" << m_maxRetries << ")";
+                reply->deleteLater();
+                
+                // 延迟重试（指数退避）
+                QTimer::singleShot(1000 * (retryCount + 1), this, [this, url, successCallback, errorCallback, queryParams, retryCount]() {
+                    getWithRetry(url, successCallback, errorCallback, queryParams, retryCount + 1);
+                });
+                return;
+            } else {
+                qWarning() << "NetworkManager - Max retries reached, giving up";
+                if (errorCallback) {
+                    errorCallback(QString("Request timed out after %1 retries").arg(m_maxRetries));
+                }
+                reply->deleteLater();
+                return;
+            }
+        }
+        
         handleResponse(reply, successCallback, errorCallback);
     });
+}
+
+void NetworkManager::setRequestTimeout(QNetworkReply *reply, int timeoutMs)
+{
+    // 使用QTimer实现超时机制
+    QTimer *timer = new QTimer(reply);
+    timer->setSingleShot(true);
+    
+    connect(timer, &QTimer::timeout, this, [reply, timer]() {
+        if (reply && reply->isRunning()) {
+            qWarning() << "NetworkManager - Request timeout, aborting...";
+            reply->abort();
+        }
+        timer->deleteLater();
+    });
+    
+    timer->start(timeoutMs);
 }
 
 void NetworkManager::setBaseUrl(const QString &baseUrl)
@@ -388,6 +448,9 @@ void NetworkManager::post(const QString &url,
     
     QNetworkReply *reply = m_networkManager->post(request, jsonData);
     
+    // 设置超时
+    setRequestTimeout(reply, m_timeout);
+    
     connect(reply, &QNetworkReply::finished, this, [this, reply, successCallback, errorCallback]() {
         handleResponse(reply, successCallback, errorCallback);
     });
@@ -409,6 +472,9 @@ void NetworkManager::put(const QString &url,
     
     QNetworkReply *reply = m_networkManager->put(request, jsonData);
     
+    // 设置超时
+    setRequestTimeout(reply, m_timeout);
+    
     connect(reply, &QNetworkReply::finished, this, [this, reply, successCallback, errorCallback]() {
         handleResponse(reply, successCallback, errorCallback);
     });
@@ -424,6 +490,9 @@ void NetworkManager::deleteResource(const QString &url,
     LOG_DEBUG() << "NetworkManager - DELETE request:" << fullUrl;
     
     QNetworkReply *reply = m_networkManager->deleteResource(request);
+    
+    // 设置超时
+    setRequestTimeout(reply, m_timeout);
     
     connect(reply, &QNetworkReply::finished, this, [this, reply, successCallback, errorCallback]() {
         handleResponse(reply, successCallback, errorCallback);
@@ -445,8 +514,9 @@ void NetworkManager::handleResponse(QNetworkReply *reply,
         QByteArray data = reply->readAll();
         QJsonDocument doc = QJsonDocument::fromJson(data);
         
-        // LOG_DEBUG() << "NetworkManager - Response:" << doc.toJson(QJsonDocument::Compact);
-        
+        // 获取请求的URL
+        QString requestUrl = reply->request().url().toString();
+        LOG_DEBUG() << "请求URL:" << requestUrl << "请求响应数据:" << doc.toJson(QJsonDocument::Compact);
         if (doc.isObject()) {
             QJsonObject rootObj = doc.object();
             if (successCallback) {
@@ -583,6 +653,9 @@ void NetworkManager::uploadFile(const QString &url,
     
     // 发送请求
     QNetworkReply *reply = m_networkManager->post(request, multiPart);
+    
+    // 设置超时（文件上传可能需要更长时间，使用2倍超时时间）
+    setRequestTimeout(reply, m_timeout * 2);
     
     // 设置多部分对象的父对象，确保在上传完成后被删除
     multiPart->setParent(reply);

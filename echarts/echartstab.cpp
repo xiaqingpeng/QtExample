@@ -1,4 +1,5 @@
 #include "echartstab.h"
+#include <QElapsedTimer>
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QDir>
@@ -384,6 +385,7 @@ void EChartsTab::onTimeFilterChanged()
 
 void EChartsTab::onChartTypeChanged(int index)
 {
+    Q_UNUSED(index);
     // 追踪图表类型切换事件
     QString chartType = m_chartTypeCombo->currentData().toString();
     Analytics::SDK::instance()->track("chart_type_changed", {
@@ -518,6 +520,10 @@ void EChartsTab::onPageLoaded(bool ok)
 
 void EChartsTab::fetchApiData()
 {
+    // 开始性能计时
+    QElapsedTimer timer;
+    timer.start();
+    
     // 追踪图表数据查看事件
     Analytics::SDK::instance()->track("chart_data_viewed", {
         {"event_type", "view"},
@@ -569,7 +575,15 @@ void EChartsTab::fetchApiData()
         apiUrl += "?" + params.join("&");
     }
     
-    m_networkManager->get(apiUrl, [this](const QJsonObject &rootObj) {
+    m_networkManager->get(apiUrl, [this, timer](const QJsonObject &rootObj) {
+        // 记录API请求性能
+        qint64 responseTime = timer.elapsed();
+        Analytics::SDK::instance()->trackPerformance("api_response_time", responseTime, {
+            {"page", "echarts_page"},
+            {"api", "system_logs_stats"},
+            {"status", "success"}
+        });
+        
         if (rootObj["code"].toInt() == 0) {
             QJsonArray rows = rootObj["rows"].toArray();
             
@@ -641,7 +655,15 @@ void EChartsTab::fetchApiData()
         } else {
             qWarning() << "API返回错误:" << rootObj["msg"].toString();
         }
-    }, [this](const QString &errorMsg) {
+    }, [this, timer](const QString &errorMsg) {
+        // 记录API请求失败性能
+        qint64 responseTime = timer.elapsed();
+        Analytics::SDK::instance()->trackPerformance("api_response_time", responseTime, {
+            {"page", "echarts_page"},
+            {"api", "system_logs_stats"},
+            {"status", "failed"}
+        });
+        
         qWarning() << "API请求失败:" << errorMsg;
         // 调用JavaScript显示网络错误提示
         QString jsCode = QString(

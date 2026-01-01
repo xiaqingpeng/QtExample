@@ -1,5 +1,7 @@
 #include "logstatstab.h"
 #include "common.h"
+#include "../analytics/analytics.h"
+#include <QElapsedTimer>
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QJsonDocument>
@@ -448,6 +450,10 @@ void LogStatsTab::onTimeShortcutClicked(int days)
 
 void LogStatsTab::fetchLogData()
 {
+    // 开始性能计时
+    QElapsedTimer timer;
+    timer.start();
+    
     // 构建API URL
     QString apiUrl = "http://120.48.95.51:7001/system/logs/stats";
 
@@ -490,7 +496,15 @@ void LogStatsTab::fetchLogData()
 
     // 使用NetworkManager发送GET请求
     m_networkManager->get(apiUrl,
-        [this](const QJsonObject &rootObj) {
+        [this, timer](const QJsonObject &rootObj) {
+            // 记录API请求性能
+            qint64 responseTime = timer.elapsed();
+            Analytics::SDK::instance()->trackPerformance("api_response_time", responseTime, {
+                {"page", "logstats_page"},
+                {"api", "system_logs_stats"},
+                {"status", "success"}
+            });
+            
             // 成功回调
             // LOG_DEBUG() << "Log data received:" << rootObj;
 
@@ -552,7 +566,15 @@ void LogStatsTab::fetchLogData()
             // 更新分页信息
             updatePaginationInfo();
         },
-        [this](const QString &errorMsg) {
+        [this, timer](const QString &errorMsg) {
+            // 记录API请求失败性能
+            qint64 responseTime = timer.elapsed();
+            Analytics::SDK::instance()->trackPerformance("api_response_time", responseTime, {
+                {"page", "logstats_page"},
+                {"api", "system_logs_stats"},
+                {"status", "failed"}
+            });
+            
             // 错误回调
             // 获取日志数据失败
             QMessageBox::warning(this, "错误", "获取日志数据失败: " + errorMsg);

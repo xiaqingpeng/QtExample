@@ -131,6 +131,8 @@ public:
 private:
     QNetworkAccessManager *m_networkManager;
     QString m_baseUrl;  // 基础URL
+    int m_timeout;  // 超时时间（毫秒）
+    int m_maxRetries;  // 最大重试次数
 
     // 处理响应
     void handleResponse(QNetworkReply *reply,
@@ -142,6 +144,16 @@ private:
 
     // 构建完整URL
     QString buildFullUrl(const QString &path);
+
+    // 设置请求超时
+    void setRequestTimeout(QNetworkReply *reply, int timeoutMs);
+
+    // 带重试的GET请求
+    void getWithRetry(const QString &url,
+                     const SuccessCallback &successCallback,
+                     const ErrorCallback &errorCallback,
+                     const QUrlQuery &queryParams,
+                     int retryCount = 0);
 };
 
 #endif // NETWORKMANAGER_H

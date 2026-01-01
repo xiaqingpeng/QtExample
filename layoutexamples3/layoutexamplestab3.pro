@@ -10,8 +10,8 @@ CONFIG += shared
 
 TARGET = layoutexamplestab3
 
-# 添加networkmanager.h的绝对路径
-INCLUDEPATH += /Applications/qingpengxia/qt/qt6/example
+# 添加networkmanager.h的相对路径
+INCLUDEPATH += ..
 
 # 链接networkmanager库
 LIBS += -L$$OUT_PWD/../networkmanager -lnetworkmanager
