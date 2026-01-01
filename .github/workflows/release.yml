@@ -39,15 +39,6 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Cache Qt installation
-      uses: actions/cache@v4
-      with:
-        path: ${{ env.Qt6_DIR }}
-        key: ${{ runner.os }}-qt-${{ matrix.qt_version }}-${{ matrix.qt_arch }}
-        restore-keys: |
-          ${{ runner.os }}-qt-${{ matrix.qt_version }}-
-          ${{ runner.os }}-qt-
-
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
