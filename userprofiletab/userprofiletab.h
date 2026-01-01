@@ -29,6 +29,10 @@ private slots:
     void refreshUserProfile();
     // 导出用户画像
     void exportUserProfile();
+    // 导出用户画像到不同格式
+    void exportUserProfileToCSV();
+    void exportUserProfileToExcel();
+    void exportUserProfileToPDF();
 
 private:
     // UI初始化方法
@@ -60,6 +64,7 @@ private:
     QWidget *createInterestAnalysisWidget();
     QWidget *createValueAssessmentWidget();
     QGroupBox *createGroupBox(const QString &title, QWidget *content);
+    QWidget *createModernCard(const QString &title, QWidget *content, bool showTitle = true);
 
     // UI组件
     QLabel *m_userIdLabel;

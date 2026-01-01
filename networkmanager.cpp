@@ -346,7 +346,10 @@ void NetworkManager::getActivityStats(const QString &startDate, const QString &e
 void NetworkManager::getRetentionStats(const SuccessCallback &successCallback,
                                         const ErrorCallback &errorCallback)
 {
-    get("/api/analytics/retention", successCallback, errorCallback);
+    QUrlQuery queryParams;
+    queryParams.addQueryItem("days", "7");  // 默认计算7日留存率
+    
+    get("/api/analytics/retention", successCallback, errorCallback, queryParams);
 }
 
 void NetworkManager::getPageViewStats(const QString &startDate, const QString &endDate,

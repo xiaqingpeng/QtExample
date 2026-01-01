@@ -554,37 +554,26 @@ void EChartsTab::fetchApiData()
     // 构建带筛选条件的API URL
     QString apiUrl = "http://120.48.95.51:7001/system/logs/stats";
     
-    // 添加查询参数（只添加非空的参数）
-    QList<QString> params;
+    // 使用QUrlQuery构建查询参数
+    QUrlQuery queryParams;
     if (!method.isEmpty()) {
-        params.append(QString("method=%1").arg(method));
+        queryParams.addQueryItem("method", method);
     }
     if (!platform.isEmpty()) {
-        params.append(QString("platform=%1").arg(platform));
+        queryParams.addQueryItem("platform", platform);
     }
     if (!startTime.isEmpty()) {
-        params.append(QString("startTime=%1").arg(startTime));
+        queryParams.addQueryItem("startTime", startTime);
     }
     if (!endTime.isEmpty()) {
-        params.append(QString("endTime=%1").arg(endTime));
+        queryParams.addQueryItem("endTime", endTime);
     }
     
     // 添加分页参数（获取更多数据）
-    params.append(QString("pageNum=%1").arg(1));
-    params.append(QString("pageSize=%1").arg(1000));
-    
-    if (!params.isEmpty()) {
-        apiUrl += "?" + params.join("&");
-    }
+    queryParams.addQueryItem("pageNum", "1");
+    queryParams.addQueryItem("pageSize", "1000");
     
     m_networkManager->get(apiUrl, [this, timer](const QJsonObject &rootObj) {
-        // 记录API请求性能
-        qint64 responseTime = timer.elapsed();
-        Analytics::SDK::instance()->trackPerformance("api_response_time", responseTime, {
-            {"page", "echarts_page"},
-            {"api", "system_logs_stats"},
-            {"status", "success"}
-        });
         
         if (rootObj["code"].toInt() == 0) {
             QJsonArray rows = rootObj["rows"].toArray();

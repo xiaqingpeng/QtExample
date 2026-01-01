@@ -112,7 +112,7 @@ void LayoutExamplesTab3::createDashboardLayout()
         progress->setMaximum(100);
         progress->setValue(50 + i * 10);
         progress->setStyleSheet(
-            QString("QProgressBar { border: none; border-radius: 4px; background-color: #f5f5f5; text-align: center; }")
+            QString("QProgressBar { border: none; border-radius: 4px; background-color: #f5f5f5; }")
             + QString("QProgressBar::chunk { background-color: %1; border-radius: 4px; }")
             .arg(cardColors[i].name())
         );

@@ -15,7 +15,7 @@
 #include <QPageSetupDialog>
 #include <QHeaderView>
 #include <QTimer>
-#include <QDebug>
+#include <QStandardPaths>
 
 ReportsTab::ReportsTab(QWidget *parent)
     : QWidget(parent)
@@ -35,33 +35,119 @@ ReportsTab::~ReportsTab()
 
 void ReportsTab::setupUI()
 {
+    // 设置主窗口样式
+    setStyleSheet(R"(
+        QWidget {
+            background-color: #f8f9fa;
+            font-family: "Helvetica Neue", "Helvetica", "Arial";
+        }
+        QGroupBox {
+            font-weight: 600;
+            font-size: 14px;
+            color: #2c3e50;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            margin-top: 12px;
+            padding-top: 8px;
+            background-color: white;
+        }
+        QGroupBox::title {
+            subcontrol-origin: margin;
+            left: 16px;
+            padding: 0 8px 0 8px;
+            background-color: white;
+        }
+        QPushButton {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 500;
+            font-size: 13px;
+            min-width: 70px;
+        }
+        QPushButton:hover {
+            background-color: #0056b3;
+        }
+        QPushButton:pressed {
+            background-color: #004085;
+        }
+        QComboBox {
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            padding: 8px 12px;
+            background-color: white;
+            font-size: 13px;
+            min-width: 120px;
+        }
+        QComboBox:hover {
+            border-color: #007bff;
+        }
+        QDateEdit {
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            padding: 8px 12px;
+            background-color: white;
+            font-size: 13px;
+            min-width: 120px;
+        }
+        QDateEdit:hover {
+            border-color: #007bff;
+        }
+        QTableWidget {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background-color: white;
+            gridline-color: #f1f3f4;
+            font-size: 13px;
+        }
+        QTableWidget::item {
+            padding: 12px 8px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        QTableWidget::item:selected {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        QHeaderView::section {
+            background-color: #f8f9fa;
+            padding: 12px 8px;
+            border: none;
+            border-bottom: 2px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+        }
+    )");
+    
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(20, 20, 20, 20);
-    mainLayout->setSpacing(15);
+    mainLayout->setContentsMargins(24, 24, 24, 24);
+    mainLayout->setSpacing(20);
     
-    // 工具栏
+    // 工具栏 - 现代化控制面板
     setupToolbar();
-    mainLayout->addWidget(createGroupBox("操作", createToolbarWidget()));
+    mainLayout->addWidget(createModernCard("", createToolbarWidget(), false));
     
-    // 关键指标卡片
+    // 关键指标卡片 - 仪表盘风格
     setupKeyMetrics();
-    mainLayout->addWidget(createGroupBox("关键指标", createKeyMetricsWidget()));
+    mainLayout->addWidget(createModernCard("关键指标", createKeyMetricsWidget()));
     
-    // 趋势图表
+    // 趋势图表 - 图表卡片
     setupTrendCharts();
-    mainLayout->addWidget(createGroupBox("趋势分析", createTrendChartsWidget()));
+    mainLayout->addWidget(createModernCard("趋势分析", createTrendChartsWidget()));
     
-    // 排行榜（并排显示）
+    // 排行榜（并排显示）- 数据表格卡片
     setupTopRankings();
     QHBoxLayout *rankingsLayout = new QHBoxLayout();
-    rankingsLayout->addWidget(createGroupBox("热门页面", createTopPagesWidget()));
-    rankingsLayout->addWidget(createGroupBox("热门事件", createTopEventsWidget()));
-    rankingsLayout->addWidget(createGroupBox("活跃用户", createTopUsersWidget()));
+    rankingsLayout->setSpacing(20);
+    rankingsLayout->addWidget(createModernCard("热门页面", createTopPagesWidget()));
+    rankingsLayout->addWidget(createModernCard("热门事件", createTopEventsWidget()));
+    rankingsLayout->addWidget(createModernCard("活跃用户", createTopUsersWidget()));
     mainLayout->addLayout(rankingsLayout);
     
-    // 实时统计
+    // 实时统计 - 实时数据卡片
     setupRealTimeStats();
-    mainLayout->addWidget(createGroupBox("实时数据", createRealTimeStatsWidget()));
+    mainLayout->addWidget(createModernCard("实时数据", createRealTimeStatsWidget()));
 }
 
 void ReportsTab::setupToolbar()
@@ -124,33 +210,67 @@ void ReportsTab::setupKeyMetrics()
     m_todayEventsLabel = new QLabel("今日事件: -");
     m_totalEventsLabel = new QLabel("总事件数: -");
     
-    // 设置样式
-    QString metricStyle = "QLabel { padding: 15px; border-radius: 10px; font-size: 16px; font-weight: bold; background-color: #f8f9fa; }";
-    m_dauLabel->setStyleSheet(metricStyle);
-    m_mauLabel->setStyleSheet(metricStyle);
-    m_retentionLabel->setStyleSheet(metricStyle);
-    m_conversionLabel->setStyleSheet(metricStyle);
-    m_onlineUsersLabel->setStyleSheet(metricStyle);
-    m_todayEventsLabel->setStyleSheet(metricStyle);
-    m_totalEventsLabel->setStyleSheet(metricStyle);
+    // 设置现代化指标卡片样式
+    QString metricStyle = R"(
+        QLabel {
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
+                stop:0 #ffffff, stop:1 #f8f9fa);
+            border: 1px solid #e9ecef;
+            margin: 4px;
+            min-height: 60px;
+        }
+    )";
     
-    QGridLayout *metricsLayout = new QGridLayout();
-    metricsLayout->addWidget(m_dauLabel, 0, 0);
-    metricsLayout->addWidget(m_mauLabel, 0, 1);
-    metricsLayout->addWidget(m_retentionLabel, 0, 2);
-    metricsLayout->addWidget(m_conversionLabel, 1, 0);
-    metricsLayout->addWidget(m_onlineUsersLabel, 1, 1);
-    metricsLayout->addWidget(m_todayEventsLabel, 1, 2);
-    metricsLayout->addWidget(m_totalEventsLabel, 2, 0, 1, 3); // 总事件数占满第三行
+    // 为不同指标设置不同的强调色
+    m_dauLabel->setStyleSheet(metricStyle + R"(
+        QLabel { border-left: 4px solid #28a745; }
+    )");
+    m_mauLabel->setStyleSheet(metricStyle + R"(
+        QLabel { border-left: 4px solid #007bff; }
+    )");
+    m_retentionLabel->setStyleSheet(metricStyle + R"(
+        QLabel { border-left: 4px solid #17a2b8; }
+    )");
+    m_conversionLabel->setStyleSheet(metricStyle + R"(
+        QLabel { border-left: 4px solid #ffc107; }
+    )");
+    m_onlineUsersLabel->setStyleSheet(metricStyle + R"(
+        QLabel { border-left: 4px solid #20c997; }
+    )");
+    m_todayEventsLabel->setStyleSheet(metricStyle + R"(
+        QLabel { border-left: 4px solid #fd7e14; }
+    )");
+    m_totalEventsLabel->setStyleSheet(metricStyle + R"(
+        QLabel { border-left: 4px solid #6610f2; }
+    )");
 }
 
 void ReportsTab::setupTrendCharts()
 {
     m_trendChartView = new QWebEngineView();
-    m_trendChartView->setMinimumHeight(400);
+    m_trendChartView->setMinimumHeight(450);
+    m_trendChartView->setStyleSheet(R"(
+        QWebEngineView {
+            border: none;
+            border-radius: 8px;
+            background-color: white;
+        }
+    )");
     
     m_activityChartView = new QWebEngineView();
-    m_activityChartView->setMinimumHeight(300);
+    m_activityChartView->setMinimumHeight(350);
+    m_activityChartView->setStyleSheet(R"(
+        QWebEngineView {
+            border: none;
+            border-radius: 8px;
+            background-color: white;
+        }
+    )");
 }
 
 void ReportsTab::setupTopRankings()
@@ -163,6 +283,8 @@ void ReportsTab::setupTopRankings()
     m_topPagesTable->verticalHeader()->setVisible(false);
     m_topPagesTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_topPagesTable->setAlternatingRowColors(true);
+    m_topPagesTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_topPagesTable->setMinimumHeight(300);
     
     // 热门事件表格
     m_topEventsTable = new QTableWidget();
@@ -172,6 +294,8 @@ void ReportsTab::setupTopRankings()
     m_topEventsTable->verticalHeader()->setVisible(false);
     m_topEventsTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_topEventsTable->setAlternatingRowColors(true);
+    m_topEventsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_topEventsTable->setMinimumHeight(300);
     
     // 活跃用户表格
     m_topUsersTable = new QTableWidget();
@@ -181,6 +305,8 @@ void ReportsTab::setupTopRankings()
     m_topUsersTable->verticalHeader()->setVisible(false);
     m_topUsersTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_topUsersTable->setAlternatingRowColors(true);
+    m_topUsersTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_topUsersTable->setMinimumHeight(300);
 }
 
 void ReportsTab::setupRealTimeStats()
@@ -599,25 +725,112 @@ void ReportsTab::renderTrendChart(const QJsonArray &trendData, const QString &ti
             <meta charset="utf-8">
             <script src="qrc:/echarts/ECharts/echarts.min.js"></script>
         </head>
-        <body style="margin:0;padding:0;">
-            <div id="chart" style="width:100%%;height:400px;"></div>
+        <body style="margin:0;padding:0;background:#ffffff;">
+            <div id="chart" style="width:100%%;height:450px;"></div>
             <script>
                 var chart = echarts.init(document.getElementById('chart'));
                 var option = {
-                    title: { text: '%1', left: 'center' },
-                    tooltip: { trigger: 'axis' },
-                    legend: { data: ['数值'], top: 30 },
-                    xAxis: { type: 'category', data: [%2] },
-                    yAxis: { type: 'value' },
+                    title: { 
+                        text: '%1',
+                        left: 'center',
+                        top: 20,
+                        textStyle: {
+                            fontSize: 16,
+                            fontWeight: '600',
+                            color: '#2c3e50'
+                        }
+                    },
+                    tooltip: { 
+                        trigger: 'axis',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        borderColor: '#e9ecef',
+                        borderWidth: 1,
+                        textStyle: {
+                            color: '#495057'
+                        }
+                    },
+                    legend: { 
+                        data: ['数值'], 
+                        top: 50,
+                        textStyle: {
+                            fontSize: 12,
+                            color: '#495057'
+                        }
+                    },
+                    grid: {
+                        left: '3%%',
+                        right: '4%%',
+                        bottom: '3%%',
+                        top: '15%%',
+                        containLabel: true
+                    },
+                    xAxis: { 
+                        type: 'category', 
+                        data: [%2],
+                        axisLine: {
+                            lineStyle: {
+                                color: '#e9ecef'
+                            }
+                        },
+                        axisLabel: {
+                            color: '#6c757d',
+                            fontSize: 11
+                        }
+                    },
+                    yAxis: { 
+                        type: 'value',
+                        axisLine: {
+                            lineStyle: {
+                                color: '#e9ecef'
+                            }
+                        },
+                        axisLabel: {
+                            color: '#6c757d',
+                            fontSize: 11
+                        },
+                        splitLine: {
+                            lineStyle: {
+                                color: '#f1f3f4',
+                                type: 'dashed'
+                            }
+                        }
+                    },
                     series: [{
                         name: '数值',
                         type: '%3',
                         data: [%4],
                         smooth: true,
-                        areaStyle: { opacity: 0.3 }
+                        itemStyle: {
+                            color: '#007bff',
+                            borderRadius: 4
+                        },
+                        areaStyle: { 
+                            opacity: 0.1,
+                            color: {
+                                type: 'linear',
+                                x: 0,
+                                y: 0,
+                                x2: 0,
+                                y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#007bff'
+                                }, {
+                                    offset: 1, color: 'rgba(0, 123, 255, 0)'
+                                }]
+                            }
+                        },
+                        lineStyle: {
+                            width: 3,
+                            color: '#007bff'
+                        }
                     }]
                 };
                 chart.setOption(option);
+                
+                // 响应式调整
+                window.addEventListener('resize', function() {
+                    chart.resize();
+                });
             </script>
         </body>
         </html>
@@ -652,17 +865,36 @@ void ReportsTab::exportReport()
 
 void ReportsTab::exportToCSV()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "导出报表", 
-        QString("report_%1.csv").arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")), 
-        "CSV文件 (*.csv)");
+    qDebug() << "开始CSV导出...";
+    
+    // 设置默认文件名和路径
+    QString defaultFileName = QString("report_%1.csv").arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
+    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/" + defaultFileName;
+    
+    qDebug() << "默认文件路径:" << defaultPath;
+    
+    QString fileName = QFileDialog::getSaveFileName(
+        this, 
+        "导出报表", 
+        defaultPath,
+        "CSV文件 (*.csv);;所有文件 (*.*)",
+        nullptr,
+        QFileDialog::DontUseNativeDialog  // 使用Qt自己的对话框，避免系统对话框问题
+    );
+    
+    qDebug() << "用户选择的文件名:" << fileName;
     
     if (fileName.isEmpty()) {
+        qDebug() << "用户取消了文件选择";
         return;
     }
     
+    qDebug() << "开始写入文件:" << fileName;
+    
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QMessageBox::warning(this, "错误", "无法打开文件: " + fileName);
+        qDebug() << "无法打开文件:" << fileName << "错误:" << file.errorString();
+        QMessageBox::warning(this, "错误", "无法打开文件: " + fileName + "\n错误: " + file.errorString());
         return;
     }
     
@@ -685,38 +917,79 @@ void ReportsTab::exportToCSV()
     out << "今日事件," << m_todayEventsLabel->text().replace("今日事件: ", "") << "\n";
     out << "\n";
     
+    // 检查表格是否存在并且有效
+    if (!m_topPagesTable) {
+        qDebug() << "热门页面表格为空指针";
+        QMessageBox::warning(this, "错误", "热门页面表格未初始化");
+        file.close();
+        return;
+    }
+    
+    int pagesRowCount = m_topPagesTable->rowCount();
+    qDebug() << "热门页面表格行数:" << pagesRowCount;
+    
     // 写入热门页面
     out << "热门页面\n";
     out << "排名,页面名称,访问次数\n";
-    for (int i = 0; i < m_topPagesTable->rowCount(); ++i) {
+    for (int i = 0; i < pagesRowCount && i < 100; ++i) { // 限制最大100行，防止无限循环
+        QTableWidgetItem *nameItem = m_topPagesTable->item(i, 1);
+        QTableWidgetItem *countItem = m_topPagesTable->item(i, 2);
         out << i + 1 << ","
-            << m_topPagesTable->item(i, 1)->text() << ","
-            << m_topPagesTable->item(i, 2)->text() << "\n";
+            << (nameItem ? nameItem->text() : "无数据") << ","
+            << (countItem ? countItem->text() : "0") << "\n";
     }
     out << "\n";
+    
+    // 检查事件表格
+    if (!m_topEventsTable) {
+        qDebug() << "热门事件表格为空指针";
+        QMessageBox::warning(this, "错误", "热门事件表格未初始化");
+        file.close();
+        return;
+    }
+    
+    int eventsRowCount = m_topEventsTable->rowCount();
+    qDebug() << "热门事件表格行数:" << eventsRowCount;
     
     // 写入热门事件
     out << "热门事件\n";
     out << "排名,事件名称,触发次数\n";
-    for (int i = 0; i < m_topEventsTable->rowCount(); ++i) {
+    for (int i = 0; i < eventsRowCount && i < 100; ++i) { // 限制最大100行，防止无限循环
+        QTableWidgetItem *nameItem = m_topEventsTable->item(i, 1);
+        QTableWidgetItem *countItem = m_topEventsTable->item(i, 2);
         out << i + 1 << ","
-            << m_topEventsTable->item(i, 1)->text() << ","
-            << m_topEventsTable->item(i, 2)->text() << "\n";
+            << (nameItem ? nameItem->text() : "无数据") << ","
+            << (countItem ? countItem->text() : "0") << "\n";
     }
     
     file.close();
-    QMessageBox::information(this, "成功", "报表导出成功!");
+    qDebug() << "CSV导出完成，文件保存到:" << fileName;
+    QMessageBox::information(this, "成功", "报表导出成功!\n文件保存到: " + fileName);
 }
 
 void ReportsTab::exportToExcel()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "导出报表为Excel", 
-        QString("report_%1.xlsx").arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")), 
-        "Excel文件 (*.xlsx)");
+    qDebug() << "开始Excel导出...";
+    
+    // 设置默认文件名和路径
+    QString defaultFileName = QString("report_%1.xlsx").arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
+    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/" + defaultFileName;
+    
+    QString fileName = QFileDialog::getSaveFileName(
+        this, 
+        "导出报表为Excel", 
+        defaultPath,
+        "Excel文件 (*.xlsx);;CSV文件 (*.csv);;所有文件 (*.*)",
+        nullptr,
+        QFileDialog::DontUseNativeDialog
+    );
     
     if (fileName.isEmpty()) {
+        qDebug() << "用户取消了Excel文件选择";
         return;
     }
+    
+    qDebug() << "开始写入Excel文件:" << fileName;
     
     // 使用CSV格式但保存为.xlsx文件（可以被Excel打开）
     QFile file(fileName);
@@ -747,27 +1020,42 @@ void ReportsTab::exportToExcel()
     out << "今日事件," << m_todayEventsLabel->text().replace("今日事件: ", "") << "\n";
     out << "\n";
     
-    // 写入热门页面
-    out << "热门页面\n";
-    out << "排名,页面名称,访问次数\n";
-    for (int i = 0; i < m_topPagesTable->rowCount(); ++i) {
-        out << i + 1 << ","
-            << m_topPagesTable->item(i, 1)->text() << ","
-            << m_topPagesTable->item(i, 2)->text() << "\n";
+    // 安全检查和写入热门页面
+    if (m_topPagesTable) {
+        int pagesRowCount = m_topPagesTable->rowCount();
+        qDebug() << "Excel导出 - 热门页面表格行数:" << pagesRowCount;
+        
+        out << "热门页面\n";
+        out << "排名,页面名称,访问次数\n";
+        for (int i = 0; i < pagesRowCount && i < 100; ++i) {
+            QTableWidgetItem *nameItem = m_topPagesTable->item(i, 1);
+            QTableWidgetItem *countItem = m_topPagesTable->item(i, 2);
+            out << i + 1 << ","
+                << (nameItem ? nameItem->text() : "无数据") << ","
+                << (countItem ? countItem->text() : "0") << "\n";
+        }
+        out << "\n";
     }
-    out << "\n";
     
-    // 写入热门事件
-    out << "热门事件\n";
-    out << "排名,事件名称,触发次数\n";
-    for (int i = 0; i < m_topEventsTable->rowCount(); ++i) {
-        out << i + 1 << ","
-            << m_topEventsTable->item(i, 1)->text() << ","
-            << m_topEventsTable->item(i, 2)->text() << "\n";
+    // 安全检查和写入热门事件
+    if (m_topEventsTable) {
+        int eventsRowCount = m_topEventsTable->rowCount();
+        qDebug() << "Excel导出 - 热门事件表格行数:" << eventsRowCount;
+        
+        out << "热门事件\n";
+        out << "排名,事件名称,触发次数\n";
+        for (int i = 0; i < eventsRowCount && i < 100; ++i) {
+            QTableWidgetItem *nameItem = m_topEventsTable->item(i, 1);
+            QTableWidgetItem *countItem = m_topEventsTable->item(i, 2);
+            out << i + 1 << ","
+                << (nameItem ? nameItem->text() : "无数据") << ","
+                << (countItem ? countItem->text() : "0") << "\n";
+        }
     }
     
     file.close();
-    QMessageBox::information(this, "成功", "报表导出成功!\n\n注意：文件采用CSV格式保存为.xlsx扩展名，可被Excel打开。\n如需真正的Excel格式，请使用专业库（如QXlsx）。");
+    qDebug() << "Excel导出完成，文件保存到:" << fileName;
+    QMessageBox::information(this, "成功", "报表导出成功!\n文件保存到: " + fileName + "\n\n注意：文件采用CSV格式保存为.xlsx扩展名，可被Excel打开。");
 }
 
 void ReportsTab::exportToPDF()
@@ -787,7 +1075,7 @@ void ReportsTab::exportToPDF()
         <head>
             <meta charset="utf-8">
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
+                body { font-family: "Helvetica Neue", "Helvetica", "Arial"; margin: 20px; }
                 h1 { color: #333; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; }
                 h2 { color: #666; margin-top: 30px; }
                 table { border-collapse: collapse; width: 100%; margin-top: 10px; }
@@ -852,11 +1140,18 @@ void ReportsTab::exportToPDF()
       .arg(m_todayEventsLabel->text().replace("今日事件: ", ""));
     
     // 添加热门页面数据
-    for (int i = 0; i < m_topPagesTable->rowCount(); ++i) {
-        html += QString("<tr><td>%1</td><td>%2</td><td>%3</td></tr>")
-            .arg(i + 1)
-            .arg(m_topPagesTable->item(i, 1)->text())
-            .arg(m_topPagesTable->item(i, 2)->text());
+    if (m_topPagesTable) {
+        int pagesRowCount = m_topPagesTable->rowCount();
+        qDebug() << "PDF导出 - 热门页面表格行数:" << pagesRowCount;
+        
+        for (int i = 0; i < pagesRowCount && i < 100; ++i) {
+            QTableWidgetItem *nameItem = m_topPagesTable->item(i, 1);
+            QTableWidgetItem *countItem = m_topPagesTable->item(i, 2);
+            html += QString("<tr><td>%1</td><td>%2</td><td>%3</td></tr>")
+                .arg(i + 1)
+                .arg(nameItem ? nameItem->text() : "无数据")
+                .arg(countItem ? countItem->text() : "0");
+        }
     }
     
     // 添加热门事件表格
@@ -877,11 +1172,18 @@ void ReportsTab::exportToPDF()
     )";
     
     // 添加热门事件数据
-    for (int i = 0; i < m_topEventsTable->rowCount(); ++i) {
-        html += QString("<tr><td>%1</td><td>%2</td><td>%3</td></tr>")
-            .arg(i + 1)
-            .arg(m_topEventsTable->item(i, 1)->text())
-            .arg(m_topEventsTable->item(i, 2)->text());
+    if (m_topEventsTable) {
+        int eventsRowCount = m_topEventsTable->rowCount();
+        qDebug() << "PDF导出 - 热门事件表格行数:" << eventsRowCount;
+        
+        for (int i = 0; i < eventsRowCount && i < 100; ++i) {
+            QTableWidgetItem *nameItem = m_topEventsTable->item(i, 1);
+            QTableWidgetItem *countItem = m_topEventsTable->item(i, 2);
+            html += QString("<tr><td>%1</td><td>%2</td><td>%3</td></tr>")
+                .arg(i + 1)
+                .arg(nameItem ? nameItem->text() : "无数据")
+                .arg(countItem ? countItem->text() : "0");
+        }
     }
     
     html += R"(
@@ -914,26 +1216,158 @@ QGroupBox *ReportsTab::createGroupBox(const QString &title, QWidget *content)
     return groupBox;
 }
 
+// 新增现代卡片创建方法
+QWidget *ReportsTab::createModernCard(const QString &title, QWidget *content, bool showTitle)
+{
+    QWidget *card = new QWidget();
+    card->setStyleSheet(R"(
+        QWidget {
+            background-color: white;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+        }
+    )");
+    
+    QVBoxLayout *cardLayout = new QVBoxLayout(card);
+    cardLayout->setContentsMargins(0, 0, 0, 0);
+    cardLayout->setSpacing(0);
+    
+    if (showTitle && !title.isEmpty()) {
+        QLabel *titleLabel = new QLabel(title);
+        titleLabel->setStyleSheet(R"(
+            QLabel {
+                font-weight: 600;
+                font-size: 16px;
+                color: #2c3e50;
+                padding: 16px 20px 8px 20px;
+                background-color: transparent;
+                border: none;
+            }
+        )");
+        cardLayout->addWidget(titleLabel);
+    }
+    
+    cardLayout->addWidget(content);
+    return card;
+}
+
+// 新增分隔符创建方法
+QWidget *ReportsTab::createSeparator()
+{
+    QWidget *separator = new QWidget();
+    separator->setFixedWidth(1);
+    separator->setStyleSheet("QWidget { background-color: #e9ecef; }");
+    return separator;
+}
+
 QWidget *ReportsTab::createToolbarWidget()
 {
     QWidget *widget = new QWidget();
     QHBoxLayout *layout = new QHBoxLayout(widget);
-    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(16, 12, 16, 12);
+    layout->setSpacing(16);
     
-    layout->addWidget(new QLabel("开始日期:"));
-    layout->addWidget(m_startDateEdit);
-    layout->addWidget(new QLabel("结束日期:"));
-    layout->addWidget(m_endDateEdit);
-    layout->addWidget(new QLabel("报表类型:"));
-    layout->addWidget(m_reportTypeCombo);
-    layout->addWidget(new QLabel("图表类型:"));
-    layout->addWidget(m_chartTypeCombo);
-    layout->addWidget(m_refreshButton);
-    layout->addWidget(m_exportButton);
-    layout->addWidget(m_exportCSVButton);
-    layout->addWidget(m_exportExcelButton);
-    layout->addWidget(m_exportPDFButton);
+    // 时间选择区域
+    QHBoxLayout *dateLayout = new QHBoxLayout();
+    dateLayout->setSpacing(8);
+    
+    QLabel *startLabel = new QLabel("开始:");
+    startLabel->setStyleSheet("QLabel { color: #6c757d; font-weight: 500; }");
+    QLabel *endLabel = new QLabel("至:");
+    endLabel->setStyleSheet("QLabel { color: #6c757d; font-weight: 500; }");
+    
+    dateLayout->addWidget(startLabel);
+    dateLayout->addWidget(m_startDateEdit);
+    dateLayout->addWidget(endLabel);
+    dateLayout->addWidget(m_endDateEdit);
+    
+    // 筛选选择区域
+    QHBoxLayout *filterLayout = new QHBoxLayout();
+    filterLayout->setSpacing(8);
+    
+    QLabel *reportLabel = new QLabel("报表:");
+    reportLabel->setStyleSheet("QLabel { color: #6c757d; font-weight: 500; }");
+    QLabel *chartLabel = new QLabel("图表:");
+    chartLabel->setStyleSheet("QLabel { color: #6c757d; font-weight: 500; }");
+    
+    filterLayout->addWidget(reportLabel);
+    filterLayout->addWidget(m_reportTypeCombo);
+    filterLayout->addWidget(chartLabel);
+    filterLayout->addWidget(m_chartTypeCombo);
+    
+    // 操作按钮区域
+    QHBoxLayout *actionLayout = new QHBoxLayout();
+    actionLayout->setSpacing(8);
+    
+    // 设置按钮样式
+    QString primaryBtnStyle = R"(
+        QPushButton {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 500;
+            font-size: 13px;
+            min-width: 70px;
+        }
+        QPushButton:hover {
+            background-color: #0056b3;
+        }
+    )";
+    
+    QString secondaryBtnStyle = R"(
+        QPushButton {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 500;
+            font-size: 13px;
+            min-width: 70px;
+        }
+        QPushButton:hover {
+            background-color: #545b62;
+        }
+    )";
+    
+    m_refreshButton->setText("刷新");
+    m_refreshButton->setStyleSheet(primaryBtnStyle);
+    
+    m_exportButton->setText("导出");
+    m_exportButton->setStyleSheet(secondaryBtnStyle);
+    
+    m_exportCSVButton->setText("CSV");
+    m_exportCSVButton->setStyleSheet(secondaryBtnStyle);
+    
+    m_exportExcelButton->setText("Excel");
+    m_exportExcelButton->setStyleSheet(secondaryBtnStyle);
+    
+    m_exportPDFButton->setText("PDF");
+    m_exportPDFButton->setStyleSheet(secondaryBtnStyle);
+    
+    actionLayout->addWidget(m_refreshButton);
+    actionLayout->addWidget(m_exportButton);
+    actionLayout->addWidget(m_exportCSVButton);
+    actionLayout->addWidget(m_exportExcelButton);
+    actionLayout->addWidget(m_exportPDFButton);
+    
+    // 组合所有布局
+    layout->addLayout(dateLayout);
+    layout->addWidget(createSeparator());
+    layout->addLayout(filterLayout);
+    layout->addWidget(createSeparator());
+    layout->addLayout(actionLayout);
     layout->addStretch();
+    
+    widget->setStyleSheet(R"(
+        QWidget {
+            background-color: white;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+        }
+    )");
     
     return widget;
 }
@@ -942,7 +1376,8 @@ QWidget *ReportsTab::createKeyMetricsWidget()
 {
     QWidget *widget = new QWidget();
     QGridLayout *layout = new QGridLayout(widget);
-    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(16, 16, 16, 16);
+    layout->setSpacing(16);
     
     layout->addWidget(m_dauLabel, 0, 0);
     layout->addWidget(m_mauLabel, 0, 1);
@@ -950,6 +1385,7 @@ QWidget *ReportsTab::createKeyMetricsWidget()
     layout->addWidget(m_conversionLabel, 1, 0);
     layout->addWidget(m_onlineUsersLabel, 1, 1);
     layout->addWidget(m_todayEventsLabel, 1, 2);
+    layout->addWidget(m_totalEventsLabel, 2, 0, 1, 3);
     
     return widget;
 }
@@ -978,7 +1414,33 @@ QWidget *ReportsTab::createRealTimeStatsWidget()
 {
     QWidget *widget = new QWidget();
     QHBoxLayout *layout = new QHBoxLayout(widget);
-    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(16, 16, 16, 16);
+    layout->setSpacing(20);
+    
+    // 设置实时数据样式
+    QString realtimeStyle = R"(
+        QLabel {
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                stop:0 #28a745, stop:1 #20c997);
+            min-width: 150px;
+        }
+    )";
+    
+    m_onlineUsersLabel->setStyleSheet(realtimeStyle);
+    m_todayEventsLabel->setStyleSheet(realtimeStyle + R"(
+        QLabel {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                stop:0 #007bff, stop:1 #17a2b8);
+        }
+    )");
+    
+    m_onlineUsersLabel->setAlignment(Qt::AlignCenter);
+    m_todayEventsLabel->setAlignment(Qt::AlignCenter);
     
     layout->addWidget(m_onlineUsersLabel);
     layout->addWidget(m_todayEventsLabel);

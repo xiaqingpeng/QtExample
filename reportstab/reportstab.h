@@ -74,6 +74,8 @@ private:
     QWidget *createTopUsersWidget();
     QWidget *createRealTimeStatsWidget();
     QGroupBox *createGroupBox(const QString &title, QWidget *content);
+    QWidget *createModernCard(const QString &title, QWidget *content, bool showTitle = true);
+    QWidget *createSeparator();
     
     // 工具栏组件
     QDateEdit *m_startDateEdit;
