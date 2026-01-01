@@ -42,6 +42,8 @@ private slots:
     void onTimeShortcutClicked(int days);
     // WebView页面加载完成后获取API数据
     void onPageLoaded(bool ok);
+    // 图表类型切换事件
+    void onChartTypeChanged(int index);
 
 private:
     QWebEngineView *m_webView;  // 加载HTML的WebView
@@ -53,6 +55,7 @@ private:
     // 筛选控件
     QComboBox *m_methodCombo;   // 方法选择下拉框
     QComboBox *m_platformCombo; // 平台选择下拉框
+    QComboBox *m_chartTypeCombo; // 图表类型选择下拉框
     QDateTimeEdit *m_startTimeEdit; // 开始时间选择器
     QDateTimeEdit *m_endTimeEdit;   // 结束时间选择器
     

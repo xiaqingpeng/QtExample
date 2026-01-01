@@ -228,6 +228,45 @@
             return getBarOption(); // 混合图就是柱状图+折线图
         }
 
+        // 雷达图配置
+        function getRadarOption() {
+            var radarData = [];
+            for (var i = 0; i < apiData.categories.length; i++) {
+                radarData.push({
+                    value: [apiData.counts[i], apiData.durations[i]],
+                    name: apiData.categories[i]
+                });
+            }
+            
+            return {
+                title: { 
+                    text: 'API访问雷达图', 
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'bold' }
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    data: apiData.categories,
+                    orient: 'vertical',
+                    left: 'left',
+                    top: '10%'
+                },
+                radar: {
+                    indicator: [
+                        { name: '访问次数', max: Math.max(...apiData.counts) * 1.2 },
+                        { name: '响应时间(ms)', max: Math.max(...apiData.durations) * 1.2 }
+                    ]
+                },
+                series: [{
+                    name: 'API访问统计',
+                    type: 'radar',
+                    data: radarData
+                }]
+            };
+        }
+
         // 切换图表类型
         function switchChart(type) {
             currentChartType = type;
@@ -244,6 +283,9 @@
                 case 'pie':
                     option = getPieOption();
                     break;
+                case 'radar':
+                    option = getRadarOption();
+                    break;
                 case 'mixed':
                     option = getMixedOption();
                     break;
@@ -259,12 +301,16 @@
         }
 
         // 供Qt调用的函数：更新API数据
-        function updateApiChart(categories, counts, durations) {
+        function updateApiChart(categories, counts, durations, chartType) {
             if (categories && counts && durations && 
                 categories.length > 0 && counts.length > 0 && durations.length > 0) {
                 apiData.categories = categories;
                 apiData.counts = counts;
                 apiData.durations = durations;
+                // 如果传入了chartType参数，则更新当前图表类型
+                if (chartType) {
+                    currentChartType = chartType;
+                }
                 updateChartDisplay();
                 console.log('API数据已更新:', apiData);
             } else {

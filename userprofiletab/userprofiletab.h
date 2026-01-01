@@ -11,6 +11,7 @@
 #include <QComboBox>
 #include <QProgressBar>
 #include <QWebEngineView>
+#include <QTimer>
 
 class UserProfileTab : public QWidget
 {
@@ -87,6 +88,9 @@ private:
     QString m_currentUserId;
     QStringList m_userIdList;
     int m_currentUserIndex;
+    
+    // 定时刷新定时器
+    QTimer *m_refreshTimer;
 };
 
 #endif // USERPROFILETAB_H

@@ -19,6 +19,11 @@ UserProfileTab::UserProfileTab(QWidget *parent)
     setupUI();
     // 加载用户列表
     loadUserList();
+    
+    // 设置定时刷新（每30秒）
+    m_refreshTimer = new QTimer(this);
+    connect(m_refreshTimer, &QTimer::timeout, this, &UserProfileTab::refreshUserProfile);
+    m_refreshTimer->start(30000);
 }
 
 UserProfileTab::~UserProfileTab()

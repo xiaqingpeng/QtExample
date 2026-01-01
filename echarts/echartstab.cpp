@@ -140,6 +140,40 @@ EChartsTab::EChartsTab(QWidget *parent)
     filterLayout->addWidget(new QLabel("Platform:"));
     filterLayout->addWidget(m_platformCombo);
     
+    // 图表类型选择下拉框
+    m_chartTypeCombo = new QComboBox(this);
+    m_chartTypeCombo->addItem("柱状图", "bar");
+    m_chartTypeCombo->addItem("折线图", "line");
+    m_chartTypeCombo->addItem("饼图", "pie");
+    m_chartTypeCombo->addItem("雷达图", "radar");
+    m_chartTypeCombo->setCurrentIndex(0);  // 默认选择柱状图
+    m_chartTypeCombo->setMinimumWidth(120);
+    m_chartTypeCombo->setMinimumHeight(36);
+    m_chartTypeCombo->setStyleSheet(
+        "QComboBox {"
+        "    background-color: white;"
+        "    border: 1px solid #d0d0d0;"
+        "    border-radius: 6px;"
+        "    padding: 6px 12px;"
+        "    font-size: 13px;"
+        "    color: #333;"
+        "}"
+        "QComboBox:hover { border: 1px solid #0078d4; }"
+        "QComboBox:focus { border: 1px solid #0078d4; }"
+        "QComboBox::drop-down { border: none; width: 24px; }"
+        "QComboBox::down-arrow { image: none; border: none; }"
+        "QComboBox QAbstractItemView {"
+        "    background-color: white;"
+        "    border: 1px solid #d0d0d0;"
+        "    border-radius: 6px;"
+        "    selection-background-color: #0078d4;"
+        "    selection-color: white;"
+        "    outline: none;"
+        "}"
+    );
+    filterLayout->addWidget(new QLabel("图表:"));
+    filterLayout->addWidget(m_chartTypeCombo);
+    
     layout->addLayout(filterLayout);
     
     // 6.1 创建时间筛选控件
@@ -289,6 +323,8 @@ EChartsTab::EChartsTab(QWidget *parent)
             this, &EChartsTab::onFilterChanged);
     connect(m_platformCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), 
             this, &EChartsTab::onFilterChanged);
+    connect(m_chartTypeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), 
+            this, &EChartsTab::onChartTypeChanged);
     
     // 创建定时器（但不启动，等待首次手动获取数据后才启动）
     m_apiTimer = new QTimer(this);
@@ -311,6 +347,12 @@ void EChartsTab::onFilterChanged()
 void EChartsTab::onTimeFilterChanged()
 {
     // 当时间筛选条件改变时，自动重新获取数据
+    fetchApiData();
+}
+
+void EChartsTab::onChartTypeChanged(int index)
+{
+    // 当图表类型改变时，重新渲染图表
     fetchApiData();
 }
 
@@ -436,10 +478,10 @@ void EChartsTab::onPageLoaded(bool ok)
 
 void EChartsTab::fetchApiData()
 {
-    // 自动更新定时器已关闭
-    // if (!m_apiTimer->isActive()) {
-    //     m_apiTimer->start(30000); // 30秒
-    // }
+    // 首次获取数据后启动定时器（每30秒自动刷新）
+    if (!m_apiTimer->isActive()) {
+        m_apiTimer->start(30000); // 30秒
+    }
     
     // 从下拉框获取筛选条件
     QString method = m_methodCombo->currentData().toString();
@@ -533,16 +575,20 @@ void EChartsTab::fetchApiData()
                 avgDurations.append(avgDuration);
             }
             
+            // 获取当前选择的图表类型
+            QString chartType = m_chartTypeCombo->currentData().toString();
+            
             // 生成JavaScript代码更新图表
             QString jsCode = QString(
                 "if (window.updateApiChart) {"
-                "    window.updateApiChart(%1, %2, %3);"
+                "    window.updateApiChart(%1, %2, %3, '%4');"
                 "} else {"
                 "    console.log('updateApiChart函数未找到');"
                 "}"
             ).arg(jsonArrayToString(categories))
              .arg(jsonArrayToString(counts))
-             .arg(jsonArrayToString(avgDurations));
+             .arg(jsonArrayToString(avgDurations))
+             .arg(chartType);
             
             m_webView->page()->runJavaScript(jsCode);
             
