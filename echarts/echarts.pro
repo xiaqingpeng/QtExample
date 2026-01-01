@@ -13,15 +13,20 @@ TARGET = echarts
 INCLUDEPATH += /Applications/qingpengxia/qt/qt6/example
 
 # 链接networkmanager库
-LIBS += -L$$OUT_PWD/../networkmanager -lnetworkmanager
+LIBS += -L$$PWD/../networkmanager -lnetworkmanager
 
 SOURCES += \
     echartstab.cpp \
-    logstatstab.cpp
+    logstatstab.cpp \
+    ../analytics/analytics.cpp
 
 HEADERS += \
     echartstab.h \
-    logstatstab.h
+    logstatstab.h \
+    ../analytics/analytics.h
+
+# 包含analytics头文件
+INCLUDEPATH += ../analytics
 
 RESOURCES += \
     ../layoutexamplestab.qrc

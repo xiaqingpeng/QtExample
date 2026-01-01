@@ -12,14 +12,16 @@ TARGET = changepasswordpage
 
 SOURCES += \
     changepasswordpage.cpp \
-    ../networkmanager.cpp
+    ../networkmanager.cpp \
+    ../analytics/analytics.cpp
 
 HEADERS += \
     changepasswordpage.h \
-    ../networkmanager.h
+    ../networkmanager.h \
+    ../analytics/analytics.h
 
-# 包含项目根目录以访问networkmanager.h
-INCLUDEPATH += ..
+# 包含项目根目录以访问networkmanager.h和analytics.h
+INCLUDEPATH += .. ../analytics.
 
 
 

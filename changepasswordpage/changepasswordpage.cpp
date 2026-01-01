@@ -4,6 +4,7 @@
 #include <QJsonObject>
 #include <QSettings>
 #include <QCryptographicHash>
+#include "analytics/analytics.h"
 
 ChangePasswordPage::ChangePasswordPage(QWidget *parent)
     : QWidget(parent)
@@ -124,6 +125,11 @@ void ChangePasswordPage::onChangePasswordClicked()
 
         if (code == 0) {
             QMessageBox::information(this, "成功", "密码修改成功！");
+            // 追踪密码修改成功事件
+            Analytics::SDK::instance()->track("password_change_success", {
+                {"event_type", "click"},
+                {"page", "change_password_page"}
+            });
             // 清空输入框
             m_oldPasswordEdit->clear();
             m_newPasswordEdit->clear();
@@ -132,12 +138,25 @@ void ChangePasswordPage::onChangePasswordClicked()
             emit passwordChanged();
         } else {
             QMessageBox::warning(this, "失败", message);
+            // 追踪密码修改失败事件
+            Analytics::SDK::instance()->track("password_change_failed", {
+                {"event_type", "error"},
+                {"page", "change_password_page"},
+                {"error_message", message}
+            });
         }
     },
     [this](const QString &errorMsg) {
         // 错误回调
         // 修改密码失败
         QMessageBox::warning(this, "错误", "网络请求失败: " + errorMsg);
+        // 追踪密码修改失败事件（网络错误）
+        Analytics::SDK::instance()->track("password_change_failed", {
+            {"event_type", "error"},
+            {"page", "change_password_page"},
+            {"error_message", errorMsg},
+            {"error_type", "network_error"}
+        });
     });
 }
 

@@ -13,6 +13,7 @@
 #include "loginpage.h"
 #include "changepasswordpage.h"
 #include "userinfopage.h"
+#include "analytics/analytics.h"
 #include <QFont>
 #include <QListWidgetItem>
 #include <QScrollArea>
@@ -448,6 +449,13 @@ void MainUIWindow::setupContent()
 void MainUIWindow::onMainMenuClicked(QListWidgetItem *item)
 {
     QString mainMenu = item->text();
+    
+    // 追踪一级菜单切换事件
+    Analytics::SDK::instance()->track("main_menu_changed", {
+        {"event_type", "click"},
+        {"menu_name", mainMenu}
+    });
+    
     setupSubMenu(mainMenu);
 }
 
@@ -460,6 +468,12 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
     }
 
     QString subMenu = item->text();
+    
+    // 追踪页面导航事件
+    Analytics::SDK::instance()->track("page_navigated", {
+        {"event_type", "view"},
+        {"page_name", subMenu}
+    });
 
     // 清空内容区域
     while (contentStack->count() > 0) {

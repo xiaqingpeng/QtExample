@@ -258,7 +258,7 @@ void ReportsTab::loadRetentionStats()
             if (!retentionKey.isEmpty()) {
                 QString retentionStr = data[retentionKey].toString();
                 retention = retentionStr.toDouble();
-                LOG_DEBUG() << "留存率(" << retentionKey << "):" << retention;
+               // LOG_DEBUG() << "留存率(" << retentionKey << "):" << retention;
             }
             
             m_retentionLabel->setText(QString("留存率: %1%").arg(retention, 0, 'f', 2));

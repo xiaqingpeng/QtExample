@@ -14,11 +14,11 @@ TEMPLATE = subdirs
 
 # 子项目列表
 SUBDIRS += \
+    networkmanager \
+    analytics \
     loginpage \
     changepasswordpage \
     userinfo \
-    networkmanager \
-    analytics \
     advancedcontrols \
     basiccontrols \
     datadisplay \

@@ -11,6 +11,7 @@ target_link_libraries(ECharts PRIVATE
     Qt6::Widgets
     Qt6::WebEngineWidgets
     Qt6::Network
+    Analytics
 )
 
 # 设置头文件导出

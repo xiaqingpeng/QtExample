@@ -13,6 +13,7 @@ target_link_libraries(ChangePasswordPage PRIVATE
     Qt6::Widgets
     Qt6::Network
     NetworkManager
+    Analytics
 )
 
 # 导出头文件

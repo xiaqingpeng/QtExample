@@ -20,6 +20,7 @@
 #include <QDate>
 #include "echartstab.h"
 #include "common.h"
+#include "analytics/analytics.h"
 
 EChartsTab::EChartsTab(QWidget *parent)
     : QMainWindow(parent)
@@ -332,6 +333,11 @@ EChartsTab::EChartsTab(QWidget *parent)
     
     // 初始化默认选择"今天"
     onTimeShortcutClicked(0);
+    
+    // 追踪ECharts图表页面浏览事件
+    Analytics::SDK::instance()->trackView("echarts_page", {
+        {"page_title", "ECharts图表示例"}
+    });
 }
 
 EChartsTab::~EChartsTab()
@@ -340,18 +346,52 @@ EChartsTab::~EChartsTab()
 
 void EChartsTab::onFilterChanged()
 {
+    // 追踪筛选操作事件
+    QString method = m_methodCombo->currentData().toString();
+    QString platform = m_platformCombo->currentData().toString();
+    Analytics::SDK::instance()->track("chart_filter_changed", {
+        {"event_type", "click"},
+        {"page", "echarts_page"},
+        {"filter_method", method},
+        {"filter_platform", platform}
+    });
+    
     // 当筛选条件改变时，自动重新获取数据
     fetchApiData();
 }
 
 void EChartsTab::onTimeFilterChanged()
 {
+    // 追踪时间筛选操作事件
+    QString startTime;
+    QString endTime;
+    if (m_startTimeEdit->dateTime().isValid()) {
+        startTime = m_startTimeEdit->dateTime().toString(Qt::ISODate);
+    }
+    if (m_endTimeEdit->dateTime().isValid()) {
+        endTime = m_endTimeEdit->dateTime().toString(Qt::ISODate);
+    }
+    Analytics::SDK::instance()->track("chart_time_filter_changed", {
+        {"event_type", "click"},
+        {"page", "echarts_page"},
+        {"start_time", startTime},
+        {"end_time", endTime}
+    });
+    
     // 当时间筛选条件改变时，自动重新获取数据
     fetchApiData();
 }
 
 void EChartsTab::onChartTypeChanged(int index)
 {
+    // 追踪图表类型切换事件
+    QString chartType = m_chartTypeCombo->currentData().toString();
+    Analytics::SDK::instance()->track("chart_type_changed", {
+        {"event_type", "click"},
+        {"page", "echarts_page"},
+        {"chart_type", chartType}
+    });
+    
     // 当图表类型改变时，重新渲染图表
     fetchApiData();
 }
@@ -478,6 +518,12 @@ void EChartsTab::onPageLoaded(bool ok)
 
 void EChartsTab::fetchApiData()
 {
+    // 追踪图表数据查看事件
+    Analytics::SDK::instance()->track("chart_data_viewed", {
+        {"event_type", "view"},
+        {"page", "echarts_page"}
+    });
+    
     // 首次获取数据后启动定时器（每30秒自动刷新）
     if (!m_apiTimer->isActive()) {
         m_apiTimer->start(30000); // 30秒

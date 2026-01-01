@@ -133,6 +133,7 @@ target_link_libraries(ECharts PRIVATE
     Qt6::WebEngineWidgets
     Qt6::Network
     NetworkManager
+    Analytics
 )
 target_include_directories(ECharts PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -197,6 +198,8 @@ add_dependencies(UserProfileTab NetworkManager)
 add_dependencies(ReportsTab NetworkManager)
 add_dependencies(LoginPage Analytics)
 add_dependencies(UserInfo Analytics)
+add_dependencies(ChangePasswordPage Analytics)
+add_dependencies(ECharts Analytics)
 
 # 主应用程序源文件
 set(SOURCES
