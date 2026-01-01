@@ -21,7 +21,10 @@ HEADERS += \
     ../analytics/analytics.h
 
 # 包含项目根目录以访问networkmanager.h和analytics.h
-INCLUDEPATH += .. ../analytics
+INCLUDEPATH += .. ../analytics ../styles
+
+# 链接styles库
+LIBS += -L$$OUT_PWD/../styles -lstyles
 
 # 安装配置
 target.path = $[QT_INSTALL_LIBS]

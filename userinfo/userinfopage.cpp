@@ -1,4 +1,5 @@
 #include "userinfopage.h"
+#include "../styles/theme_manager.h"
 #include <QSettings>
 #include <QPixmap>
 #include <QBuffer>
@@ -40,6 +41,10 @@ UserInfoPage::UserInfoPage(QWidget *parent)
     
     setupUI();
     loadUserInfo();
+    
+    // 连接主题变化信号
+    connect(ThemeManager::instance(), &ThemeManager::themeChanged, 
+            this, &UserInfoPage::onThemeChanged);
     
     // 追踪页面浏览事件
     Analytics::SDK::instance()->trackView("user_info_page", {
@@ -160,16 +165,24 @@ void UserInfoPage::setupUI()
     avatarLayout->setContentsMargins(4, 4, 4, 4);
     
     m_avatarLabel = new QLabel();
+    m_avatarLabel->setObjectName("avatarLabel");
     m_avatarLabel->setAlignment(Qt::AlignCenter);
     m_avatarLabel->setFixedSize(152, 152);
-    // 现代简约头像样式
-    m_avatarLabel->setStyleSheet(
-        "QLabel { "
-        "    background-color: #f8fafc; "
+    
+    // 使用主题管理器的导航栏头像样式，但适配更大尺寸
+    ThemeManager* themeManager = ThemeManager::instance();
+    const auto& colors = themeManager->colors();
+    
+    QString avatarStyle = QString(
+        "QLabel#avatarLabel { "
+        "    border: 2px solid %1; "
         "    border-radius: 76px; "
-        "    border: 3px solid #ffffff; "
+        "    background-color: %2; "
         "}"
-    );
+    ).arg(colors.PRIMARY)
+     .arg(colors.SURFACE);
+    
+    m_avatarLabel->setStyleSheet(avatarStyle);
     
     // 添加微妙阴影效果 (暂时禁用以排查崩溃问题)
     // QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(this);
@@ -886,4 +899,24 @@ void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
     QMessageBox::information(this, "成功", "头像上传成功！");
     
     reply->deleteLater();
+}
+
+void UserInfoPage::onThemeChanged()
+{
+    // 当主题变化时，更新头像样式
+    if (m_avatarLabel) {
+        ThemeManager* themeManager = ThemeManager::instance();
+        const auto& colors = themeManager->colors();
+        
+        QString avatarStyle = QString(
+            "QLabel#avatarLabel { "
+            "    border: 2px solid %1; "
+            "    border-radius: 76px; "
+            "    background-color: %2; "
+            "}"
+        ).arg(colors.PRIMARY)
+         .arg(colors.SURFACE);
+        
+        m_avatarLabel->setStyleSheet(avatarStyle);
+    }
 }
