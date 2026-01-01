@@ -491,8 +491,8 @@ void LogStatsTab::fetchLogData()
         queryParams.addQueryItem("endTime", endTime);
     }
 
-    // LOG_DEBUG() << "Fetching log data from:" << apiUrl;
-    // LOG_DEBUG() << "Query params:" << queryParams.toString();
+    // // LOG_DEBUG() << "Fetching log data from:" << apiUrl;
+    // // LOG_DEBUG() << "Query params:" << queryParams.toString();
 
     // 使用NetworkManager发送GET请求
     m_networkManager->get(apiUrl,
@@ -506,7 +506,7 @@ void LogStatsTab::fetchLogData()
             });
             
             // 成功回调
-            // LOG_DEBUG() << "Log data received:" << rootObj;
+            // // LOG_DEBUG() << "Log data received:" << rootObj;
 
             // 解析响应数据
             int code = rootObj["code"].toInt();

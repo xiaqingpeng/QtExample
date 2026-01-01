@@ -364,9 +364,9 @@ void ReportsTab::loadRetentionStats()
     
     networkManager->getRetentionStats(
         [this](const QJsonObject &response) {
-           // LOG_DEBUG() << "留存率API返回数据:" << QJsonDocument(response).toJson(QJsonDocument::Compact);
+           // // LOG_DEBUG() << "留存率API返回数据:" << QJsonDocument(response).toJson(QJsonDocument::Compact);
             QJsonObject data = response["data"].toObject();
-          //  LOG_DEBUG() << "留存率data数据:" << QJsonDocument(data).toJson(QJsonDocument::Compact);
+          //  // LOG_DEBUG() << "留存率data数据:" << QJsonDocument(data).toJson(QJsonDocument::Compact);
             
             // API返回的是day1Retention、day7Retention、day30Retention三个字段
             // 优先显示7日留存率
@@ -865,13 +865,13 @@ void ReportsTab::exportReport()
 
 void ReportsTab::exportToCSV()
 {
-    qDebug() << "开始CSV导出...";
+   // qDebug() << "开始CSV导出...";
     
     // 设置默认文件名和路径
     QString defaultFileName = QString("report_%1.csv").arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
     QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/" + defaultFileName;
     
-    qDebug() << "默认文件路径:" << defaultPath;
+   // qDebug() << "默认文件路径:" << defaultPath;
     
     QString fileName = QFileDialog::getSaveFileName(
         this, 
@@ -882,18 +882,18 @@ void ReportsTab::exportToCSV()
         QFileDialog::DontUseNativeDialog  // 使用Qt自己的对话框，避免系统对话框问题
     );
     
-    qDebug() << "用户选择的文件名:" << fileName;
+   // qDebug() << "用户选择的文件名:" << fileName;
     
     if (fileName.isEmpty()) {
-        qDebug() << "用户取消了文件选择";
+      //  qDebug() << "用户取消了文件选择";
         return;
     }
     
-    qDebug() << "开始写入文件:" << fileName;
+  //  qDebug() << "开始写入文件:" << fileName;
     
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qDebug() << "无法打开文件:" << fileName << "错误:" << file.errorString();
+   //     qDebug() << "无法打开文件:" << fileName << "错误:" << file.errorString();
         QMessageBox::warning(this, "错误", "无法打开文件: " + fileName + "\n错误: " + file.errorString());
         return;
     }
@@ -919,14 +919,14 @@ void ReportsTab::exportToCSV()
     
     // 检查表格是否存在并且有效
     if (!m_topPagesTable) {
-        qDebug() << "热门页面表格为空指针";
+     //   qDebug() << "热门页面表格为空指针";
         QMessageBox::warning(this, "错误", "热门页面表格未初始化");
         file.close();
         return;
     }
     
     int pagesRowCount = m_topPagesTable->rowCount();
-    qDebug() << "热门页面表格行数:" << pagesRowCount;
+  //  qDebug() << "热门页面表格行数:" << pagesRowCount;
     
     // 写入热门页面
     out << "热门页面\n";
@@ -942,14 +942,14 @@ void ReportsTab::exportToCSV()
     
     // 检查事件表格
     if (!m_topEventsTable) {
-        qDebug() << "热门事件表格为空指针";
+    //    qDebug() << "热门事件表格为空指针";
         QMessageBox::warning(this, "错误", "热门事件表格未初始化");
         file.close();
         return;
     }
     
     int eventsRowCount = m_topEventsTable->rowCount();
-    qDebug() << "热门事件表格行数:" << eventsRowCount;
+  //  qDebug() << "热门事件表格行数:" << eventsRowCount;
     
     // 写入热门事件
     out << "热门事件\n";
@@ -963,13 +963,13 @@ void ReportsTab::exportToCSV()
     }
     
     file.close();
-    qDebug() << "CSV导出完成，文件保存到:" << fileName;
+  //  qDebug() << "CSV导出完成，文件保存到:" << fileName;
     QMessageBox::information(this, "成功", "报表导出成功!\n文件保存到: " + fileName);
 }
 
 void ReportsTab::exportToExcel()
 {
-    qDebug() << "开始Excel导出...";
+ //   qDebug() << "开始Excel导出...";
     
     // 设置默认文件名和路径
     QString defaultFileName = QString("report_%1.xlsx").arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
@@ -985,11 +985,11 @@ void ReportsTab::exportToExcel()
     );
     
     if (fileName.isEmpty()) {
-        qDebug() << "用户取消了Excel文件选择";
+    //    qDebug() << "用户取消了Excel文件选择";
         return;
     }
     
-    qDebug() << "开始写入Excel文件:" << fileName;
+  //  qDebug() << "开始写入Excel文件:" << fileName;
     
     // 使用CSV格式但保存为.xlsx文件（可以被Excel打开）
     QFile file(fileName);
@@ -1023,7 +1023,7 @@ void ReportsTab::exportToExcel()
     // 安全检查和写入热门页面
     if (m_topPagesTable) {
         int pagesRowCount = m_topPagesTable->rowCount();
-        qDebug() << "Excel导出 - 热门页面表格行数:" << pagesRowCount;
+     //   qDebug() << "Excel导出 - 热门页面表格行数:" << pagesRowCount;
         
         out << "热门页面\n";
         out << "排名,页面名称,访问次数\n";
@@ -1040,7 +1040,7 @@ void ReportsTab::exportToExcel()
     // 安全检查和写入热门事件
     if (m_topEventsTable) {
         int eventsRowCount = m_topEventsTable->rowCount();
-        qDebug() << "Excel导出 - 热门事件表格行数:" << eventsRowCount;
+    //    qDebug() << "Excel导出 - 热门事件表格行数:" << eventsRowCount;
         
         out << "热门事件\n";
         out << "排名,事件名称,触发次数\n";
@@ -1054,7 +1054,7 @@ void ReportsTab::exportToExcel()
     }
     
     file.close();
-    qDebug() << "Excel导出完成，文件保存到:" << fileName;
+  //  qDebug() << "Excel导出完成，文件保存到:" << fileName;
     QMessageBox::information(this, "成功", "报表导出成功!\n文件保存到: " + fileName + "\n\n注意：文件采用CSV格式保存为.xlsx扩展名，可被Excel打开。");
 }
 
@@ -1142,7 +1142,7 @@ void ReportsTab::exportToPDF()
     // 添加热门页面数据
     if (m_topPagesTable) {
         int pagesRowCount = m_topPagesTable->rowCount();
-        qDebug() << "PDF导出 - 热门页面表格行数:" << pagesRowCount;
+     //   qDebug() << "PDF导出 - 热门页面表格行数:" << pagesRowCount;
         
         for (int i = 0; i < pagesRowCount && i < 100; ++i) {
             QTableWidgetItem *nameItem = m_topPagesTable->item(i, 1);
@@ -1174,7 +1174,7 @@ void ReportsTab::exportToPDF()
     // 添加热门事件数据
     if (m_topEventsTable) {
         int eventsRowCount = m_topEventsTable->rowCount();
-        qDebug() << "PDF导出 - 热门事件表格行数:" << eventsRowCount;
+     //   qDebug() << "PDF导出 - 热门事件表格行数:" << eventsRowCount;
         
         for (int i = 0; i < eventsRowCount && i < 100; ++i) {
             QTableWidgetItem *nameItem = m_topEventsTable->item(i, 1);

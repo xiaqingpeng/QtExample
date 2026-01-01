@@ -397,10 +397,10 @@ void UserProfileTab::loadUserProfileData()
     // 获取用户行为特征
     networkManager->getUserBehaviorStats(m_currentUserId,
         [this](const QJsonObject &response) {
-          //  LOG_DEBUG() << "用户行为特征API返回数据:" << QJsonDocument(response).toJson(QJsonDocument::Compact);
+          //  // LOG_DEBUG() << "用户行为特征API返回数据:" << QJsonDocument(response).toJson(QJsonDocument::Compact);
             if (response["success"].toBool()) {
                 QJsonObject data = response["data"].toObject();
-           //     LOG_DEBUG() << "用户行为特征data对象:" << QJsonDocument(data).toJson(QJsonDocument::Compact);
+           //     // LOG_DEBUG() << "用户行为特征data对象:" << QJsonDocument(data).toJson(QJsonDocument::Compact);
                 if (!data.isEmpty()) {
                     updateBehaviorStatsDisplay(data);
                 } else {
@@ -453,7 +453,7 @@ void UserProfileTab::loadUserProfileData()
 
 void UserProfileTab::updateUserInfoDisplay(const QJsonObject &userInfo)
 {
-   // LOG_DEBUG() << "用户画像数据:" << QJsonDocument(userInfo).toJson(QJsonDocument::Compact);
+   // // LOG_DEBUG() << "用户画像数据:" << QJsonDocument(userInfo).toJson(QJsonDocument::Compact);
     
     m_userIdLabel->setText("用户ID: " + userInfo["userId"].toString());
     
@@ -485,7 +485,7 @@ void UserProfileTab::updateUserInfoDisplay(const QJsonObject &userInfo)
         activeDays = userInfo["activeDays"].toInt();
     }
     
-  //  LOG_DEBUG() << "总事件数:" << totalEvents << "活跃天数:" << activeDays;
+  //  // LOG_DEBUG() << "总事件数:" << totalEvents << "活跃天数:" << activeDays;
     
     m_totalEventsLabel->setText("总事件数: " + QString::number(totalEvents));
     m_activeDaysLabel->setText("活跃天数: " + QString::number(activeDays));
@@ -570,10 +570,10 @@ void UserProfileTab::updateUserTagsDisplay(const QJsonArray &tags)
 
 void UserProfileTab::updateBehaviorStatsDisplay(const QJsonObject &behaviorStats)
 {
- //   LOG_DEBUG() << "行为统计数据:" << QJsonDocument(behaviorStats).toJson(QJsonDocument::Compact);
+ //   // LOG_DEBUG() << "行为统计数据:" << QJsonDocument(behaviorStats).toJson(QJsonDocument::Compact);
     
     QJsonObject visitFrequency = behaviorStats["visitFrequency"].toObject();
-  //  LOG_DEBUG() << "访问频率数据:" << QJsonDocument(visitFrequency).toJson(QJsonDocument::Compact);
+  //  // LOG_DEBUG() << "访问频率数据:" << QJsonDocument(visitFrequency).toJson(QJsonDocument::Compact);
     
     int totalVisits = visitFrequency["totalVisits"].toInt();
     m_visitCountLabel->setText("访问次数: " + QString::number(totalVisits));
@@ -585,12 +585,12 @@ void UserProfileTab::updateBehaviorStatsDisplay(const QJsonObject &behaviorStats
     } else {
         avgDailyVisits = visitFrequency["avgDailyVisits"].toDouble();
     }
-  //  LOG_DEBUG() << "平均每日访问:" << avgDailyVisits;
+  //  // LOG_DEBUG() << "平均每日访问:" << avgDailyVisits;
     m_avgStayTimeLabel->setText("平均每日访问: " + QString::number(avgDailyVisits, 'f', 2));
     
     // 获取常用页面
     QJsonArray pagePreference = behaviorStats["pagePreference"].toArray();
-   // LOG_DEBUG() << "页面偏好数据:" << QJsonDocument(pagePreference).toJson(QJsonDocument::Compact);
+   // // LOG_DEBUG() << "页面偏好数据:" << QJsonDocument(pagePreference).toJson(QJsonDocument::Compact);
     // 处理页面偏好数据
     QStringList topPages;
     for (int i = 0; i < qMin(5, pagePreference.size()); ++i) {
@@ -608,7 +608,7 @@ void UserProfileTab::updateBehaviorStatsDisplay(const QJsonObject &behaviorStats
     
     // 获取常用功能
     QJsonArray featureUsage = behaviorStats["featureUsage"].toArray();
-   // LOG_DEBUG() << "功能使用数据:" << QJsonDocument(featureUsage).toJson(QJsonDocument::Compact);
+   // // LOG_DEBUG() << "功能使用数据:" << QJsonDocument(featureUsage).toJson(QJsonDocument::Compact);
     // 处理功能使用数据
     QStringList topFeatures;
     for (int i = 0; i < qMin(5, featureUsage.size()); ++i) {
@@ -824,16 +824,16 @@ void UserProfileTab::renderValueRadarChart(const QJsonObject &valueData)
 
 void UserProfileTab::exportUserProfile()
 {
-    qDebug() << "开始用户画像导出...";
+    // qDebug() << "开始用户画像导出...";
     
     // 检查当前用户ID是否有效
     if (m_currentUserId.isEmpty()) {
-        qDebug() << "当前用户ID为空，无法导出";
+        // qDebug() << "当前用户ID为空，无法导出";
         QMessageBox::warning(this, "错误", "当前没有选择用户，无法导出用户画像");
         return;
     }
     
-    qDebug() << "当前用户ID:" << m_currentUserId;
+    // qDebug() << "当前用户ID:" << m_currentUserId;
     
     // 创建导出格式选择对话框
     QMessageBox formatDialog(this);
@@ -849,7 +849,7 @@ void UserProfileTab::exportUserProfile()
     formatDialog.exec();
     
     if (formatDialog.clickedButton() == cancelButton) {
-        qDebug() << "用户取消了格式选择";
+        // qDebug() << "用户取消了格式选择";
         return;
     }
     
@@ -865,7 +865,7 @@ void UserProfileTab::exportUserProfile()
 
 void UserProfileTab::exportUserProfileToCSV()
 {
-    qDebug() << "开始CSV格式用户画像导出...";
+    // qDebug() << "开始CSV格式用户画像导出...";
     
     // 设置默认文件名和路径
     QString defaultFileName = QString("user_profile_%1.csv").arg(m_currentUserId);
@@ -881,15 +881,15 @@ void UserProfileTab::exportUserProfileToCSV()
     );
     
     if (fileName.isEmpty()) {
-        qDebug() << "用户取消了CSV文件选择";
+        // qDebug() << "用户取消了CSV文件选择";
         return;
     }
     
-    qDebug() << "开始写入CSV文件:" << fileName;
+    // qDebug() << "开始写入CSV文件:" << fileName;
     
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qDebug() << "无法打开CSV文件:" << fileName << "错误:" << file.errorString();
+        // qDebug() << "无法打开CSV文件:" << fileName << "错误:" << file.errorString();
         QMessageBox::warning(this, "错误", "无法打开文件: " + fileName + "\n错误: " + file.errorString());
         return;
     }
@@ -943,13 +943,13 @@ void UserProfileTab::exportUserProfileToCSV()
     out << "常用功能," << topFeatures << "\n";
     
     file.close();
-    qDebug() << "CSV用户画像导出完成，文件保存到:" << fileName;
+    // qDebug() << "CSV用户画像导出完成，文件保存到:" << fileName;
     QMessageBox::information(this, "成功", "用户画像导出成功!\n文件保存到: " + fileName);
 }
 
 void UserProfileTab::exportUserProfileToExcel()
 {
-    qDebug() << "开始Excel格式用户画像导出...";
+    // qDebug() << "开始Excel格式用户画像导出...";
     
     // 设置默认文件名和路径
     QString defaultFileName = QString("user_profile_%1.xlsx").arg(m_currentUserId);
@@ -965,11 +965,11 @@ void UserProfileTab::exportUserProfileToExcel()
     );
     
     if (fileName.isEmpty()) {
-        qDebug() << "用户取消了Excel文件选择";
+        // qDebug() << "用户取消了Excel文件选择";
         return;
     }
     
-    qDebug() << "开始写入Excel文件:" << fileName;
+    // qDebug() << "开始写入Excel文件:" << fileName;
     
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -1028,13 +1028,13 @@ void UserProfileTab::exportUserProfileToExcel()
     out << "常用功能," << topFeatures << "\n";
     
     file.close();
-    qDebug() << "Excel用户画像导出完成，文件保存到:" << fileName;
+    // qDebug() << "Excel用户画像导出完成，文件保存到:" << fileName;
     QMessageBox::information(this, "成功", "用户画像导出成功!\n文件保存到: " + fileName + "\n\n注意：文件采用CSV格式保存为.xlsx扩展名，可被Excel打开。");
 }
 
 void UserProfileTab::exportUserProfileToPDF()
 {
-    qDebug() << "开始PDF格式用户画像导出...";
+    // qDebug() << "开始PDF格式用户画像导出...";
     
     // 设置默认文件名和路径
     QString defaultFileName = QString("user_profile_%1.pdf").arg(m_currentUserId);
@@ -1050,11 +1050,11 @@ void UserProfileTab::exportUserProfileToPDF()
     );
     
     if (fileName.isEmpty()) {
-        qDebug() << "用户取消了PDF文件选择";
+        // qDebug() << "用户取消了PDF文件选择";
         return;
     }
     
-    qDebug() << "开始生成PDF文件:" << fileName;
+    // qDebug() << "开始生成PDF文件:" << fileName;
     
     // 获取用户数据
     QString registerTime = m_registerTimeLabel ? m_registerTimeLabel->text().replace("注册时间: ", "") : "无数据";
@@ -1159,7 +1159,7 @@ void UserProfileTab::exportUserProfileToPDF()
     document.setHtml(html);
     document.print(&printer);
     
-    qDebug() << "PDF用户画像导出完成，文件保存到:" << fileName;
+    // qDebug() << "PDF用户画像导出完成，文件保存到:" << fileName;
     QMessageBox::information(this, "成功", "用户画像导出成功!\n文件保存到: " + fileName);
 }
 

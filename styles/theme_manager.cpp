@@ -10,7 +10,7 @@ const QString ThemeManager::Shadow::LG = "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0
 const QString ThemeManager::Shadow::XL = "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)";
 
 // 字体定义
-const QString ThemeManager::Typography::FONT_FAMILY = "system";
+const QString ThemeManager::Typography::FONT_FAMILY = "SF Pro Text";
 
 ThemeManager::ThemeManager(QObject *parent) : QObject(parent), m_currentTheme(LIGHT)
 {

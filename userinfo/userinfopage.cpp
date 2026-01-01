@@ -404,10 +404,10 @@ void UserInfoPage::loadUserInfo()
                     // 创建圆形头像（152px大小以匹配头像标签尺寸）
                     QPixmap circularAvatar = createCircularPixmap(pixmap, 152);
                     m_avatarLabel->setPixmap(circularAvatar);
-                    qDebug() << "Loaded network avatar";
+                 //   qDebug() << "Loaded network avatar";
                 }
             } else {
-                qDebug() << "Failed to load network avatar:" << reply->errorString();
+             //   qDebug() << "Failed to load network avatar:" << reply->errorString();
             }
             reply->deleteLater();
         });
@@ -557,7 +557,7 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
 
 void UserInfoPage::onUploadAvatarClicked()
 {
-    qDebug() << "Upload avatar button clicked!";
+  //  qDebug() << "Upload avatar button clicked!";
     
     try {
         // 检查文件系统访问权限
@@ -568,11 +568,11 @@ void UserInfoPage::onUploadAvatarClicked()
         
         QDir dir(testDir);
         if (!dir.exists()) {
-            qDebug() << "Pictures directory does not exist:" << testDir;
+         //   qDebug() << "Pictures directory does not exist:" << testDir;
             testDir = QDir::homePath();
         }
         
-        qDebug() << "Using directory for file dialog:" << testDir;
+      //  qDebug() << "Using directory for file dialog:" << testDir;
         
         // 追踪点击事件 (添加异常保护)
         try {
@@ -581,14 +581,14 @@ void UserInfoPage::onUploadAvatarClicked()
                 {"button_text", "更换头像"}
             });
         } catch (...) {
-            qDebug() << "Analytics tracking failed, continuing...";
+         //   qDebug() << "Analytics tracking failed, continuing...";
         }
         
         // 尝试不同的文件对话框方式
         QString filePath;
         
         // 方法1: 使用非原生对话框
-        qDebug() << "Trying non-native dialog...";
+     //   qDebug() << "Trying non-native dialog...";
         filePath = QFileDialog::getOpenFileName(
             this,
             "选择头像图片",
@@ -600,7 +600,7 @@ void UserInfoPage::onUploadAvatarClicked()
         
         // 如果第一种方法失败，尝试原生对话框
         if (filePath.isEmpty()) {
-            qDebug() << "Non-native dialog failed, trying native dialog...";
+          //  qDebug() << "Non-native dialog failed, trying native dialog...";
             filePath = QFileDialog::getOpenFileName(
                 this,
                 "选择头像图片",
@@ -611,7 +611,7 @@ void UserInfoPage::onUploadAvatarClicked()
         
         // 如果还是失败，尝试无父窗口
         if (filePath.isEmpty()) {
-            qDebug() << "Native dialog failed, trying without parent...";
+          //  qDebug() << "Native dialog failed, trying without parent...";
             filePath = QFileDialog::getOpenFileName(
                 nullptr,
                 "选择头像图片",
@@ -620,10 +620,10 @@ void UserInfoPage::onUploadAvatarClicked()
             );
         }
         
-        qDebug() << "Final selected file path:" << filePath;
+     //   qDebug() << "Final selected file path:" << filePath;
         
         if (filePath.isEmpty()) {
-            qDebug() << "No file selected after all attempts";
+         //   qDebug() << "No file selected after all attempts";
             // 显示详细的帮助信息
             QMessageBox::information(this, "文件选择失败", 
                 "无法打开文件选择对话框。\n\n"
@@ -661,7 +661,7 @@ void UserInfoPage::onUploadAvatarClicked()
         qint64 fileSize = file.size();
         file.close();
         
-        qDebug() << "File size:" << fileSize << "bytes";
+     //   qDebug() << "File size:" << fileSize << "bytes";
         
         if (fileSize > 5 * 1024 * 1024) {
             showError("文件大小不能超过5MB");
@@ -680,16 +680,16 @@ void UserInfoPage::onUploadAvatarClicked()
             return;
         }
         
-        qDebug() << "Image loaded successfully, size:" << testPixmap.size();
+     //   qDebug() << "Image loaded successfully, size:" << testPixmap.size();
         
         // 先本地预览头像
         QPixmap circularAvatar = createCircularPixmap(testPixmap, 152);
         if (!circularAvatar.isNull()) {
             m_avatarLabel->setPixmap(circularAvatar);
-            qDebug() << "Avatar preview updated successfully";
+         //   qDebug() << "Avatar preview updated successfully";
             
             // 立即发射信号，避免定时器
-            qDebug() << "Emitting avatarUpdated signal immediately";
+         //   qDebug() << "Emitting avatarUpdated signal immediately";
             emit avatarUpdated();
         }
         
@@ -697,17 +697,17 @@ void UserInfoPage::onUploadAvatarClicked()
         uploadAvatar(filePath);
         
     } catch (const std::exception& e) {
-        qDebug() << "Exception in onUploadAvatarClicked:" << e.what();
+      //  qDebug() << "Exception in onUploadAvatarClicked:" << e.what();
         showError("发生未知错误，请重试");
     } catch (...) {
-        qDebug() << "Unknown exception in onUploadAvatarClicked";
+     //   qDebug() << "Unknown exception in onUploadAvatarClicked";
         showError("发生未知错误，请重试");
     }
 }
 
 void UserInfoPage::uploadAvatar(const QString &filePath)
 {
-    qDebug() << "Starting avatar upload for file:" << filePath;
+ //   qDebug() << "Starting avatar upload for file:" << filePath;
     
     // 先更新本地显示
     QPixmap localPixmap(filePath);
@@ -721,7 +721,7 @@ void UserInfoPage::uploadAvatar(const QString &filePath)
         settings.sync();
         
         // 发射头像更新信号
-        qDebug() << "Emitting avatarUpdated signal for local avatar";
+   //     qDebug() << "Emitting avatarUpdated signal for local avatar";
         emit avatarUpdated();
         
         QMessageBox::information(this, "成功", "头像已更新！\n注意：这是本地预览，实际上传功能需要网络连接。");

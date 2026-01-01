@@ -1,4 +1,5 @@
 #include "mainuiwindow.h"
+#include "utils/logger.h"
 #include "advancedcontrols/advancedcontrolstab.h"
 #include "basiccontrols/basiccontrolstab.h"
 #include "datadisplay/datadisplaytab.h"
@@ -64,7 +65,7 @@ void MainUIWindow::setupUI(QWidget *parent)
 {
     Q_UNUSED(parent);
     
-    qDebug() << "setupUI started";
+    // LOG_DEBUG("setupUI started");
     
     try {
         // 创建主布局
@@ -120,12 +121,12 @@ void MainUIWindow::setupUI(QWidget *parent)
             setupSubMenuContent(mainMenuList->currentItem()->text());
         }
         
-        qDebug() << "setupUI completed successfully";
+        // LOG_DEBUG("setupUI completed successfully");
         
     } catch (const std::exception& e) {
-        qDebug() << "Exception in setupUI:" << e.what();
+        LOG_ERROR("Exception in setupUI:" << e.what());
     } catch (...) {
-        qDebug() << "Unknown exception in setupUI";
+        LOG_ERROR("Unknown exception in setupUI");
     }
 }
 
@@ -137,7 +138,7 @@ void MainUIWindow::setupNavigationBar()
     
     QHBoxLayout *navLayout = new QHBoxLayout(navigationBar);
     navLayout->setContentsMargins(24, 12, 24, 12);
-    navLayout->setSpacing(16);
+    navLayout->setSpacing(20);
     
     // 应用标题
     QLabel *appTitle = new QLabel("Qt 现代化应用");
@@ -147,6 +148,7 @@ void MainUIWindow::setupNavigationBar()
         "    font-size: %2px; "
         "    font-weight: 700; "
         "    color: %3; "
+        "    padding: 0 8px; "
         "}"
     ).arg(ThemeManager::Typography::FONT_FAMILY)
      .arg(ThemeManager::Typography::FONT_SIZE_XL)
@@ -155,12 +157,20 @@ void MainUIWindow::setupNavigationBar()
     navLayout->addWidget(appTitle);
     navLayout->addStretch();
     
+    // 用户信息区域容器
+    QWidget *userInfoContainer = new QWidget();
+    QHBoxLayout *userInfoLayout = new QHBoxLayout(userInfoContainer);
+    userInfoLayout->setContentsMargins(0, 0, 0, 0);
+    userInfoLayout->setSpacing(12);
+    
     // 主题切换器
     themeComboBox = new QComboBox();
     themeComboBox->addItem("浅色主题", static_cast<int>(ThemeManager::LIGHT));
     themeComboBox->addItem("深色主题", static_cast<int>(ThemeManager::DARK));
     themeComboBox->addItem("蓝色主题", static_cast<int>(ThemeManager::BLUE));
     themeComboBox->addItem("绿色主题", static_cast<int>(ThemeManager::GREEN));
+    themeComboBox->setMinimumWidth(120);
+    themeComboBox->setMaximumWidth(140);
     
     // 设置当前主题
     themeComboBox->setCurrentIndex(static_cast<int>(ThemeManager::instance()->getCurrentTheme()));
@@ -170,7 +180,28 @@ void MainUIWindow::setupNavigationBar()
                 ThemeManager::instance()->setTheme(static_cast<ThemeManager::ThemeType>(index));
             });
     
-    navLayout->addWidget(themeComboBox);
+    userInfoLayout->addWidget(themeComboBox);
+    
+    // 分隔线
+    QFrame *separator = new QFrame();
+    separator->setFrameShape(QFrame::VLine);
+    separator->setFrameShadow(QFrame::Sunken);
+    separator->setFixedHeight(30);
+    separator->setStyleSheet(QString(
+        "QFrame { "
+        "    color: %1; "
+        "    background-color: %2; "
+        "}"
+    ).arg(ThemeManager::instance()->colors().BORDER)
+     .arg(ThemeManager::instance()->colors().BORDER));
+    
+    userInfoLayout->addWidget(separator);
+    
+    // 用户头像和用户名容器
+    QWidget *userContainer = new QWidget();
+    QHBoxLayout *userLayout = new QHBoxLayout(userContainer);
+    userLayout->setContentsMargins(0, 0, 0, 0);
+    userLayout->setSpacing(10);
     
     // 用户头像
     avatarLabel = new QLabel();
@@ -178,19 +209,28 @@ void MainUIWindow::setupNavigationBar()
     avatarLabel->setFixedSize(44, 44);
     avatarLabel->setAlignment(Qt::AlignCenter);
     
-    navLayout->addWidget(avatarLabel);
+    userLayout->addWidget(avatarLabel);
     
     // 用户名
     usernameLabel = new QLabel("未登录");
     usernameLabel->setObjectName("usernameLabel");
+    usernameLabel->setMinimumWidth(80);
+    usernameLabel->setMaximumWidth(150);
+    usernameLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     
-    navLayout->addWidget(usernameLabel);
+    userLayout->addWidget(usernameLabel);
+    
+    userInfoLayout->addWidget(userContainer);
     
     // 登出按钮
     logoutButton = new QPushButton("登出");
+    logoutButton->setMinimumWidth(60);
+    logoutButton->setMaximumWidth(80);
     connect(logoutButton, &QPushButton::clicked, this, &MainUIWindow::onLogoutClicked);
     
-    navLayout->addWidget(logoutButton);
+    userInfoLayout->addWidget(logoutButton);
+    
+    navLayout->addWidget(userInfoContainer);
 }
 
 void MainUIWindow::setupMainMenu()
@@ -525,15 +565,15 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         if (subMenu.contains("用户信息")) {
             UserInfoPage *userInfoPage = qobject_cast<UserInfoPage*>(contentWidget);
             if (userInfoPage) {
-                qDebug() << "Connecting avatarUpdated signal for UserInfoPage";
+                // LOG_DEBUG("Connecting avatarUpdated signal for UserInfoPage");
                 connect(userInfoPage, &UserInfoPage::avatarUpdated, 
                         this, &MainUIWindow::updateUserInfoSafe, Qt::QueuedConnection);
                 
                 // 立即更新一次导航栏头像，确保同步（不使用定时器）
-                qDebug() << "Immediate avatar sync for navigation bar";
+                // LOG_DEBUG("Immediate avatar sync for navigation bar");
                 updateUserInfoSafe();
             } else {
-                qDebug() << "Failed to cast to UserInfoPage";
+                // LOG_DEBUG("Failed to cast to UserInfoPage");
             }
         }
     }
@@ -543,7 +583,7 @@ void MainUIWindow::onLoginSuccess(const QString &token)
 {
     Q_UNUSED(token);
     
-    qDebug() << "MainUIWindow::onLoginSuccess called";
+    // LOG_DEBUG("MainUIWindow::onLoginSuccess called");
     
     // 安全检查：确保所有UI元素都已初始化
     if (!mainStack || !statusIndicator || !statusText || !statusMessage) {
@@ -551,13 +591,13 @@ void MainUIWindow::onLoginSuccess(const QString &token)
         return;
     }
     
-    qDebug() << "Switching to main interface";
+    // LOG_DEBUG("Switching to main interface");
     
     try {
         // 登录成功，切换到主界面
         mainStack->setCurrentIndex(1);
         
-        qDebug() << "Updating status bar";
+        // LOG_DEBUG("Updating status bar");
         
         // 更新状态栏
         statusIndicator->setStyleSheet(
@@ -569,25 +609,25 @@ void MainUIWindow::onLoginSuccess(const QString &token)
         statusText->setText("在线");
         statusMessage->setText("登录成功");
         
-        qDebug() << "Scheduling updateUserInfo";
+        // LOG_DEBUG("Scheduling updateUserInfo");
         
         // 立即更新用户信息，不使用定时器避免崩溃
         try {
-            qDebug() << "About to call updateUserInfo immediately";
+            // LOG_DEBUG("About to call updateUserInfo immediately");
             updateUserInfoSafe();
-            qDebug() << "updateUserInfo completed successfully";
+            // LOG_DEBUG("updateUserInfo completed successfully");
         } catch (const std::exception& e) {
-            qDebug() << "Exception in updateUserInfo:" << e.what();
+            // LOG_DEBUG("Exception in updateUserInfo:" << e.what());
         } catch (...) {
-            qDebug() << "Unknown exception in updateUserInfo";
+            // LOG_DEBUG("Unknown exception in updateUserInfo");
         }
         
-        qDebug() << "onLoginSuccess completed successfully";
+        // LOG_DEBUG("onLoginSuccess completed successfully");
         
     } catch (const std::exception& e) {
-        qDebug() << "Exception in onLoginSuccess:" << e.what();
+        // LOG_DEBUG("Exception in onLoginSuccess:" << e.what());
     } catch (...) {
-        qDebug() << "Unknown exception in onLoginSuccess";
+        // LOG_DEBUG("Unknown exception in onLoginSuccess");
     }
 }
 
@@ -638,7 +678,7 @@ void MainUIWindow::onLogoutClicked()
 
 void MainUIWindow::updateUserInfoSafe()
 {
-    qDebug() << "MainUIWindow::updateUserInfoSafe() called";
+    // LOG_DEBUG("MainUIWindow::updateUserInfoSafe() called");
     
     try {
         // 安全检查：确保所有UI元素都已初始化
@@ -647,7 +687,7 @@ void MainUIWindow::updateUserInfoSafe()
             return;
         }
         
-        qDebug() << "UI elements check passed";
+        // LOG_DEBUG("UI elements check passed");
         
         // 从设置中获取用户信息
         QSettings settings("YourCompany", "QtApp");
@@ -655,22 +695,22 @@ void MainUIWindow::updateUserInfoSafe()
         QString localAvatar = settings.value("user/avatar_local", "").toString();
         QString networkAvatar = settings.value("user/avatar", "").toString();
         
-        qDebug() << "Updating user info - username:" << username;
-        qDebug() << "Local avatar:" << localAvatar;
-        qDebug() << "Network avatar:" << networkAvatar;
+        // LOG_DEBUG("Updating user info - username:" << username);
+        // LOG_DEBUG("Local avatar:" << localAvatar);
+        // LOG_DEBUG("Network avatar:" << networkAvatar);
         
         // 更新用户名
         if (!username.isEmpty()) {
             usernameLabel->setText(username);
-            qDebug() << "Username updated to:" << username;
+            // LOG_DEBUG("Username updated to:" << username);
         } else {
             usernameLabel->setText("未知用户");
-            qDebug() << "Username set to default";
+            // LOG_DEBUG("Username set to default");
         }
         
         // 优先使用本地头像
         if (!localAvatar.isEmpty() && QFileInfo::exists(localAvatar)) {
-            qDebug() << "Loading local avatar from:" << localAvatar;
+            // LOG_DEBUG("Loading local avatar from:" << localAvatar);
             
             QPixmap localPixmap(localAvatar);
             if (!localPixmap.isNull()) {
@@ -678,19 +718,19 @@ void MainUIWindow::updateUserInfoSafe()
                 QPixmap circularPixmap = createCircularPixmap(localPixmap, 40);
                 if (!circularPixmap.isNull()) {
                     avatarLabel->setPixmap(circularPixmap);
-                    qDebug() << "Local avatar loaded successfully for navigation bar";
+                    // LOG_DEBUG("Local avatar loaded successfully for navigation bar");
                     return; // 使用本地头像，不需要继续
                 } else {
-                    qDebug() << "Failed to create circular pixmap from local avatar";
+                    // LOG_DEBUG("Failed to create circular pixmap from local avatar");
                 }
             } else {
-                qDebug() << "Failed to load local avatar pixmap";
+                // LOG_DEBUG("Failed to load local avatar pixmap");
             }
         }
         
         // 如果没有本地头像，尝试加载网络头像
         if (!networkAvatar.isEmpty()) {
-            qDebug() << "Loading network avatar from:" << networkAvatar;
+            // LOG_DEBUG("Loading network avatar from:" << networkAvatar);
             loadNetworkAvatar(networkAvatar);
             return; // 网络头像加载是异步的，直接返回
         }
@@ -698,20 +738,20 @@ void MainUIWindow::updateUserInfoSafe()
         // 如果都没有，设置默认头像
         setDefaultAvatar();
         
-        qDebug() << "updateUserInfoSafe completed successfully";
+        // LOG_DEBUG("updateUserInfoSafe completed successfully");
         
     } catch (const std::exception& e) {
-        qDebug() << "Exception in updateUserInfoSafe:" << e.what();
+        // LOG_DEBUG("Exception in updateUserInfoSafe:" << e.what());
         setDefaultAvatar();
     } catch (...) {
-        qDebug() << "Unknown exception in updateUserInfoSafe";
+        // LOG_DEBUG("Unknown exception in updateUserInfoSafe");
         setDefaultAvatar();
     }
 }
 
 void MainUIWindow::forceAvatarSync()
 {
-    qDebug() << "forceAvatarSync called";
+    // LOG_DEBUG("forceAvatarSync called");
     updateUserInfoSafe();
 }
 
@@ -736,15 +776,15 @@ void MainUIWindow::setDefaultAvatar()
     painter.drawEllipse(6, 26, 28, 16); // 身体
     
     avatarLabel->setPixmap(defaultAvatar);
-    qDebug() << "Default avatar set";
+    // LOG_DEBUG("Default avatar set");
 }
 
 void MainUIWindow::loadNetworkAvatar(const QString &avatarUrl)
 {
-    qDebug() << "loadNetworkAvatar called with URL:" << avatarUrl;
+    // LOG_DEBUG("loadNetworkAvatar called with URL:" << avatarUrl);
     
     if (avatarUrl.isEmpty()) {
-        qDebug() << "Avatar URL is empty, setting default avatar";
+        // LOG_DEBUG("Avatar URL is empty, setting default avatar");
         setDefaultAvatar();
         return;
     }
@@ -759,30 +799,30 @@ void MainUIWindow::loadNetworkAvatar(const QString &avatarUrl)
         request.setRawHeader("User-Agent", "Qt Application");
         request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
         
-        qDebug() << "Sending network request for avatar";
+        // LOG_DEBUG("Sending network request for avatar");
         
         // 发送GET请求
         QNetworkReply *reply = manager->get(request);
         
         // 连接完成信号
         connect(reply, &QNetworkReply::finished, [this, reply, avatarUrl]() {
-            qDebug() << "Network avatar request finished";
+            // LOG_DEBUG("Network avatar request finished");
             
             try {
                 if (reply->error() == QNetworkReply::NoError) {
                     QByteArray imageData = reply->readAll();
-                    qDebug() << "Received image data size:" << imageData.size();
+                    // LOG_DEBUG("Received image data size:" << imageData.size());
                     
                     if (!imageData.isEmpty()) {
                         QPixmap pixmap;
                         if (pixmap.loadFromData(imageData)) {
-                            qDebug() << "Successfully loaded pixmap from network data";
+                            // LOG_DEBUG("Successfully loaded pixmap from network data");
                             
                             // 创建圆形头像
                             QPixmap circularPixmap = createCircularPixmap(pixmap, 40);
                             if (!circularPixmap.isNull()) {
                                 avatarLabel->setPixmap(circularPixmap);
-                                qDebug() << "Network avatar loaded successfully for navigation bar";
+                                // LOG_DEBUG("Network avatar loaded successfully for navigation bar");
                                 
                                 // 可选：保存到本地缓存
                                 QSettings settings("YourCompany", "QtApp");
@@ -792,29 +832,29 @@ void MainUIWindow::loadNetworkAvatar(const QString &avatarUrl)
                                 
                                 if (pixmap.save(localPath, "PNG")) {
                                     settings.setValue("user/avatar_local", localPath);
-                                    qDebug() << "Avatar cached locally at:" << localPath;
+                                    // LOG_DEBUG("Avatar cached locally at:" << localPath);
                                 }
                             } else {
-                                qDebug() << "Failed to create circular pixmap from network avatar";
+                                // LOG_DEBUG("Failed to create circular pixmap from network avatar");
                                 setDefaultAvatar();
                             }
                         } else {
-                            qDebug() << "Failed to load pixmap from network data";
+                            // LOG_DEBUG("Failed to load pixmap from network data");
                             setDefaultAvatar();
                         }
                     } else {
-                        qDebug() << "Received empty image data";
+                        // LOG_DEBUG("Received empty image data");
                         setDefaultAvatar();
                     }
                 } else {
-                    qDebug() << "Network error loading avatar:" << reply->errorString();
+                    // LOG_DEBUG("Network error loading avatar:" << reply->errorString());
                     setDefaultAvatar();
                 }
             } catch (const std::exception& e) {
-                qDebug() << "Exception in network avatar callback:" << e.what();
+                // LOG_DEBUG("Exception in network avatar callback:" << e.what());
                 setDefaultAvatar();
             } catch (...) {
-                qDebug() << "Unknown exception in network avatar callback";
+                // LOG_DEBUG("Unknown exception in network avatar callback");
                 setDefaultAvatar();
             }
             
@@ -824,42 +864,42 @@ void MainUIWindow::loadNetworkAvatar(const QString &avatarUrl)
         // 设置超时
         QTimer::singleShot(10000, reply, [reply]() {
             if (reply->isRunning()) {
-                qDebug() << "Network avatar request timeout";
+                // LOG_DEBUG("Network avatar request timeout");
                 reply->abort();
             }
         });
         
     } catch (const std::exception& e) {
-        qDebug() << "Exception in loadNetworkAvatar:" << e.what();
+        // LOG_DEBUG("Exception in loadNetworkAvatar:" << e.what());
         setDefaultAvatar();
     } catch (...) {
-        qDebug() << "Unknown exception in loadNetworkAvatar";
+        // LOG_DEBUG("Unknown exception in loadNetworkAvatar");
         setDefaultAvatar();
     }
 }
 
 void MainUIWindow::updateUserInfo()
 {
-    qDebug() << "MainUIWindow::updateUserInfo() called - delegating to updateUserInfoSafe";
+    // LOG_DEBUG("MainUIWindow::updateUserInfo() called - delegating to updateUserInfoSafe");
     updateUserInfoSafe();
 }
 
 QPixmap MainUIWindow::createCircularPixmap(const QPixmap &pixmap, int size)
 {
-    qDebug() << "createCircularPixmap called with size:" << size;
+    // LOG_DEBUG("createCircularPixmap called with size:" << size);
     
     try {
         if (pixmap.isNull()) {
-            qDebug() << "Input pixmap is null";
+            // LOG_DEBUG("Input pixmap is null");
             return QPixmap();
         }
         
         if (size <= 0) {
-            qDebug() << "Invalid size:" << size;
+            // LOG_DEBUG("Invalid size:" << size);
             return QPixmap();
         }
         
-        qDebug() << "Input pixmap size:" << pixmap.size();
+        // LOG_DEBUG("Input pixmap size:" << pixmap.size());
         
         // 创建指定大小的圆形图片
         QPixmap result(size, size);
@@ -882,7 +922,7 @@ QPixmap MainUIWindow::createCircularPixmap(const QPixmap &pixmap, int size)
         int scaledWidth = static_cast<int>(pixmap.width() * scale);
         int scaledHeight = static_cast<int>(pixmap.height() * scale);
         
-        qDebug() << "Scale:" << scale << "Scaled size:" << scaledWidth << "x" << scaledHeight;
+        // LOG_DEBUG("Scale:" << scale << "Scaled size:" << scaledWidth << "x" << scaledHeight);
         
         // 缩放图片
         QPixmap scaledPixmap = pixmap.scaled(scaledWidth, scaledHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
@@ -891,20 +931,20 @@ QPixmap MainUIWindow::createCircularPixmap(const QPixmap &pixmap, int size)
         int x = (size - scaledWidth) / 2;
         int y = (size - scaledHeight) / 2;
         
-        qDebug() << "Drawing at position:" << x << "," << y;
+        // LOG_DEBUG("Drawing at position:" << x << "," << y);
         
         // 绘制图片，确保完全填充圆形
         painter.drawPixmap(x, y, scaledPixmap);
         painter.end();
         
-        qDebug() << "createCircularPixmap completed successfully";
+        // LOG_DEBUG("createCircularPixmap completed successfully");
         return result;
         
     } catch (const std::exception& e) {
-        qDebug() << "Exception in createCircularPixmap:" << e.what();
+        // LOG_DEBUG("Exception in createCircularPixmap:" << e.what());
         return QPixmap();
     } catch (...) {
-        qDebug() << "Unknown exception in createCircularPixmap";
+        // LOG_DEBUG("Unknown exception in createCircularPixmap");
         return QPixmap();
     }
 }
