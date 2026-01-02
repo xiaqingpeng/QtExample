@@ -1,9 +1,9 @@
-name: Qt Release
+name: Qt Release (Lite)
 
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*.*.*-lite'
 
 permissions:
   contents: write
@@ -12,17 +12,12 @@ jobs:
   build-and-release:
     name: Build and Release on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    timeout-minutes: 60
     strategy:
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
         qt_version: ['6.6.1']
         include:
-          - os: windows-latest
-            qt_arch: win64_msvc2019_64
-            archive_ext: zip
-            cmake_generator: "Ninja"
-            cmake_config: Release
           - os: macos-latest
             qt_arch: clang_64
             archive_ext: zip
@@ -46,8 +41,6 @@ jobs:
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /usr/local/lib/android
         sudo rm -rf /opt/ghc
-        sudo rm -rf /opt/hostedtoolcache/CodeQL
-        sudo docker image prune --all --force
         df -h
 
     - name: Setup Qt Cache
@@ -55,24 +48,21 @@ jobs:
       with:
         path: |
           ${{ runner.temp }}/Qt
-          ~/.cache/pip
-        key: ${{ runner.os }}-Qt-${{ matrix.qt_version }}-${{ matrix.qt_arch }}-v2
+        key: ${{ runner.os }}-Qt-${{ matrix.qt_version }}-lite-v1
         restore-keys: |
           ${{ runner.os }}-Qt-${{ matrix.qt_version }}-
-          ${{ runner.os }}-Qt-
 
-    - name: Install Qt
+    - name: Install Qt (Minimal)
       uses: jurplel/install-qt-action@v3
       with:
         version: ${{ matrix.qt_version }}
         target: desktop
         arch: ${{ matrix.qt_arch }}
         cache: true
-        cache-key-prefix: 'install-qt-action'
-        modules: 'qtwebengine qtwebchannel qtpositioning'
+        cache-key-prefix: 'install-qt-lite'
+        modules: 'qtwebengine'  # 只安装必需的模块
         setup-python: false
-        tools: 'tools_ifw tools_cmake'
-      timeout-minutes: 30
+      timeout-minutes: 25
 
     - name: Install system dependencies (Linux)
       if: matrix.os == 'ubuntu-latest'
@@ -87,18 +77,9 @@ jobs:
           libfontconfig1 \
           libxkbcommon-x11-0
 
-    - name: Setup MSVC environment (Windows)
-      if: matrix.os == 'windows-latest'
-      uses: ilammy/msvc-dev-cmd@v1
-
     - name: Configure CMake
       run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          cmake -B build -G "${{ matrix.cmake_generator }}" \
-            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_config }} \
-            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" \
-            -DCMAKE_CXX_STANDARD=17
-        elif [ "$RUNNER_OS" == "macOS" ]; then
+        if [ "$RUNNER_OS" == "macOS" ]; then
           cmake -B build -G "${{ matrix.cmake_generator }}" \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_config }} \
             -DCMAKE_PREFIX_PATH="$Qt6_DIR" \
@@ -111,33 +92,14 @@ jobs:
             -DCMAKE_CXX_STANDARD=17
         fi
       shell: bash
-      timeout-minutes: 10
+      timeout-minutes: 5
 
     - name: Build project
       run: |
         cmake --build build --config ${{ matrix.cmake_config }} --parallel
-      timeout-minutes: 20
+      timeout-minutes: 15
 
-    - name: Package application (Windows)
-      if: matrix.os == 'windows-latest'
-      env:
-        ARCHIVE_NAME: example-${{ github.ref_name }}-${{ runner.os }}-qt${{ matrix.qt_version }}
-      run: |
-        New-Item -ItemType Directory -Path "$env:ARCHIVE_NAME" -Force
-        
-        # 调试：列出build目录内容
-        Write-Host "=== Build directory contents ==="
-        Get-ChildItem "build/" | Format-Table
-        
-        Copy-Item "build/example.exe" "$env:ARCHIVE_NAME/"
-        Get-ChildItem "build/*.dll" -ErrorAction SilentlyContinue | Copy-Item -Destination "$env:ARCHIVE_NAME/"
-        Copy-Item "images" "$env:ARCHIVE_NAME/" -Recurse -Force
-        Compress-Archive -Path "$env:ARCHIVE_NAME" -DestinationPath "$env:ARCHIVE_NAME.zip" -Force
-        echo "ASSET_PATH=$env:ARCHIVE_NAME.zip" >> $env:GITHUB_ENV
-      shell: pwsh
-
-    - name: Package application (macOS/Linux)
-      if: matrix.os != 'windows-latest'
+    - name: Package application
       env:
         ARCHIVE_NAME: example-${{ github.ref_name }}-${{ runner.os }}-qt${{ matrix.qt_version }}
       run: |
@@ -149,13 +111,13 @@ jobs:
         
         if [ "$RUNNER_OS" == "macOS" ]; then
           cp -R build/example.app "$ARCHIVE_NAME/"
-          cp -r images "$ARCHIVE_NAME/"
+          cp -r images "$ARCHIVE_NAME/" || echo "Images directory not found"
           zip -r "$ARCHIVE_NAME.zip" "$ARCHIVE_NAME"
           echo "ASSET_PATH=$ARCHIVE_NAME.zip" >> $GITHUB_ENV
         else
           cp build/example "$ARCHIVE_NAME/"
           cp build/*.so* "$ARCHIVE_NAME/" 2>/dev/null || true
-          cp -r images "$ARCHIVE_NAME/"
+          cp -r images "$ARCHIVE_NAME/" || echo "Images directory not found"
           tar -czf "$ARCHIVE_NAME.tar.gz" "$ARCHIVE_NAME"
           echo "ASSET_PATH=$ARCHIVE_NAME.tar.gz" >> $GITHUB_ENV
         fi
@@ -166,10 +128,10 @@ jobs:
       with:
         files: ${{ env.ASSET_PATH }}
         draft: false
-        prerelease: false
+        prerelease: true  # 标记为预发布
         generate_release_notes: true
         fail_on_unmatched_files: true
-        make_latest: true
+        make_latest: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       timeout-minutes: 10

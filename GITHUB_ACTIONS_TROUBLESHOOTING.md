@@ -89,7 +89,46 @@ Error: Too many retries.
 # 访问: https://github.com/用户名/仓库名/releases/tag/v1.0.0
 ```
 
-### 6. 权限问题
+### 6. GitHub Actions超时问题
+
+**错误信息:**
+```
+Error: The operation was canceled.
+```
+
+**原因分析:**
+- Qt安装过程超时（特别是包含WebEngine等大模块时）
+- 网络连接缓慢导致下载超时
+- GitHub Actions runner资源不足
+- 缓存失效导致重复下载
+
+**解决方案:**
+1. 使用轻量级工作流（减少Qt模块）
+2. 增加超时时间设置
+3. 优化缓存策略
+4. 清理磁盘空间
+
+**修复示例:**
+```yaml
+# 使用轻量级版本
+- name: Install Qt (Minimal)
+  uses: jurplel/install-qt-action@v3
+  with:
+    modules: 'qtwebengine'  # 只安装必需模块
+  timeout-minutes: 25
+
+# 增加job超时时间
+jobs:
+  build-and-release:
+    timeout-minutes: 90
+```
+
+**备用方案:**
+- 使用 `release-lite.yml` 工作流（标签格式：`v1.0.0-lite`）
+- 分离构建和发布步骤
+- 使用预构建的Qt Docker镜像
+
+### 7. 权限问题
 
 **错误信息:**
 ```
