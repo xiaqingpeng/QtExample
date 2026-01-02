@@ -46,6 +46,9 @@ UserInfoPage::UserInfoPage(QWidget *parent)
     connect(ThemeManager::instance(), &ThemeManager::themeChanged, 
             this, &UserInfoPage::onThemeChanged);
     
+    // 应用当前主题
+    QTimer::singleShot(0, this, &UserInfoPage::applyTheme);
+    
     // 追踪页面浏览事件
     Analytics::SDK::instance()->trackView("user_info_page", {
         {"page_title", "个人中心"},
@@ -64,52 +67,27 @@ void UserInfoPage::setupUI()
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
     
-    // 设置页面现代简约背景
-    this->setStyleSheet(
-        "QWidget { "
-        "    background: #f8fafc; "
-        "}"
-    );
+    // 设置页面对象名
+    this->setObjectName("userInfoPage");
     
-    // 顶部装饰区域（现代简约设计）
+    // 顶部装饰区域
     QWidget *headerWidget = new QWidget();
+    headerWidget->setObjectName("topBar");
     headerWidget->setFixedHeight(160);
-    headerWidget->setStyleSheet(
-        "QWidget { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 #3b82f6, stop:1 #1d4ed8); "
-        "    border-bottom: 1px solid #e2e8f0; "
-        "}"
-    );
     
     QVBoxLayout *headerLayout = new QVBoxLayout(headerWidget);
     headerLayout->setContentsMargins(0, 0, 0, 0);
     
     // 标题
     QLabel *titleLabel = new QLabel("个人中心");
+    titleLabel->setObjectName("logoLabel");
     titleLabel->setAlignment(Qt::AlignCenter);
-    titleLabel->setStyleSheet(
-        "QLabel { "
-        "    font-size: 28px; "
-        "    font-weight: 600; "
-        "    color: white; "
-        "    padding: 32px 0 12px 0; "
-        "    letter-spacing: 1px; "
-        "}"
-    );
     headerLayout->addWidget(titleLabel);
     
     // 副标题
     QLabel *subtitleLabel = new QLabel("查看和管理您的个人信息");
+    subtitleLabel->setObjectName("subtitleLabel");
     subtitleLabel->setAlignment(Qt::AlignCenter);
-    subtitleLabel->setStyleSheet(
-        "QLabel { "
-        "    font-size: 14px; "
-        "    color: rgba(255,255,255,0.9); "
-        "    padding: 0 0 24px 0; "
-        "    font-weight: 400; "
-        "}"
-    );
     headerLayout->addWidget(subtitleLabel);
     
     headerLayout->addStretch();
@@ -117,28 +95,15 @@ void UserInfoPage::setupUI()
     
     // 内容区域容器
     QWidget *contentWidget = new QWidget();
-    contentWidget->setStyleSheet("background-color: transparent;");
+    contentWidget->setObjectName("contentWidget");
     
     QVBoxLayout *contentLayout = new QVBoxLayout(contentWidget);
     contentLayout->setContentsMargins(24, 20, 24, 24);
     contentLayout->setSpacing(20);
     
-    // 主信息卡片（现代简约设计）
+    // 主信息卡片
     QWidget *mainInfoCard = new QWidget();
-    mainInfoCard->setStyleSheet(
-        "QWidget { "
-        "    background-color: #ffffff; "
-        "    border-radius: 20px; "
-        "    border: 1px solid #f1f5f9; "
-        "}"
-    );
-    
-    // 添加主卡片阴影 (暂时禁用以排查崩溃问题)
-    // QGraphicsDropShadowEffect *mainCardShadow = new QGraphicsDropShadowEffect(this);
-    // mainCardShadow->setBlurRadius(24);
-    // mainCardShadow->setColor(QColor(0, 0, 0, 6));
-    // mainCardShadow->setOffset(0, 8);
-    // mainInfoCard->setGraphicsEffect(mainCardShadow);
+    mainInfoCard->setObjectName("userInfoCard");
     
     QVBoxLayout *mainCardLayout = new QVBoxLayout(mainInfoCard);
     mainCardLayout->setContentsMargins(40, 40, 40, 40);
@@ -146,20 +111,14 @@ void UserInfoPage::setupUI()
     
     // 头像和基本信息区域
     QWidget *profileSection = new QWidget();
-    profileSection->setStyleSheet("background-color: transparent;");
+    profileSection->setObjectName("profileSection");
     QVBoxLayout *profileLayout = new QVBoxLayout(profileSection);
     profileLayout->setSpacing(20);
     
-    // 头像容器（现代简约设计）
+    // 头像容器
     QWidget *avatarContainer = new QWidget();
+    avatarContainer->setObjectName("avatarContainer");
     avatarContainer->setFixedSize(160, 160);
-    avatarContainer->setStyleSheet(
-        "QWidget { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, "
-        "    stop:0 #3b82f6, stop:1 #1d4ed8); "
-        "    border-radius: 80px; "
-        "}"
-    );
     
     QVBoxLayout *avatarLayout = new QVBoxLayout(avatarContainer);
     avatarLayout->setContentsMargins(4, 4, 4, 4);
@@ -169,29 +128,7 @@ void UserInfoPage::setupUI()
     m_avatarLabel->setAlignment(Qt::AlignCenter);
     m_avatarLabel->setFixedSize(152, 152);
     
-    // 使用主题管理器的导航栏头像样式，但适配更大尺寸
-    ThemeManager* themeManager = ThemeManager::instance();
-    const auto& colors = themeManager->colors();
-    
-    QString avatarStyle = QString(
-        "QLabel#avatarLabel { "
-        "    border: 2px solid %1; "
-        "    border-radius: 76px; "
-        "    background-color: %2; "
-        "}"
-    ).arg(colors.PRIMARY)
-     .arg(colors.SURFACE);
-    
-    m_avatarLabel->setStyleSheet(avatarStyle);
-    
-    // 添加微妙阴影效果 (暂时禁用以排查崩溃问题)
-    // QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect(this);
-    // shadowEffect->setBlurRadius(16);
-    // shadowEffect->setColor(QColor(0, 0, 0, 12));
-    // shadowEffect->setOffset(0, 4);
-    // m_avatarLabel->setGraphicsEffect(shadowEffect);
-    
-    // 在线状态指示器（现代设计）
+    // 在线状态指示器
     QLabel *onlineIndicator = new QLabel();
     onlineIndicator->setFixedSize(24, 24);
     onlineIndicator->setStyleSheet(
@@ -201,13 +138,6 @@ void UserInfoPage::setupUI()
         "    border: 4px solid white; "
         "}"
     );
-    
-    // 添加指示器阴影 (暂时禁用以排查崩溃问题)
-    // QGraphicsDropShadowEffect *indicatorShadow = new QGraphicsDropShadowEffect(this);
-    // indicatorShadow->setBlurRadius(8);
-    // indicatorShadow->setColor(QColor(0, 0, 0, 20));
-    // indicatorShadow->setOffset(0, 2);
-    // onlineIndicator->setGraphicsEffect(indicatorShadow);
     
     // 使用绝对定位将状态指示器放在头像右下角
     onlineIndicator->setParent(avatarContainer);
@@ -251,29 +181,9 @@ void UserInfoPage::setupUI()
     );
     profileLayout->addWidget(m_usernameLabel);
     
-    // 上传头像按钮（现代简约设计）
+    // 上传头像按钮
     m_uploadAvatarButton = new QPushButton("更换头像");
-    m_uploadAvatarButton->setStyleSheet(
-        "QPushButton { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 #3b82f6, stop:1 #1d4ed8); "
-        "    color: white; "
-        "    border: none; "
-        "    padding: 14px 36px; "
-        "    border-radius: 10px; "
-        "    font-size: 14px; "
-        "    font-weight: 600; "
-        "    letter-spacing: 0.3px; "
-        "}"
-        "QPushButton:hover { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 #2563eb, stop:1 #1e40af); "
-        "}"
-        "QPushButton:pressed { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 #1d4ed8, stop:1 #1e3a8a); "
-        "}"
-    );
+    m_uploadAvatarButton->setObjectName("uploadAvatarButton");
     connect(m_uploadAvatarButton, &QPushButton::clicked, this, &UserInfoPage::onUploadAvatarClicked);
     profileLayout->addWidget(m_uploadAvatarButton, 0, Qt::AlignCenter);
     
@@ -903,20 +813,107 @@ void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
 
 void UserInfoPage::onThemeChanged()
 {
-    // 当主题变化时，更新头像样式
-    if (m_avatarLabel) {
-        ThemeManager* themeManager = ThemeManager::instance();
-        const auto& colors = themeManager->colors();
-        
-        QString avatarStyle = QString(
-            "QLabel#avatarLabel { "
-            "    border: 2px solid %1; "
-            "    border-radius: 76px; "
-            "    background-color: %2; "
-            "}"
-        ).arg(colors.PRIMARY)
-         .arg(colors.SURFACE);
-        
-        m_avatarLabel->setStyleSheet(avatarStyle);
-    }
+    applyTheme();
+}
+
+void UserInfoPage::applyTheme()
+{
+    ThemeManager* themeManager = ThemeManager::instance();
+    const auto& colors = themeManager->colors();
+    
+    // 应用主题到页面
+    QString pageStyle = QString(
+        "QWidget#userInfoPage { "
+        "    background-color: %1; "
+        "} "
+        "QWidget#topBar { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 %2, stop:1 %3); "
+        "} "
+        "QLabel#logoLabel { "
+        "    color: white; "
+        "    background-color: transparent; "
+        "    font-family: %4; "
+        "    font-size: %5px; "
+        "    font-weight: 700; "
+        "    padding: 32px 0 12px 0; "
+        "    letter-spacing: 1px; "
+        "} "
+        "QLabel#subtitleLabel { "
+        "    color: rgba(255,255,255,0.9); "
+        "    font-family: %6; "
+        "    font-size: %7px; "
+        "    font-weight: 400; "
+        "    padding: 0 0 24px 0; "
+        "} "
+        "QWidget#contentWidget { "
+        "    background-color: transparent; "
+        "} "
+        "QWidget#userInfoCard { "
+        "    background-color: %8; "
+        "    border: 1px solid %9; "
+        "    border-radius: %10px; "
+        "} "
+        "QWidget#profileSection { "
+        "    background-color: transparent; "
+        "} "
+        "QWidget#avatarContainer { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, "
+        "    stop:0 %11, stop:1 %12); "
+        "    border-radius: 80px; "
+        "} "
+        "QLabel#avatarLabel { "
+        "    border: 2px solid %13; "
+        "    border-radius: 76px; "
+        "    background-color: %14; "
+        "} "
+        "QPushButton#uploadAvatarButton { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 %15, stop:1 %16); "
+        "    color: white; "
+        "    border: none; "
+        "    padding: 14px 36px; "
+        "    border-radius: %17px; "
+        "    font-family: %18; "
+        "    font-size: %19px; "
+        "    font-weight: 600; "
+        "    letter-spacing: 0.3px; "
+        "} "
+        "QPushButton#uploadAvatarButton:hover { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 %20, stop:1 %21); "
+        "} "
+        "QPushButton#uploadAvatarButton:pressed { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 %22, stop:1 %23); "
+        "}"
+    ).arg(colors.BACKGROUND)
+     .arg(colors.PRIMARY)
+     .arg(colors.PRIMARY_HOVER)
+     .arg(ThemeManager::Typography::FONT_FAMILY)
+     .arg(ThemeManager::Typography::FONT_SIZE_XL)
+     .arg(ThemeManager::Typography::FONT_FAMILY)
+     .arg(ThemeManager::Typography::FONT_SIZE_SM)
+     .arg(colors.CARD)
+     .arg(colors.BORDER)
+     .arg(ThemeManager::BorderRadius::LG)
+     .arg(colors.PRIMARY)
+     .arg(colors.PRIMARY_HOVER)
+     .arg(colors.PRIMARY)
+     .arg(colors.SURFACE)
+     .arg(colors.PRIMARY)           // 按钮背景起始色
+     .arg(colors.PRIMARY_HOVER)     // 按钮背景结束色
+     .arg(ThemeManager::BorderRadius::MD)  // 按钮圆角
+     .arg(ThemeManager::Typography::FONT_FAMILY)  // 按钮字体
+     .arg(ThemeManager::Typography::FONT_SIZE_SM) // 按钮字体大小
+     .arg(colors.PRIMARY_HOVER)     // 悬停背景起始色
+     .arg(colors.PRIMARY_LIGHT)     // 悬停背景结束色
+     .arg(colors.PRIMARY_HOVER)     // 按下背景起始色
+     .arg(colors.PRIMARY_LIGHT);    // 按下背景结束色
+    
+    // 应用按钮样式
+    QString buttonStyle = themeManager->getButtonStyle("primary");
+    
+    // 应用所有样式
+    this->setStyleSheet(pageStyle + buttonStyle);
 }

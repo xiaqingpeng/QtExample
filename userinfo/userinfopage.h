@@ -31,6 +31,7 @@ private:
     void onAvatarUploadFinished(QNetworkReply *reply);
     QPixmap createCircularPixmap(const QPixmap &pixmap, int size);
     void onThemeChanged(); // 主题变化槽函数
+    void applyTheme(); // 应用主题方法
     
     // UI控件
     QLabel *m_avatarLabel;

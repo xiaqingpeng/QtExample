@@ -1,78 +1,123 @@
 #include "changepasswordpage.h"
+#include "../styles/theme_manager.h"
 #include <QMessageBox>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSettings>
 #include <QCryptographicHash>
+#include <QTimer>
 #include "analytics/analytics.h"
 
 ChangePasswordPage::ChangePasswordPage(QWidget *parent)
     : QWidget(parent)
     , m_networkManager(new NetworkManager(this))
 {
+    // 设置页面背景
+    this->setObjectName("changePasswordPage");
+    
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setSpacing(20);
-    mainLayout->setContentsMargins(50, 50, 50, 50);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
+    
+    // 顶部装饰区域
+    QWidget *topBar = new QWidget();
+    topBar->setObjectName("topBar");
+    topBar->setFixedHeight(80);
+    
+    QHBoxLayout *topBarLayout = new QHBoxLayout(topBar);
+    topBarLayout->setContentsMargins(24, 0, 24, 0);
+    
+    // 标题标签
+    QLabel *logoLabel = new QLabel("修改密码");
+    logoLabel->setObjectName("logoLabel");
+    topBarLayout->addStretch();
+    topBarLayout->addWidget(logoLabel);
+    topBarLayout->addStretch();
+    
+    mainLayout->addWidget(topBar);
+    
+    // 中心内容区域
+    QWidget *centerWidget = new QWidget();
+    QVBoxLayout *centerLayout = new QVBoxLayout(centerWidget);
+    centerLayout->setContentsMargins(40, 40, 40, 40);
+    centerLayout->setAlignment(Qt::AlignCenter);
+    
+    // 主卡片
+    QWidget *cardWidget = new QWidget();
+    cardWidget->setObjectName("changePasswordCard");
+    cardWidget->setMaximumWidth(500);
+    cardWidget->setMinimumWidth(400);
+    
+    QVBoxLayout *cardLayout = new QVBoxLayout(cardWidget);
+    cardLayout->setSpacing(24);
+    cardLayout->setContentsMargins(40, 40, 40, 40);
 
-    // 标题
-    QLabel *titleLabel = new QLabel("修改密码", this);
-    QFont titleFont(".AppleSystemUIFont", 18, QFont::Bold);
-    titleLabel->setFont(titleFont);
+    // 卡片标题
+    QLabel *titleLabel = new QLabel("修改密码");
+    titleLabel->setObjectName("changePasswordTitle");
     titleLabel->setAlignment(Qt::AlignCenter);
-    titleLabel->setStyleSheet("color: #2c3e50; margin-bottom: 20px;");
-    mainLayout->addWidget(titleLabel);
+    cardLayout->addWidget(titleLabel);
+
+    // 表单区域
+    QVBoxLayout *formLayout = new QVBoxLayout();
+    formLayout->setSpacing(20);
 
     // 旧密码
-    QHBoxLayout *oldPasswordLayout = new QHBoxLayout();
-    QLabel *oldPasswordLabel = new QLabel("旧密码:", this);
-    oldPasswordLabel->setFixedWidth(100);
-    m_oldPasswordEdit = new QLineEdit(this);
+    QLabel *oldPasswordLabel = new QLabel("旧密码");
+    oldPasswordLabel->setObjectName("fieldLabel");
+    formLayout->addWidget(oldPasswordLabel);
+    
+    m_oldPasswordEdit = new QLineEdit();
+    m_oldPasswordEdit->setObjectName("oldPasswordEdit");
     m_oldPasswordEdit->setEchoMode(QLineEdit::Password);
     m_oldPasswordEdit->setPlaceholderText("请输入旧密码");
-    m_oldPasswordEdit->setStyleSheet("QLineEdit { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }");
-    oldPasswordLayout->addWidget(oldPasswordLabel);
-    oldPasswordLayout->addWidget(m_oldPasswordEdit);
-    mainLayout->addLayout(oldPasswordLayout);
+    m_oldPasswordEdit->setMinimumHeight(44);
+    formLayout->addWidget(m_oldPasswordEdit);
 
     // 新密码
-    QHBoxLayout *newPasswordLayout = new QHBoxLayout();
-    QLabel *newPasswordLabel = new QLabel("新密码:", this);
-    newPasswordLabel->setFixedWidth(100);
-    m_newPasswordEdit = new QLineEdit(this);
+    QLabel *newPasswordLabel = new QLabel("新密码");
+    newPasswordLabel->setObjectName("fieldLabel");
+    formLayout->addWidget(newPasswordLabel);
+    
+    m_newPasswordEdit = new QLineEdit();
+    m_newPasswordEdit->setObjectName("newPasswordEdit");
     m_newPasswordEdit->setEchoMode(QLineEdit::Password);
-    m_newPasswordEdit->setPlaceholderText("请输入新密码");
-    m_newPasswordEdit->setStyleSheet("QLineEdit { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }");
-    newPasswordLayout->addWidget(newPasswordLabel);
-    newPasswordLayout->addWidget(m_newPasswordEdit);
-    mainLayout->addLayout(newPasswordLayout);
+    m_newPasswordEdit->setPlaceholderText("请输入新密码（6-16位）");
+    m_newPasswordEdit->setMinimumHeight(44);
+    formLayout->addWidget(m_newPasswordEdit);
 
     // 确认密码
-    QHBoxLayout *confirmPasswordLayout = new QHBoxLayout();
-    QLabel *confirmPasswordLabel = new QLabel("确认密码:", this);
-    confirmPasswordLabel->setFixedWidth(100);
-    m_confirmPasswordEdit = new QLineEdit(this);
+    QLabel *confirmPasswordLabel = new QLabel("确认密码");
+    confirmPasswordLabel->setObjectName("fieldLabel");
+    formLayout->addWidget(confirmPasswordLabel);
+    
+    m_confirmPasswordEdit = new QLineEdit();
+    m_confirmPasswordEdit->setObjectName("confirmPasswordEdit");
     m_confirmPasswordEdit->setEchoMode(QLineEdit::Password);
     m_confirmPasswordEdit->setPlaceholderText("请再次输入新密码");
-    m_confirmPasswordEdit->setStyleSheet("QLineEdit { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }");
-    confirmPasswordLayout->addWidget(confirmPasswordLabel);
-    confirmPasswordLayout->addWidget(m_confirmPasswordEdit);
-    mainLayout->addLayout(confirmPasswordLayout);
+    m_confirmPasswordEdit->setMinimumHeight(44);
+    formLayout->addWidget(m_confirmPasswordEdit);
+
+    cardLayout->addLayout(formLayout);
 
     // 修改密码按钮
-    m_changePasswordBtn = new QPushButton("修改密码", this);
-    m_changePasswordBtn->setFixedHeight(40);
-    m_changePasswordBtn->setStyleSheet(
-        "QPushButton { background-color: #007bff; color: white; border: none; padding: 10px; border-radius: 4px; font-size: 14px; }"
-        "QPushButton:hover { background-color: #0056b3; }"
-        "QPushButton:pressed { background-color: #004085; }"
-    );
-    mainLayout->addWidget(m_changePasswordBtn);
+    m_changePasswordBtn = new QPushButton("修改密码");
+    m_changePasswordBtn->setObjectName("changePasswordButton");
+    m_changePasswordBtn->setMinimumHeight(44);
+    cardLayout->addWidget(m_changePasswordBtn);
 
-    // 连接按钮点击信号
+    centerLayout->addWidget(cardWidget);
+    mainLayout->addWidget(centerWidget);
+    
+    // 连接信号
     connect(m_changePasswordBtn, &QPushButton::clicked, this, &ChangePasswordPage::onChangePasswordClicked);
-
-    // 添加弹性空间
-    mainLayout->addStretch();
+    
+    // 连接主题变化信号
+    connect(ThemeManager::instance(), &ThemeManager::themeChanged, 
+            this, &ChangePasswordPage::onThemeChanged);
+    
+    // 应用当前主题
+    QTimer::singleShot(0, this, &ChangePasswordPage::applyTheme);
 }
 
 void ChangePasswordPage::onChangePasswordClicked()
@@ -160,3 +205,76 @@ void ChangePasswordPage::onChangePasswordClicked()
     });
 }
 
+
+void ChangePasswordPage::applyTheme()
+{
+    ThemeManager* themeManager = ThemeManager::instance();
+    const auto& colors = themeManager->colors();
+    
+    // 应用主题到页面
+    QString pageStyle = QString(
+        "QWidget#changePasswordPage { "
+        "    background-color: %1; "
+        "} "
+        "QWidget#topBar { "
+        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+        "    stop:0 %2, stop:1 %3); "
+        "} "
+        "QLabel#logoLabel { "
+        "    color: white; "
+        "    background-color: transparent; "
+        "    font-family: %4; "
+        "    font-size: %5px; "
+        "    font-weight: 700; "
+        "    border: none; "
+        "    padding: 0px; "
+        "    margin: 0px; "
+        "} "
+        "QWidget#changePasswordCard { "
+        "    background-color: %6; "
+        "    border: 1px solid %7; "
+        "    border-radius: %8px; "
+        "} "
+        "QLabel#changePasswordTitle { "
+        "    color: %9; "
+        "    font-family: %10; "
+        "    font-size: %11px; "
+        "    font-weight: 700; "
+        "    margin-bottom: %12px; "
+        "} "
+        "QLabel#fieldLabel { "
+        "    color: %13; "
+        "    font-family: %14; "
+        "    font-size: %15px; "
+        "    font-weight: 500; "
+        "    margin-bottom: %16px; "
+        "}"
+    ).arg(colors.BACKGROUND)
+     .arg(colors.PRIMARY)
+     .arg(colors.PRIMARY_HOVER)
+     .arg(ThemeManager::Typography::FONT_FAMILY)
+     .arg(ThemeManager::Typography::FONT_SIZE_XL)
+     .arg(colors.CARD)
+     .arg(colors.BORDER)
+     .arg(ThemeManager::BorderRadius::LG)
+     .arg(colors.TEXT_PRIMARY)
+     .arg(ThemeManager::Typography::FONT_FAMILY)
+     .arg(ThemeManager::Typography::FONT_SIZE_XXL)
+     .arg(ThemeManager::Spacing::MD)
+     .arg(colors.TEXT_PRIMARY)
+     .arg(ThemeManager::Typography::FONT_FAMILY)
+     .arg(ThemeManager::Typography::FONT_SIZE_MD)
+     .arg(ThemeManager::Spacing::XS);
+    
+    // 应用输入框样式
+    QString inputStyle = themeManager->getInputStyle();
+    QString buttonPrimaryStyle = themeManager->getButtonStyle("primary");
+    
+    // 应用所有样式
+    this->setStyleSheet(pageStyle + inputStyle + buttonPrimaryStyle);
+}
+
+void ChangePasswordPage::onThemeChanged()
+{
+    applyTheme();
+}

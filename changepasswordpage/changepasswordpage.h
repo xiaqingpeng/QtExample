@@ -21,8 +21,10 @@ signals:
 
 private slots:
     void onChangePasswordClicked();
+    void onThemeChanged(); // 主题变化槽函数
 
 private:
+    void applyTheme(); // 应用主题方法
     QLineEdit *m_oldPasswordEdit;
     QLineEdit *m_newPasswordEdit;
     QLineEdit *m_confirmPasswordEdit;
