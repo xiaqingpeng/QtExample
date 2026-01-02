@@ -665,7 +665,7 @@ void EChartsTab::fetchApiData()
             "}"
         );
         m_webView->page()->runJavaScript(jsCode);
-    });
+    }, queryParams);
 }
 
 
