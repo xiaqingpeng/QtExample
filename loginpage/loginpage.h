@@ -29,10 +29,13 @@ private slots:
     void onRegisterClicked();
     void onSwitchToLogin();
     void onSwitchToRegister();
+    void onThemeChanged(); // 主题变化槽函数
 
 private:
     void setupLoginUI();
     void setupRegisterUI();
+    void applyTheme(); // 应用主题方法
+    void applyThemeToWidget(QWidget* widget); // 应用主题到特定widget
     void showError(const QString &message);
     void showSuccess(const QString &message);
     void saveUserInfo(const QString &token, const QString &email, const QString &password,

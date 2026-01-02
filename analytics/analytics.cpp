@@ -213,6 +213,12 @@ void SDK::addToQueue(const Event& event) {
 }
 
 void SDK::sendEvents(const QList<Event>& events) {
+    // 验证 serverUrl 是否有效
+    if (m_config.serverUrl.isEmpty()) {
+        qWarning() << "[Analytics] serverUrl is empty, skipping event send";
+        return;
+    }
+    
     QJsonArray eventArray;
     for (const Event& event : events) {
         // 转换为后端API期望的格式
@@ -243,6 +249,12 @@ void SDK::sendEvents(const QList<Event>& events) {
         batchUrl += "/batch";
     } else if (!batchUrl.endsWith("/events/batch")) {
         batchUrl += "/events/batch";
+    }
+    
+    // 再次验证构建后的 URL
+    if (batchUrl.isEmpty() || !batchUrl.startsWith("http://") && !batchUrl.startsWith("https://")) {
+        qWarning() << "[Analytics] Invalid batchUrl:" << batchUrl;
+        return;
     }
     
     QNetworkRequest request(batchUrl);
