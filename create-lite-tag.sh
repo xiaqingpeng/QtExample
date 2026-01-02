@@ -13,7 +13,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # 配置
-BASE_TAG="v1.0.0"
+BASE_TAG="v1.0.1"
 LITE_TAG="${BASE_TAG}-lite"
 REMOTE_NAME="origin"
 

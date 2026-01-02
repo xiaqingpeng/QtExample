@@ -60,9 +60,9 @@ jobs:
         arch: ${{ matrix.qt_arch }}
         cache: true
         cache-key-prefix: 'install-qt-lite'
-        modules: 'qtwebengine'  # 只安装必需的模块
+        # 不安装额外模块，只使用基础Qt
         setup-python: false
-      timeout-minutes: 25
+      timeout-minutes: 20
 
     - name: Install system dependencies (Linux)
       if: matrix.os == 'ubuntu-latest'
@@ -79,6 +79,9 @@ jobs:
 
     - name: Configure CMake
       run: |
+        # 使用轻量级CMakeLists.txt
+        cp CMakeLists-lite.txt CMakeLists.txt
+        
         if [ "$RUNNER_OS" == "macOS" ]; then
           cmake -B build -G "${{ matrix.cmake_generator }}" \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_config }} \
