@@ -30,18 +30,30 @@
 | `create-lite-tag.sh` | ⚡ 轻量级标签创建 | 避免GitHub Actions超时 |
 | `quick-test.sh` | 🔍 环境和脚本检查 | 验证工具链完整性 |
 
+### Windows PowerShell脚本
+
+| 脚本 | 功能 | 使用场景 |
+|------|------|----------|
+| `complete-release-windows.ps1` | 🎯 Windows完整发布流程 | Windows一站式发布解决方案 |
+| `test-build-windows.ps1` | 🔨 Windows本地构建测试 | Windows平台构建验证 |
+| `package-windows.ps1` | 📦 Windows应用打包 | 创建Windows发布包 |
+| `upload-release-windows.ps1` | 📤 Windows Release上传 | Windows版本发布 |
+| `quick-test-windows.ps1` | 🔍 Windows环境检查 | Windows开发环境验证 |
+
 ### 文档和指南
 
 | 文档 | 内容 |
 |------|------|
 | `PIPELINE_DETECTION_GUIDE.md` | 流水线检测使用指南 |
 | `GITHUB_ACTIONS_TROUBLESHOOTING.md` | 详细的故障排除指南 |
+| `WINDOWS_RELEASE_GUIDE.md` | Windows平台发布指南 |
 | `RELEASE_AUTOMATION_SUMMARY.md` | 本总结文档 |
 
 ## 🚀 使用流程
 
 ### 推荐工作流程
 
+#### macOS/Linux
 ```bash
 # 1. 环境检查
 ./quick-test.sh
@@ -51,8 +63,19 @@
 # 选择选项 5 (完整流程)
 ```
 
+#### Windows
+```powershell
+# 1. 环境检查
+.\quick-test-windows.ps1
+
+# 2. 完整发布流程
+.\complete-release-windows.ps1
+# 选择选项 4 (完整流程)
+```
+
 ### 分步执行
 
+#### macOS/Linux
 ```bash
 # 步骤1: 本地构建测试
 ./test-build.sh
@@ -65,6 +88,18 @@
 
 # 步骤4: 如果需要，手动上传
 ./upload-release.sh build/example-v1.0.0-macOS-qt6.6.1.zip
+```
+
+#### Windows
+```powershell
+# 步骤1: 本地构建测试
+.\test-build-windows.ps1
+
+# 步骤2: 打包应用程序
+.\package-windows.ps1 -Version "v1.0.1"
+
+# 步骤3: 上传到Release
+.\upload-release-windows.ps1 -AssetFile "example-v1.0.1-Windows-qt6.6.1.zip" -TagName "v1.0.1-lite"
 ```
 
 ## 🔧 技术改进
@@ -138,22 +173,22 @@
 ## 🎉 成果展示
 
 ### 自动化程度
-- **构建验证**: 自动化 ✅
-- **标签管理**: 自动化 ✅  
-- **流水线监控**: 自动化 ✅
-- **错误处理**: 自动化 ✅
-- **备用方案**: 自动化 ✅
+- **构建验证**: 自动化 ✅ (macOS/Linux/Windows)
+- **标签管理**: 自动化 ✅ (macOS/Linux)
+- **流水线监控**: 自动化 ✅ (macOS/Linux)
+- **错误处理**: 自动化 ✅ (全平台)
+- **备用方案**: 自动化 ✅ (全平台)
 
 ### 用户体验
-- **交互式菜单**: 简单易用 ✅
-- **详细反馈**: 清晰的状态显示 ✅
-- **错误诊断**: 智能的问题分析 ✅
-- **文档完善**: 详细的使用指南 ✅
+- **交互式菜单**: 简单易用 ✅ (全平台)
+- **详细反馈**: 清晰的状态显示 ✅ (全平台)
+- **错误诊断**: 智能的问题分析 ✅ (全平台)
+- **文档完善**: 详细的使用指南 ✅ (全平台)
 
 ### 可靠性
-- **多重检查**: 环境、语法、依赖 ✅
-- **容错机制**: 重试和备用方案 ✅
-- **状态验证**: 实时监控和确认 ✅
+- **多重检查**: 环境、语法、依赖 ✅ (全平台)
+- **容错机制**: 重试和备用方案 ✅ (全平台)
+- **状态验证**: 实时监控和确认 ✅ (macOS/Linux)
 
 ## 🔮 未来扩展
 

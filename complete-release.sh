@@ -34,10 +34,12 @@ echo -e "  ${CYAN}3.${NC} 检测流水线状态"
 echo -e "  ${CYAN}4.${NC} 手动上传Release资产"
 echo -e "  ${CYAN}5.${NC} 完整流程 (1→2→3)"
 echo -e "  ${CYAN}6.${NC} 创建轻量级标签 (避免超时)"
+echo -e "  ${CYAN}7.${NC} 跨平台构建和打包"
+echo -e "  ${CYAN}8.${NC} 快速构建上传 (基于现有构建)"
 echo -e "  ${CYAN}0.${NC} 退出"
 echo ""
 
-read -p "请输入选择 [1-6,0]: " choice
+read -p "请输入选择 [1-8,0]: " choice
 
 case $choice in
     1)
@@ -185,6 +187,24 @@ case $choice in
             ./create-lite-tag.sh
         else
             echo -e "${RED}✗ 错误: create-lite-tag.sh 不存在${NC}"
+            exit 1
+        fi
+        ;;
+    7)
+        echo -e "${YELLOW}执行跨平台构建和打包...${NC}"
+        if [ -f "./build-all-platforms.sh" ]; then
+            ./build-all-platforms.sh
+        else
+            echo -e "${RED}✗ 错误: build-all-platforms.sh 不存在${NC}"
+            exit 1
+        fi
+        ;;
+    8)
+        echo -e "${YELLOW}执行快速构建上传...${NC}"
+        if [ -f "./quick-build-upload.sh" ]; then
+            ./quick-build-upload.sh
+        else
+            echo -e "${RED}✗ 错误: quick-build-upload.sh 不存在${NC}"
             exit 1
         fi
         ;;
