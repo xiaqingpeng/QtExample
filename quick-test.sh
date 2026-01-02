@@ -23,6 +23,7 @@ SCRIPTS=(
     "test-build.sh"
     "upload-release.sh"
     "complete-release.sh"
+    "create-lite-tag.sh"
 )
 
 echo -e "${CYAN}检查脚本文件...${NC}"
@@ -181,6 +182,7 @@ if [ "$all_good" = true ]; then
     echo -e "  ${YELLOW}./complete-release.sh${NC} - 完整发布流程"
     echo -e "  ${YELLOW}./test-build.sh${NC} - 本地构建测试"
     echo -e "  ${YELLOW}./recreate-tag.sh${NC} - 重建标签"
+    echo -e "  ${YELLOW}./create-lite-tag.sh${NC} - 创建轻量级标签 (避免超时)"
     echo -e "  ${YELLOW}./check-pipeline.sh${NC} - 检测流水线"
 else
     echo -e "${RED}✗ 部分检查失败，请解决上述问题${NC}"

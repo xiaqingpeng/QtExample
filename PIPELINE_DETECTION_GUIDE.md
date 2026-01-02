@@ -9,6 +9,7 @@
 3. **`test-build.sh`** - 本地构建测试脚本
 4. **`upload-release.sh`** - 手动上传Release资产
 5. **`complete-release.sh`** - 完整的发布流程管理
+6. **`create-lite-tag.sh`** - 轻量级标签创建（避免超时问题）
 
 ## 功能特性
 
@@ -42,6 +43,12 @@
 - 整合所有发布步骤
 - 提供选择性执行选项
 - 自动化完整发布流程
+
+### ⚡ 轻量级发布 (`create-lite-tag.sh`)
+- 避免GitHub Actions超时问题
+- 使用最小化的Qt模块集
+- 优化的构建配置
+- 适合网络环境较差的情况
 
 ## 安装要求
 
@@ -113,7 +120,19 @@
 - 验证生成的文件
 - 提供构建结果分析
 
-### 5. 手动上传Release资产
+### 6. 轻量级发布（推荐用于避免超时）
+
+```bash
+./create-lite-tag.sh
+```
+
+当遇到GitHub Actions超时问题时的解决方案：
+- 使用 `v1.0.0-lite` 格式的标签
+- 触发 `release-lite.yml` 工作流
+- 只安装必需的Qt模块
+- 更短的超时时间设置
+
+### 7. 手动上传Release资产
 
 ```bash
 ./upload-release.sh <文件路径> [标签名]

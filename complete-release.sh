@@ -33,10 +33,11 @@ echo -e "  ${CYAN}2.${NC} 重建标签并推送"
 echo -e "  ${CYAN}3.${NC} 检测流水线状态"
 echo -e "  ${CYAN}4.${NC} 手动上传Release资产"
 echo -e "  ${CYAN}5.${NC} 完整流程 (1→2→3)"
+echo -e "  ${CYAN}6.${NC} 创建轻量级标签 (避免超时)"
 echo -e "  ${CYAN}0.${NC} 退出"
 echo ""
 
-read -p "请输入选择 [1-5,0]: " choice
+read -p "请输入选择 [1-6,0]: " choice
 
 case $choice in
     1)
@@ -175,6 +176,15 @@ case $choice in
             ./check-pipeline.sh
         else
             echo -e "${RED}✗ 错误: check-pipeline.sh 不存在${NC}"
+            exit 1
+        fi
+        ;;
+    6)
+        echo -e "${YELLOW}创建轻量级标签...${NC}"
+        if [ -f "./create-lite-tag.sh" ]; then
+            ./create-lite-tag.sh
+        else
+            echo -e "${RED}✗ 错误: create-lite-tag.sh 不存在${NC}"
             exit 1
         fi
         ;;

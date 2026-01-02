@@ -6,6 +6,7 @@
 1. **构建文件路径不匹配** - GitHub Actions找不到 `build/example`
 2. **流水线状态未知** - 无法知道GitHub Actions是否成功运行
 3. **Release上传失败** - 网络重试问题导致资产上传失败
+4. **GitHub Actions超时** - Qt安装过程超时导致构建失败
 
 ### 解决方案
 ✅ **统一文件命名** - CMakeLists.txt和GitHub Actions使用相同的文件名  
@@ -13,6 +14,7 @@
 ✅ **流水线状态检测** - 自动监控GitHub Actions运行状态  
 ✅ **备用上传机制** - 提供手动上传和重试功能  
 ✅ **完整工具链** - 从构建到发布的全流程自动化  
+✅ **轻量级工作流** - 避免超时问题的优化版本  
 
 ## 🛠️ 创建的工具
 
@@ -25,7 +27,8 @@
 | `check-pipeline.sh` | 📊 流水线状态检测 | 快速查看Actions状态 |
 | `test-build.sh` | 🔨 本地构建测试 | 发布前验证构建 |
 | `upload-release.sh` | 📤 手动上传Release资产 | Actions失败时的备用方案 |
-| `quick-test.sh` | ⚡ 环境和脚本检查 | 验证工具链完整性 |
+| `create-lite-tag.sh` | ⚡ 轻量级标签创建 | 避免GitHub Actions超时 |
+| `quick-test.sh` | 🔍 环境和脚本检查 | 验证工具链完整性 |
 
 ### 文档和指南
 
@@ -124,7 +127,11 @@
 **之前:** `❌ Too many retries. Aborting...`  
 **现在:** ✅ 提供备用上传脚本和重试机制
 
-### 4. 手动操作繁琐
+### 4. GitHub Actions超时问题
+**之前:** `Error: The operation was canceled.` (Qt安装超时)  
+**现在:** ✅ 提供轻量级工作流和优化的超时设置
+
+### 5. 手动操作繁琐
 **之前:** 需要手动执行多个步骤  
 **现在:** ✅ 一键完整发布流程
 
