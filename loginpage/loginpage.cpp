@@ -36,7 +36,7 @@ LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
     config.appId = "qt-example-app";
     config.enableDebug = true;
     config.batchSize = 1;  // 降低批量大小，每个事件立即发送
-    config.flushInterval = 5;  // 降低刷新间隔，5秒定时发送
+    config.flushInterval = 300;  // 增加刷新间隔到5分钟，减少网络请求频率
     config.enablePersistence = true;
     Analytics::SDK::instance()->initialize(config);
     

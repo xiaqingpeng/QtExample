@@ -12,7 +12,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-#include <QTimer>
+// #include <QTimer>  // 已禁用定时器功能
 #include <QComboBox>
 #include <QLabel>
 #include <QHBoxLayout>
@@ -513,7 +513,9 @@ void EChartsTab::onPageLoaded(bool ok)
 {
     if (ok) {
         // 页面加载完成后，延迟一小段时间确保JavaScript环境准备好
-        QTimer::singleShot(500, this, &EChartsTab::fetchApiData);
+        // QTimer::singleShot(500, this, &EChartsTab::fetchApiData); // 已禁用自动获取数据
+        // 改为直接调用，不使用定时器延迟
+        fetchApiData();
     } else {
         // WebView页面加载失败
     }
@@ -574,6 +576,13 @@ void EChartsTab::fetchApiData()
     queryParams.addQueryItem("pageSize", "1000");
     
     m_networkManager->get(apiUrl, [this, timer](const QJsonObject &rootObj) {
+        // 记录API请求成功性能
+        qint64 responseTime = timer.elapsed();
+        Analytics::SDK::instance()->trackPerformance("api_response_time", responseTime, {
+            {"page", "echarts_page"},
+            {"api", "system_logs_stats"},
+            {"status", "success"}
+        });
         
         if (rootObj["code"].toInt() == 0) {
             QJsonArray rows = rootObj["rows"].toArray();

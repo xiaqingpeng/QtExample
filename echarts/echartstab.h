@@ -6,7 +6,7 @@
 #include <QWebChannel>
 #include <QVariant>
 #include "networkmanager.h"
-#include <QTimer>
+// #include <QTimer>  // 已禁用定时器功能
 #include <QComboBox>
 #include <QDateTimeEdit>
 #include <QPushButton>
@@ -52,7 +52,7 @@ private:
     QWebChannel *m_channel;
     ChartBridge *m_bridge;      // Qt与JS的桥接对象
     NetworkManager *m_networkManager;
-    QTimer *m_apiTimer;         // API自动更新定时器
+    // QTimer *m_apiTimer;         // API自动更新定时器 - 已禁用
     
     // 筛选控件
     QComboBox *m_methodCombo;   // 方法选择下拉框

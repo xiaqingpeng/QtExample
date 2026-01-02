@@ -13,7 +13,7 @@ TARGET = echarts
 INCLUDEPATH += ..
 
 # 链接networkmanager库
-LIBS += -L$$OUT_PWD/../networkmanager -lnetworkmanager
+LIBS += -L../networkmanager -lnetworkmanager
 
 SOURCES += \
     echartstab.cpp \
