@@ -33,7 +33,6 @@
 #include <QFileInfo>
 #include <QStandardPaths>
 #include <QDir>
-#include <stdexcept>
 
 MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
 {

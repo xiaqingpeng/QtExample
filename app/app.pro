@@ -6,12 +6,21 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17 sdk_no_version_check
 
-# 设置macOS部署目标版本为11.0，与Qt库版本兼容
-QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.0
+# 禁用过时的single_module链接器标志
+CONFIG -= single_module
+
+# 设置macOS部署目标版本为14.0，与Qt库版本兼容
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
 
 # 创建应用程序
 TEMPLATE = app
-TARGET = example
+TARGET = "QT Example"
+
+# 设置应用程序图标
+macx {
+    ICON = ../images/icon.png
+    QMAKE_INFO_PLIST = ../Info.plist.in
+}
 
 SOURCES += \
     ../main.cpp \

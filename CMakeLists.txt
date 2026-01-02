@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # 项目信息
-project(example VERSION 1.0.0 LANGUAGES CXX)
+project("QT Example" VERSION 1.0.0 LANGUAGES CXX)
 
 # 设置C++标准
 set(CMAKE_CXX_STANDARD 17)
@@ -15,13 +15,14 @@ find_package(Qt6 COMPONENTS Core Gui Widgets WebEngineWidgets Network PrintSuppo
 
 # 设置MacOS特定选项
 if(APPLE)
-    # 忽略SDK版本检查（与qmake中的sdk_no_version_check对应）
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "26.0" CACHE STRING "Minimum macOS version" FORCE)
+    # 设置部署目标为14.0以匹配Qt库版本
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Minimum macOS version" FORCE)
     # 设置应用程序包类型
-    set(MACOSX_BUNDLE_BUNDLE_NAME "example")
+    set(MACOSX_BUNDLE_BUNDLE_NAME "QT Example")
     set(MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION})
     set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR})
-    set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.example.example")
+    set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.example.qtexample")
+    set(MACOSX_BUNDLE_ICON_FILE "icon")
 endif()
 
 # 定义模块库
@@ -243,17 +244,31 @@ set(UIS
 )
 
 # 创建可执行文件
-qt_add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${UIS} layoutexamplestab.qrc)
+qt_add_executable(QTExample MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${UIS} layoutexamplestab.qrc)
+
+# 设置应用程序显示名称
+set_target_properties(QTExample PROPERTIES
+    OUTPUT_NAME "QT Example"
+    MACOSX_BUNDLE_BUNDLE_NAME "QT Example"
+)
+
+# 设置应用程序图标
+if(APPLE)
+    # 复制图标文件到应用程序包
+    set(ICON_FILE "${CMAKE_CURRENT_SOURCE_DIR}/images/icon.png")
+    set_source_files_properties(${ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+    target_sources(QTExample PRIVATE ${ICON_FILE})
+endif()
 
 # 设置RPATH，确保应用程序能找到共享库
-set_target_properties(${PROJECT_NAME} PROPERTIES
+set_target_properties(QTExample PROPERTIES
     MACOSX_RPATH YES
     BUILD_WITH_INSTALL_RPATH YES
     INSTALL_RPATH @executable_path/../Frameworks
 )
 
 # 链接Qt库和自定义模块
-target_link_libraries(${PROJECT_NAME} PRIVATE
+target_link_libraries(QTExample PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
@@ -279,7 +294,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 # 包含模块头文件目录
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(QTExample PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/advancedcontrols
     ${CMAKE_CURRENT_SOURCE_DIR}/basiccontrols
@@ -299,7 +314,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 # 安装规则
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS QTExample
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -312,7 +327,7 @@ install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialog
 )
 
 # 复制共享库到应用程序的Frameworks目录中
-set_target_properties(${PROJECT_NAME} PROPERTIES
+set_target_properties(QTExample PROPERTIES
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in
     MACOSX_RPATH TRUE
@@ -323,11 +338,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # 复制所有共享库到应用程序的Frameworks目录（仅 macOS）
 function(copy_shared_library_to_bundle target_name)
     if(APPLE)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks
+        add_custom_command(TARGET QTExample POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_BUNDLE_DIR:QTExample>/Contents/Frameworks
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 $<TARGET_FILE:${target_name}>
-                $<TARGET_BUNDLE_DIR:${PROJECT_NAME}>/Contents/Frameworks/
+                $<TARGET_BUNDLE_DIR:QTExample>/Contents/Frameworks/
             COMMENT "Copying ${target_name} to app bundle"
         )
     endif()
