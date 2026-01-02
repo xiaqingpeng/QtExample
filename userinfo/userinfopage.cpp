@@ -73,7 +73,7 @@ void UserInfoPage::setupUI()
     // 顶部装饰区域
     QWidget *headerWidget = new QWidget();
     headerWidget->setObjectName("topBar");
-    headerWidget->setFixedHeight(160);
+    headerWidget->setFixedHeight(80);
     
     QVBoxLayout *headerLayout = new QVBoxLayout(headerWidget);
     headerLayout->setContentsMargins(0, 0, 0, 0);
@@ -88,7 +88,7 @@ void UserInfoPage::setupUI()
     QLabel *subtitleLabel = new QLabel("查看和管理您的个人信息");
     subtitleLabel->setObjectName("subtitleLabel");
     subtitleLabel->setAlignment(Qt::AlignCenter);
-    headerLayout->addWidget(subtitleLabel);
+    // headerLayout->addWidget(subtitleLabel);
     
     headerLayout->addStretch();
     mainLayout->addWidget(headerWidget);
