@@ -140,5 +140,36 @@ jobs:
         draft: false
         prerelease: false
         generate_release_notes: true
+        fail_on_unmatched_files: true
+        make_latest: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      timeout-minutes: 10
+      
+    - name: Verify Release Upload
+      if: success()
+      run: |
+        echo "✅ Release asset uploaded successfully: ${{ env.ASSET_PATH }}"
+        echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+      
+    - name: Handle Upload Failure
+      if: failure()
+      run: |
+        echo "❌ Release upload failed for ${{ env.ASSET_PATH }}"
+        echo "🔍 Troubleshooting steps:"
+        echo "  1. Check file exists: ls -la ${{ env.ASSET_PATH }}"
+        echo "  2. Check file size: du -h ${{ env.ASSET_PATH }}"
+        echo "  3. Verify GitHub token permissions"
+        echo "  4. Check GitHub API status: https://www.githubstatus.com/"
+        ls -la ${{ env.ASSET_PATH }} || echo "File not found!"
+        du -h ${{ env.ASSET_PATH }} || echo "Cannot get file size!"
+        
+    - name: Retry Upload with GitHub CLI
+      if: failure()
+      run: |
+        echo "🔄 Attempting upload with GitHub CLI..."
+        if command -v gh &> /dev/null; then
+          gh release upload ${{ github.ref_name }} ${{ env.ASSET_PATH }} --clobber || echo "GitHub CLI upload also failed"
+        else
+          echo "GitHub CLI not available for retry"
+        fi

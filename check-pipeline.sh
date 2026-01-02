@@ -99,6 +99,9 @@ if [ "$check_method" = "gh" ]; then
                                 echo -e "    - 依赖库缺失"
                                 echo -e "    - CMake配置错误"
                                 echo -e "    - 权限问题"
+                                echo -e "    - GitHub API上传重试失败"
+                                echo -e "    - 网络连接问题"
+                                echo -e "    - Release资产上传超时"
                                 ;;
                             "cancelled")
                                 echo -e "  ${BLUE}状态:${NC} ${YELLOW}⚠️  已取消${NC}"

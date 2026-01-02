@@ -60,7 +60,36 @@ Could not find a package configuration file provided by "Qt6WebEngineWidgets"
     modules: 'qtwebengine qtwebchannel qtpositioning'
 ```
 
-### 4. 权限问题
+### 5. Release资产上传失败
+
+**错误信息:**
+```
+❌ Too many retries. Aborting...
+Error: Too many retries.
+```
+
+**原因分析:**
+- GitHub API网络连接问题
+- 文件过大（超过100MB限制）
+- GitHub服务临时不可用
+- API速率限制
+
+**解决方案:**
+1. 检查文件大小是否超过GitHub限制
+2. 使用备用上传脚本重试
+3. 检查GitHub服务状态
+4. 手动上传到Release页面
+
+**修复示例:**
+```bash
+# 使用备用上传脚本
+./upload-release.sh example-v1.0.0-macOS-qt6.6.1.zip
+
+# 或手动上传
+# 访问: https://github.com/用户名/仓库名/releases/tag/v1.0.0
+```
+
+### 6. 权限问题
 
 **错误信息:**
 ```
@@ -227,6 +256,28 @@ otool -L build/example.app/Contents/MacOS/example  # macOS
   uses: mxschmitt/action-tmate@v3
   if: failure()
 ```
+
+## 备用解决方案
+
+### 手动上传Release资产
+
+如果GitHub Actions上传失败，可以使用备用脚本：
+
+```bash
+# 构建完成后，手动上传
+./upload-release.sh build/example-v1.0.0-macOS-qt6.6.1.zip v1.0.0
+
+# 或者让脚本自动检测标签
+./upload-release.sh build/example-v1.0.0-Linux-qt6.6.1.tar.gz
+```
+
+### 完全手动流程
+
+1. 访问GitHub仓库的Releases页面
+2. 找到对应的标签Release
+3. 点击"Edit release"
+4. 拖拽文件到"Attach binaries"区域
+5. 保存Release
 
 ## 预防措施
 
