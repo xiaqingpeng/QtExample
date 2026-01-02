@@ -28,6 +28,10 @@ UserProfileTab::UserProfileTab(QWidget *parent)
     m_refreshTimer = new QTimer(this);
     connect(m_refreshTimer, &QTimer::timeout, this, &UserProfileTab::refreshUserProfile);
     m_refreshTimer->start(30000);
+    
+    // 连接主题变化信号
+    connect(ThemeManager::instance(), &ThemeManager::themeChanged,
+            this, &UserProfileTab::applyTheme);
 }
 
 UserProfileTab::~UserProfileTab()
@@ -36,49 +40,6 @@ UserProfileTab::~UserProfileTab()
 
 void UserProfileTab::setupUI()
 {
-    // 设置主窗口样式
-    setStyleSheet(R"(
-        QWidget {
-            background-color: #f8f9fa;
-            font-family: "Helvetica Neue", "Helvetica", "Arial";
-        }
-        QGroupBox {
-            font-weight: 600;
-            font-size: 14px;
-            color: #2c3e50;
-            border: 1px solid #e9ecef;
-            border-radius: 12px;
-            margin-top: 12px;
-            padding-top: 8px;
-            background-color: white;
-        }
-        QGroupBox::title {
-            subcontrol-origin: margin;
-            left: 16px;
-            padding: 0 8px 0 8px;
-            background-color: white;
-        }
-        QPushButton {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-weight: 500;
-            font-size: 13px;
-        }
-        QPushButton:hover {
-            background-color: #0056b3;
-        }
-        QPushButton:pressed {
-            background-color: #004085;
-        }
-        QLabel {
-            color: #495057;
-            font-size: 13px;
-        }
-    )");
-    
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(24, 24, 24, 24);
     mainLayout->setSpacing(20);
@@ -107,6 +68,9 @@ void UserProfileTab::setupUI()
     chartsLayout->addWidget(createModernCard("兴趣分布", createInterestAnalysisWidget()));
     chartsLayout->addWidget(createModernCard("价值评估", createValueAssessmentWidget()));
     mainLayout->addLayout(chartsLayout);
+    
+    // 应用主题
+    applyTheme();
 }
 
 void UserProfileTab::setupToolbar()
@@ -116,55 +80,17 @@ void UserProfileTab::setupToolbar()
     m_prevUserButton = new QPushButton();
     m_nextUserButton = new QPushButton();
     
+    // 设置对象名称用于主题样式
+    m_refreshButton->setObjectName("primaryButton");
+    m_exportButton->setObjectName("primaryButton");
+    m_prevUserButton->setObjectName("secondaryButton");
+    m_nextUserButton->setObjectName("secondaryButton");
+    
     // 使用安全的文本设置
     m_refreshButton->setText("刷新");
     m_exportButton->setText("导出");
     m_prevUserButton->setText("< 上一个");
     m_nextUserButton->setText("下一个 >");
-    
-    // 设置按钮样式
-    QString primaryButtonStyle = R"(
-        QPushButton {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            font-weight: 500;
-            font-size: 13px;
-            min-width: 80px;
-        }
-        QPushButton:hover {
-            background-color: #0056b3;
-        }
-        QPushButton:pressed {
-            background-color: #004085;
-        }
-    )";
-    
-    QString secondaryButtonStyle = R"(
-        QPushButton {
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            font-weight: 500;
-            font-size: 13px;
-            min-width: 80px;
-        }
-        QPushButton:hover {
-            background-color: #545b62;
-        }
-        QPushButton:pressed {
-            background-color: #3d4142;
-        }
-    )";
-    
-    m_refreshButton->setStyleSheet(primaryButtonStyle);
-    m_exportButton->setStyleSheet(primaryButtonStyle);
-    m_prevUserButton->setStyleSheet(secondaryButtonStyle);
-    m_nextUserButton->setStyleSheet(secondaryButtonStyle);
     
     connect(m_refreshButton, &QPushButton::clicked, this, &UserProfileTab::refreshUserProfile);
     connect(m_exportButton, &QPushButton::clicked, this, &UserProfileTab::exportUserProfile);
@@ -190,25 +116,12 @@ void UserProfileTab::setupUserInfoCard()
     m_totalEventsLabel = new QLabel("总事件数: -");
     m_activeDaysLabel = new QLabel("活跃天数: -");
     
-    // 设置现代化标签样式
-    QString infoLabelStyle = R"(
-        QLabel {
-            color: #495057;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 12px 16px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #007bff;
-            margin: 4px 0;
-        }
-    )";
-    
-    m_userIdLabel->setStyleSheet(infoLabelStyle);
-    m_registerTimeLabel->setStyleSheet(infoLabelStyle);
-    m_lastActiveTimeLabel->setStyleSheet(infoLabelStyle);
-    m_totalEventsLabel->setStyleSheet(infoLabelStyle);
-    m_activeDaysLabel->setStyleSheet(infoLabelStyle);
+    // 设置对象名称用于主题样式
+    m_userIdLabel->setObjectName("infoLabel");
+    m_registerTimeLabel->setObjectName("infoLabel");
+    m_lastActiveTimeLabel->setObjectName("infoLabel");
+    m_totalEventsLabel->setObjectName("infoLabel");
+    m_activeDaysLabel->setObjectName("infoLabel");
 }
 
 void UserProfileTab::setupUserTags()
@@ -217,23 +130,10 @@ void UserProfileTab::setupUserTags()
     m_loyaltyTagLabel = new QLabel("忠诚度: -");
     m_valueTagLabel = new QLabel("价值: -");
     
-    // 设置现代化标签样式
-    QString tagStyle = R"(
-        QLabel {
-            padding: 12px 20px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 13px;
-            color: white;
-            background-color: #6c757d;
-            margin: 8px;
-            min-width: 100px;
-        }
-    )";
-    
-    m_activityTagLabel->setStyleSheet(tagStyle);
-    m_loyaltyTagLabel->setStyleSheet(tagStyle);
-    m_valueTagLabel->setStyleSheet(tagStyle);
+    // 设置对象名称用于主题样式
+    m_activityTagLabel->setObjectName("tagLabel");
+    m_loyaltyTagLabel->setObjectName("tagLabel");
+    m_valueTagLabel->setObjectName("tagLabel");
     
     // 设置标签对齐
     m_activityTagLabel->setAlignment(Qt::AlignCenter);
@@ -248,24 +148,11 @@ void UserProfileTab::setupBehaviorStats()
     m_topPagesLabel = new QLabel("常用页面: -");
     m_topFeaturesLabel = new QLabel("常用功能: -");
     
-    // 设置统计数据样式
-    QString statsStyle = R"(
-        QLabel {
-            color: #495057;
-            font-size: 13px;
-            font-weight: 500;
-            padding: 16px;
-            background-color: #ffffff;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            margin: 4px;
-        }
-    )";
-    
-    m_visitCountLabel->setStyleSheet(statsStyle);
-    m_avgStayTimeLabel->setStyleSheet(statsStyle);
-    m_topPagesLabel->setStyleSheet(statsStyle);
-    m_topFeaturesLabel->setStyleSheet(statsStyle);
+    // 设置对象名称用于主题样式
+    m_visitCountLabel->setObjectName("statsLabel");
+    m_avgStayTimeLabel->setObjectName("statsLabel");
+    m_topPagesLabel->setObjectName("statsLabel");
+    m_topFeaturesLabel->setObjectName("statsLabel");
     
     // 设置文本换行
     m_topPagesLabel->setWordWrap(true);
@@ -276,26 +163,14 @@ void UserProfileTab::setupInterestAnalysis()
 {
     m_interestChartView = new QWebEngineView();
     m_interestChartView->setMinimumHeight(350);
-    m_interestChartView->setStyleSheet(R"(
-        QWebEngineView {
-            border: none;
-            border-radius: 8px;
-            background-color: white;
-        }
-    )");
+    m_interestChartView->setObjectName("chartView");
 }
 
 void UserProfileTab::setupValueAssessment()
 {
     m_valueRadarView = new QWebEngineView();
     m_valueRadarView->setMinimumHeight(350);
-    m_valueRadarView->setStyleSheet(R"(
-        QWebEngineView {
-            border: none;
-            border-radius: 8px;
-            background-color: white;
-        }
-    )");
+    m_valueRadarView->setObjectName("chartView");
 }
 
 void UserProfileTab::loadUserList()
@@ -1163,8 +1038,125 @@ void UserProfileTab::exportUserProfileToPDF()
     QMessageBox::information(this, "成功", "用户画像导出成功!\n文件保存到: " + fileName);
 }
 
+void UserProfileTab::applyTheme()
+{
+    const auto& colors = ThemeManager::instance()->colors();
+    
+    // 直接为按钮设置样式，避免选择器问题
+    QString primaryButtonStyle = QString(R"(
+        background-color: %1;
+        color: white;
+        border: none;
+        border-radius: %2px;
+        padding: 12px 24px;
+        font-weight: 500;
+        font-size: %3px;
+        min-width: 80px;
+    )").arg(colors.PRIMARY)
+       .arg(ThemeManager::BorderRadius::MD)
+       .arg(ThemeManager::Typography::FONT_SIZE_SM);
+    
+    QString secondaryButtonStyle = QString(R"(
+        background-color: %1;
+        color: white;
+        border: none;
+        border-radius: %2px;
+        padding: 12px 24px;
+        font-weight: 500;
+        font-size: %3px;
+        min-width: 80px;
+    )").arg(colors.GRAY_600)
+       .arg(ThemeManager::BorderRadius::MD)
+       .arg(ThemeManager::Typography::FONT_SIZE_SM);
+    
+    // 直接设置按钮样式
+    if (m_refreshButton) m_refreshButton->setStyleSheet(primaryButtonStyle);
+    if (m_exportButton) m_exportButton->setStyleSheet(primaryButtonStyle);
+    if (m_prevUserButton) m_prevUserButton->setStyleSheet(secondaryButtonStyle);
+    if (m_nextUserButton) m_nextUserButton->setStyleSheet(secondaryButtonStyle);
+    
+    // 应用信息标签样式
+    QString infoLabelStyle = QString(R"(
+        QLabel#infoLabel {
+            color: %1;
+            font-size: %2px;
+            font-weight: 500;
+            padding: 12px 16px;
+            background-color: %3;
+            border-radius: %4px;
+            border-left: 4px solid %5;
+            margin: 4px 0;
+        }
+    )").arg(colors.TEXT_PRIMARY)
+       .arg(ThemeManager::Typography::FONT_SIZE_SM)
+       .arg(colors.SURFACE)
+       .arg(ThemeManager::BorderRadius::MD)
+       .arg(colors.PRIMARY);
+    
+    // 应用标签样式
+    QString tagLabelStyle = QString(R"(
+        QLabel#tagLabel {
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: %1px;
+            color: white;
+            background-color: %2;
+            margin: 8px;
+            min-width: 100px;
+        }
+    )").arg(ThemeManager::Typography::FONT_SIZE_SM)
+       .arg(colors.GRAY_600);
+    
+    // 应用统计标签样式
+    QString statsLabelStyle = QString(R"(
+        QLabel#statsLabel {
+            color: %1;
+            font-size: %2px;
+            font-weight: 500;
+            padding: 16px;
+            background-color: %3;
+            border: 1px solid %4;
+            border-radius: %5px;
+            margin: 4px;
+        }
+    )").arg(colors.TEXT_PRIMARY)
+       .arg(ThemeManager::Typography::FONT_SIZE_SM)
+       .arg(colors.CARD)
+       .arg(colors.BORDER)
+       .arg(ThemeManager::BorderRadius::MD);
+    
+    // 应用图表视图样式
+    QString chartViewStyle = QString(R"(
+        QWebEngineView#chartView {
+            border: none;
+            border-radius: %1px;
+            background-color: %2;
+        }
+    )").arg(ThemeManager::BorderRadius::MD)
+       .arg(colors.CARD);
+    
+    // 设置主窗口样式，包含所有组件样式（除了按钮）
+    QString mainStyle = QString(R"(
+        QWidget {
+            background-color: %1;
+            font-family: %2;
+            color: %3;
+        }
+    )").arg(colors.BACKGROUND)
+       .arg(ThemeManager::Typography::FONT_FAMILY)
+       .arg(colors.TEXT_PRIMARY);
+    
+    // 组合非按钮样式并应用
+    QString combinedStyle = mainStyle + infoLabelStyle + tagLabelStyle + statsLabelStyle + chartViewStyle;
+    
+    setStyleSheet(combinedStyle);
+}
+
 QWidget *UserProfileTab::createToolbarWidget()
 {
+    const auto& colors = ThemeManager::instance()->colors();
+    
     QHBoxLayout *layout = new QHBoxLayout();
     layout->setSpacing(12);
     layout->setContentsMargins(16, 12, 16, 12);
@@ -1187,13 +1179,15 @@ QWidget *UserProfileTab::createToolbarWidget()
     
     QWidget *widget = new QWidget();
     widget->setLayout(layout);
-    widget->setStyleSheet(R"(
+    widget->setStyleSheet(QString(R"(
         QWidget {
-            background-color: white;
-            border-radius: 12px;
-            border: 1px solid #e9ecef;
+            background-color: %1;
+            border-radius: %2px;
+            border: 1px solid %3;
         }
-    )");
+    )").arg(colors.CARD)
+       .arg(ThemeManager::BorderRadius::LG)
+       .arg(colors.BORDER));
     return widget;
 }
 
@@ -1265,14 +1259,18 @@ QGroupBox *UserProfileTab::createGroupBox(const QString &title, QWidget *content
 // 新增现代卡片创建方法
 QWidget *UserProfileTab::createModernCard(const QString &title, QWidget *content, bool showTitle)
 {
+    const auto& colors = ThemeManager::instance()->colors();
+    
     QWidget *card = new QWidget();
-    card->setStyleSheet(R"(
+    card->setStyleSheet(QString(R"(
         QWidget {
-            background-color: white;
-            border-radius: 12px;
-            border: 1px solid #e9ecef;
+            background-color: %1;
+            border-radius: %2px;
+            border: 1px solid %3;
         }
-    )");
+    )").arg(colors.CARD)
+       .arg(ThemeManager::BorderRadius::LG)
+       .arg(colors.BORDER));
     
     QVBoxLayout *cardLayout = new QVBoxLayout(card);
     cardLayout->setContentsMargins(0, 0, 0, 0);
@@ -1280,16 +1278,17 @@ QWidget *UserProfileTab::createModernCard(const QString &title, QWidget *content
     
     if (showTitle && !title.isEmpty()) {
         QLabel *titleLabel = new QLabel(title);
-        titleLabel->setStyleSheet(R"(
+        titleLabel->setStyleSheet(QString(R"(
             QLabel {
                 font-weight: 600;
-                font-size: 16px;
-                color: #2c3e50;
+                font-size: %1px;
+                color: %2;
                 padding: 16px 20px 8px 20px;
                 background-color: transparent;
                 border: none;
             }
-        )");
+        )").arg(ThemeManager::Typography::FONT_SIZE_LG)
+           .arg(colors.TEXT_PRIMARY));
         cardLayout->addWidget(titleLabel);
     }
     

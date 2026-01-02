@@ -18,6 +18,9 @@ LIBS += -L$$OUT_PWD/../networkmanager -lnetworkmanager
 SOURCES += \
     reportstab.cpp
 
+# 添加styles库依赖
+LIBS += -L$$OUT_PWD/../styles -lstyles
+
 HEADERS += \
     reportstab.h
 

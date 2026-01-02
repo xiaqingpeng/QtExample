@@ -27,6 +27,10 @@ ReportsTab::ReportsTab(QWidget *parent)
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &ReportsTab::refreshReports);
     timer->start(30000);
+    
+    // 连接主题变化信号
+    connect(ThemeManager::instance(), &ThemeManager::themeChanged,
+            this, &ReportsTab::applyTheme);
 }
 
 ReportsTab::~ReportsTab()
@@ -35,91 +39,6 @@ ReportsTab::~ReportsTab()
 
 void ReportsTab::setupUI()
 {
-    // 设置主窗口样式
-    setStyleSheet(R"(
-        QWidget {
-            background-color: #f8f9fa;
-            font-family: "Helvetica Neue", "Helvetica", "Arial";
-        }
-        QGroupBox {
-            font-weight: 600;
-            font-size: 14px;
-            color: #2c3e50;
-            border: 1px solid #e9ecef;
-            border-radius: 12px;
-            margin-top: 12px;
-            padding-top: 8px;
-            background-color: white;
-        }
-        QGroupBox::title {
-            subcontrol-origin: margin;
-            left: 16px;
-            padding: 0 8px 0 8px;
-            background-color: white;
-        }
-        QPushButton {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-weight: 500;
-            font-size: 13px;
-            min-width: 70px;
-        }
-        QPushButton:hover {
-            background-color: #0056b3;
-        }
-        QPushButton:pressed {
-            background-color: #004085;
-        }
-        QComboBox {
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            padding: 8px 12px;
-            background-color: white;
-            font-size: 13px;
-            min-width: 120px;
-        }
-        QComboBox:hover {
-            border-color: #007bff;
-        }
-        QDateEdit {
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            padding: 8px 12px;
-            background-color: white;
-            font-size: 13px;
-            min-width: 120px;
-        }
-        QDateEdit:hover {
-            border-color: #007bff;
-        }
-        QTableWidget {
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            background-color: white;
-            gridline-color: #f1f3f4;
-            font-size: 13px;
-        }
-        QTableWidget::item {
-            padding: 12px 8px;
-            border-bottom: 1px solid #f1f3f4;
-        }
-        QTableWidget::item:selected {
-            background-color: #e3f2fd;
-            color: #1976d2;
-        }
-        QHeaderView::section {
-            background-color: #f8f9fa;
-            padding: 12px 8px;
-            border: none;
-            border-bottom: 2px solid #e9ecef;
-            font-weight: 600;
-            color: #495057;
-        }
-    )");
-    
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(24, 24, 24, 24);
     mainLayout->setSpacing(20);
@@ -148,6 +67,9 @@ void ReportsTab::setupUI()
     // 实时统计 - 实时数据卡片
     setupRealTimeStats();
     mainLayout->addWidget(createModernCard("实时数据", createRealTimeStatsWidget()));
+    
+    // 应用主题
+    applyTheme();
 }
 
 void ReportsTab::setupToolbar()
@@ -157,15 +79,18 @@ void ReportsTab::setupToolbar()
     m_startDateEdit = new QDateEdit(QDate(2025, 12, 31));
     m_startDateEdit->setCalendarPopup(true);
     m_startDateEdit->setDisplayFormat("yyyy-MM-dd");
+    m_startDateEdit->setObjectName("dateEdit");
     connect(m_startDateEdit, &QDateEdit::dateChanged, this, &ReportsTab::onDateRangeChanged);
     
     m_endDateEdit = new QDateEdit(QDate(2026, 1, 1));
     m_endDateEdit->setCalendarPopup(true);
     m_endDateEdit->setDisplayFormat("yyyy-MM-dd");
+    m_endDateEdit->setObjectName("dateEdit");
     connect(m_endDateEdit, &QDateEdit::dateChanged, this, &ReportsTab::onDateRangeChanged);
     
     // 报表类型选择
     m_reportTypeCombo = new QComboBox();
+    m_reportTypeCombo->setObjectName("comboBox");
     m_reportTypeCombo->addItem("事件总数", "events");
     m_reportTypeCombo->addItem("日活跃用户", "activity");
     m_reportTypeCombo->addItem("页面访问量", "pageview");
@@ -177,6 +102,7 @@ void ReportsTab::setupToolbar()
     
     // 图表类型选择
     m_chartTypeCombo = new QComboBox();
+    m_chartTypeCombo->setObjectName("comboBox");
     m_chartTypeCombo->addItem("折线图", "line");
     m_chartTypeCombo->addItem("柱状图", "bar");
     // 连接图表类型改变信号，重新渲染图表
@@ -185,18 +111,23 @@ void ReportsTab::setupToolbar()
     
     // 操作按钮
     m_refreshButton = new QPushButton("刷新");
+    m_refreshButton->setObjectName("primaryButton");
     connect(m_refreshButton, &QPushButton::clicked, this, &ReportsTab::refreshReports);
     
     m_exportButton = new QPushButton("导出");
+    m_exportButton->setObjectName("secondaryButton");
     connect(m_exportButton, &QPushButton::clicked, this, &ReportsTab::exportReport);
     
     m_exportCSVButton = new QPushButton("导出CSV");
+    m_exportCSVButton->setObjectName("secondaryButton");
     connect(m_exportCSVButton, &QPushButton::clicked, this, &ReportsTab::exportToCSV);
     
     m_exportExcelButton = new QPushButton("导出Excel");
+    m_exportExcelButton->setObjectName("secondaryButton");
     connect(m_exportExcelButton, &QPushButton::clicked, this, &ReportsTab::exportToExcel);
     
     m_exportPDFButton = new QPushButton("导出PDF");
+    m_exportPDFButton->setObjectName("secondaryButton");
     connect(m_exportPDFButton, &QPushButton::clicked, this, &ReportsTab::exportToPDF);
 }
 
@@ -210,73 +141,32 @@ void ReportsTab::setupKeyMetrics()
     m_todayEventsLabel = new QLabel("今日事件: -");
     m_totalEventsLabel = new QLabel("总事件数: -");
     
-    // 设置现代化指标卡片样式
-    QString metricStyle = R"(
-        QLabel {
-            padding: 20px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #495057;
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                stop:0 #ffffff, stop:1 #f8f9fa);
-            border: 1px solid #e9ecef;
-            margin: 4px;
-            min-height: 60px;
-        }
-    )";
-    
-    // 为不同指标设置不同的强调色
-    m_dauLabel->setStyleSheet(metricStyle + R"(
-        QLabel { border-left: 4px solid #28a745; }
-    )");
-    m_mauLabel->setStyleSheet(metricStyle + R"(
-        QLabel { border-left: 4px solid #007bff; }
-    )");
-    m_retentionLabel->setStyleSheet(metricStyle + R"(
-        QLabel { border-left: 4px solid #17a2b8; }
-    )");
-    m_conversionLabel->setStyleSheet(metricStyle + R"(
-        QLabel { border-left: 4px solid #ffc107; }
-    )");
-    m_onlineUsersLabel->setStyleSheet(metricStyle + R"(
-        QLabel { border-left: 4px solid #20c997; }
-    )");
-    m_todayEventsLabel->setStyleSheet(metricStyle + R"(
-        QLabel { border-left: 4px solid #fd7e14; }
-    )");
-    m_totalEventsLabel->setStyleSheet(metricStyle + R"(
-        QLabel { border-left: 4px solid #6610f2; }
-    )");
+    // 设置对象名称用于主题样式
+    m_dauLabel->setObjectName("metricLabel");
+    m_mauLabel->setObjectName("metricLabel");
+    m_retentionLabel->setObjectName("metricLabel");
+    m_conversionLabel->setObjectName("metricLabel");
+    m_onlineUsersLabel->setObjectName("metricLabel");
+    m_todayEventsLabel->setObjectName("metricLabel");
+    m_totalEventsLabel->setObjectName("metricLabel");
 }
 
 void ReportsTab::setupTrendCharts()
 {
     m_trendChartView = new QWebEngineView();
     m_trendChartView->setMinimumHeight(450);
-    m_trendChartView->setStyleSheet(R"(
-        QWebEngineView {
-            border: none;
-            border-radius: 8px;
-            background-color: white;
-        }
-    )");
+    m_trendChartView->setObjectName("chartView");
     
     m_activityChartView = new QWebEngineView();
     m_activityChartView->setMinimumHeight(350);
-    m_activityChartView->setStyleSheet(R"(
-        QWebEngineView {
-            border: none;
-            border-radius: 8px;
-            background-color: white;
-        }
-    )");
+    m_activityChartView->setObjectName("chartView");
 }
 
 void ReportsTab::setupTopRankings()
 {
     // 热门页面表格
     m_topPagesTable = new QTableWidget();
+    m_topPagesTable->setObjectName("dataTable");
     m_topPagesTable->setColumnCount(3);
     m_topPagesTable->setHorizontalHeaderLabels(QStringList() << "排名" << "页面名称" << "访问次数");
     m_topPagesTable->horizontalHeader()->setStretchLastSection(true);
@@ -288,6 +178,7 @@ void ReportsTab::setupTopRankings()
     
     // 热门事件表格
     m_topEventsTable = new QTableWidget();
+    m_topEventsTable->setObjectName("dataTable");
     m_topEventsTable->setColumnCount(3);
     m_topEventsTable->setHorizontalHeaderLabels(QStringList() << "排名" << "事件名称" << "触发次数");
     m_topEventsTable->horizontalHeader()->setStretchLastSection(true);
@@ -299,6 +190,7 @@ void ReportsTab::setupTopRankings()
     
     // 活跃用户表格
     m_topUsersTable = new QTableWidget();
+    m_topUsersTable->setObjectName("dataTable");
     m_topUsersTable->setColumnCount(3);
     m_topUsersTable->setHorizontalHeaderLabels(QStringList() << "排名" << "用户ID" << "活跃度");
     m_topUsersTable->horizontalHeader()->setStretchLastSection(true);
@@ -1208,6 +1100,152 @@ void ReportsTab::exportToPDF()
     QMessageBox::information(this, "成功", "报表导出成功!");
 }
 
+void ReportsTab::applyTheme()
+{
+    const auto& colors = ThemeManager::instance()->colors();
+    
+    // 直接为按钮设置样式，避免选择器问题
+    QString primaryButtonStyle = QString(R"(
+        background-color: %1;
+        color: white;
+        border: none;
+        border-radius: %2px;
+        padding: 10px 16px;
+        font-weight: 500;
+        font-size: %3px;
+        min-width: 70px;
+    )").arg(colors.PRIMARY)
+       .arg(ThemeManager::BorderRadius::MD)
+       .arg(ThemeManager::Typography::FONT_SIZE_SM);
+    
+    QString secondaryButtonStyle = QString(R"(
+        background-color: %1;
+        color: white;
+        border: none;
+        border-radius: %2px;
+        padding: 10px 16px;
+        font-weight: 500;
+        font-size: %3px;
+        min-width: 70px;
+    )").arg(colors.GRAY_600)
+       .arg(ThemeManager::BorderRadius::MD)
+       .arg(ThemeManager::Typography::FONT_SIZE_SM);
+    
+    // 直接设置按钮样式
+    if (m_refreshButton) m_refreshButton->setStyleSheet(primaryButtonStyle);
+    if (m_exportButton) m_exportButton->setStyleSheet(secondaryButtonStyle);
+    if (m_exportCSVButton) m_exportCSVButton->setStyleSheet(secondaryButtonStyle);
+    if (m_exportExcelButton) m_exportExcelButton->setStyleSheet(secondaryButtonStyle);
+    if (m_exportPDFButton) m_exportPDFButton->setStyleSheet(secondaryButtonStyle);
+    
+    // 应用输入控件样式
+    QString inputStyle = QString(R"(
+        QComboBox#comboBox, QDateEdit#dateEdit {
+            border: 1px solid %1;
+            border-radius: %2px;
+            padding: 8px 12px;
+            background-color: %3;
+            font-size: %4px;
+            min-width: 120px;
+            color: %5;
+        }
+        QComboBox#comboBox:hover, QDateEdit#dateEdit:hover {
+            border-color: %6;
+        }
+    )").arg(colors.BORDER)
+       .arg(ThemeManager::BorderRadius::SM)
+       .arg(colors.SURFACE)
+       .arg(ThemeManager::Typography::FONT_SIZE_SM)
+       .arg(colors.TEXT_PRIMARY)
+       .arg(colors.PRIMARY);
+    
+    // 应用表格样式
+    QString tableStyle = QString(R"(
+        QTableWidget#dataTable {
+            border: 1px solid %1;
+            border-radius: %2px;
+            background-color: %3;
+            gridline-color: %4;
+            font-size: %5px;
+            color: %6;
+        }
+        QTableWidget#dataTable::item {
+            padding: 12px 8px;
+            border-bottom: 1px solid %7;
+        }
+        QTableWidget#dataTable::item:selected {
+            background-color: %8;
+            color: %9;
+        }
+        QHeaderView::section {
+            background-color: %10;
+            padding: 12px 8px;
+            border: none;
+            border-bottom: 2px solid %11;
+            font-weight: 600;
+            color: %12;
+        }
+    )").arg(colors.BORDER)
+       .arg(ThemeManager::BorderRadius::MD)
+       .arg(colors.CARD)
+       .arg(colors.DIVIDER)
+       .arg(ThemeManager::Typography::FONT_SIZE_SM)
+       .arg(colors.TEXT_PRIMARY)
+       .arg(colors.DIVIDER)
+       .arg(colors.PRIMARY_LIGHT)
+       .arg(colors.PRIMARY)
+       .arg(colors.SURFACE)
+       .arg(colors.BORDER)
+       .arg(colors.TEXT_SECONDARY);
+    
+    // 应用指标标签样式
+    QString metricLabelStyle = QString(R"(
+        QLabel#metricLabel {
+            padding: 20px;
+            border-radius: %1px;
+            font-size: %2px;
+            font-weight: 600;
+            color: %3;
+            background-color: %4;
+            border: 1px solid %5;
+            margin: 4px;
+            min-height: 60px;
+            border-left: 4px solid %6;
+        }
+    )").arg(ThemeManager::BorderRadius::LG)
+       .arg(ThemeManager::Typography::FONT_SIZE_SM)
+       .arg(colors.TEXT_PRIMARY)
+       .arg(colors.CARD)
+       .arg(colors.BORDER)
+       .arg(colors.PRIMARY);
+    
+    // 应用图表视图样式
+    QString chartViewStyle = QString(R"(
+        QWebEngineView#chartView {
+            border: none;
+            border-radius: %1px;
+            background-color: %2;
+        }
+    )").arg(ThemeManager::BorderRadius::MD)
+       .arg(colors.CARD);
+    
+    // 设置主窗口样式，包含所有组件样式（不包括按钮样式，因为按钮使用直接设置）
+    QString mainStyle = QString(R"(
+        QWidget {
+            background-color: %1;
+            font-family: %2;
+            color: %3;
+        }
+    )").arg(colors.BACKGROUND)
+       .arg(ThemeManager::Typography::FONT_FAMILY)
+       .arg(colors.TEXT_PRIMARY);
+    
+    // 组合所有样式并应用（不包括按钮样式）
+    QString combinedStyle = mainStyle + inputStyle + tableStyle + metricLabelStyle + chartViewStyle;
+    
+    setStyleSheet(combinedStyle);
+}
+
 QGroupBox *ReportsTab::createGroupBox(const QString &title, QWidget *content)
 {
     QGroupBox *groupBox = new QGroupBox(title);
@@ -1219,14 +1257,18 @@ QGroupBox *ReportsTab::createGroupBox(const QString &title, QWidget *content)
 // 新增现代卡片创建方法
 QWidget *ReportsTab::createModernCard(const QString &title, QWidget *content, bool showTitle)
 {
+    const auto& colors = ThemeManager::instance()->colors();
+    
     QWidget *card = new QWidget();
-    card->setStyleSheet(R"(
+    card->setStyleSheet(QString(R"(
         QWidget {
-            background-color: white;
-            border-radius: 12px;
-            border: 1px solid #e9ecef;
+            background-color: %1;
+            border-radius: %2px;
+            border: 1px solid %3;
         }
-    )");
+    )").arg(colors.CARD)
+       .arg(ThemeManager::BorderRadius::LG)
+       .arg(colors.BORDER));
     
     QVBoxLayout *cardLayout = new QVBoxLayout(card);
     cardLayout->setContentsMargins(0, 0, 0, 0);
@@ -1234,16 +1276,17 @@ QWidget *ReportsTab::createModernCard(const QString &title, QWidget *content, bo
     
     if (showTitle && !title.isEmpty()) {
         QLabel *titleLabel = new QLabel(title);
-        titleLabel->setStyleSheet(R"(
+        titleLabel->setStyleSheet(QString(R"(
             QLabel {
                 font-weight: 600;
-                font-size: 16px;
-                color: #2c3e50;
+                font-size: %1px;
+                color: %2;
                 padding: 16px 20px 8px 20px;
                 background-color: transparent;
                 border: none;
             }
-        )");
+        )").arg(ThemeManager::Typography::FONT_SIZE_LG)
+           .arg(colors.TEXT_PRIMARY));
         cardLayout->addWidget(titleLabel);
     }
     
@@ -1254,14 +1297,18 @@ QWidget *ReportsTab::createModernCard(const QString &title, QWidget *content, bo
 // 新增分隔符创建方法
 QWidget *ReportsTab::createSeparator()
 {
+    const auto& colors = ThemeManager::instance()->colors();
+    
     QWidget *separator = new QWidget();
     separator->setFixedWidth(1);
-    separator->setStyleSheet("QWidget { background-color: #e9ecef; }");
+    separator->setStyleSheet(QString("QWidget { background-color: %1; }").arg(colors.BORDER));
     return separator;
 }
 
 QWidget *ReportsTab::createToolbarWidget()
 {
+    const auto& colors = ThemeManager::instance()->colors();
+    
     QWidget *widget = new QWidget();
     QHBoxLayout *layout = new QHBoxLayout(widget);
     layout->setContentsMargins(16, 12, 16, 12);
@@ -1272,9 +1319,9 @@ QWidget *ReportsTab::createToolbarWidget()
     dateLayout->setSpacing(8);
     
     QLabel *startLabel = new QLabel("开始:");
-    startLabel->setStyleSheet("QLabel { color: #6c757d; font-weight: 500; }");
+    startLabel->setStyleSheet(QString("QLabel { color: %1; font-weight: 500; }").arg(colors.TEXT_SECONDARY));
     QLabel *endLabel = new QLabel("至:");
-    endLabel->setStyleSheet("QLabel { color: #6c757d; font-weight: 500; }");
+    endLabel->setStyleSheet(QString("QLabel { color: %1; font-weight: 500; }").arg(colors.TEXT_SECONDARY));
     
     dateLayout->addWidget(startLabel);
     dateLayout->addWidget(m_startDateEdit);
@@ -1286,9 +1333,9 @@ QWidget *ReportsTab::createToolbarWidget()
     filterLayout->setSpacing(8);
     
     QLabel *reportLabel = new QLabel("报表:");
-    reportLabel->setStyleSheet("QLabel { color: #6c757d; font-weight: 500; }");
+    reportLabel->setStyleSheet(QString("QLabel { color: %1; font-weight: 500; }").arg(colors.TEXT_SECONDARY));
     QLabel *chartLabel = new QLabel("图表:");
-    chartLabel->setStyleSheet("QLabel { color: #6c757d; font-weight: 500; }");
+    chartLabel->setStyleSheet(QString("QLabel { color: %1; font-weight: 500; }").arg(colors.TEXT_SECONDARY));
     
     filterLayout->addWidget(reportLabel);
     filterLayout->addWidget(m_reportTypeCombo);
@@ -1298,54 +1345,6 @@ QWidget *ReportsTab::createToolbarWidget()
     // 操作按钮区域
     QHBoxLayout *actionLayout = new QHBoxLayout();
     actionLayout->setSpacing(8);
-    
-    // 设置按钮样式
-    QString primaryBtnStyle = R"(
-        QPushButton {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-weight: 500;
-            font-size: 13px;
-            min-width: 70px;
-        }
-        QPushButton:hover {
-            background-color: #0056b3;
-        }
-    )";
-    
-    QString secondaryBtnStyle = R"(
-        QPushButton {
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-weight: 500;
-            font-size: 13px;
-            min-width: 70px;
-        }
-        QPushButton:hover {
-            background-color: #545b62;
-        }
-    )";
-    
-    m_refreshButton->setText("刷新");
-    m_refreshButton->setStyleSheet(primaryBtnStyle);
-    
-    m_exportButton->setText("导出");
-    m_exportButton->setStyleSheet(secondaryBtnStyle);
-    
-    m_exportCSVButton->setText("CSV");
-    m_exportCSVButton->setStyleSheet(secondaryBtnStyle);
-    
-    m_exportExcelButton->setText("Excel");
-    m_exportExcelButton->setStyleSheet(secondaryBtnStyle);
-    
-    m_exportPDFButton->setText("PDF");
-    m_exportPDFButton->setStyleSheet(secondaryBtnStyle);
     
     actionLayout->addWidget(m_refreshButton);
     actionLayout->addWidget(m_exportButton);
@@ -1361,13 +1360,15 @@ QWidget *ReportsTab::createToolbarWidget()
     layout->addLayout(actionLayout);
     layout->addStretch();
     
-    widget->setStyleSheet(R"(
+    widget->setStyleSheet(QString(R"(
         QWidget {
-            background-color: white;
-            border-radius: 12px;
-            border: 1px solid #e9ecef;
+            background-color: %1;
+            border-radius: %2px;
+            border: 1px solid %3;
         }
-    )");
+    )").arg(colors.CARD)
+       .arg(ThemeManager::BorderRadius::LG)
+       .arg(colors.BORDER));
     
     return widget;
 }
@@ -1412,32 +1413,36 @@ QWidget *ReportsTab::createTopUsersWidget()
 
 QWidget *ReportsTab::createRealTimeStatsWidget()
 {
+    const auto& colors = ThemeManager::instance()->colors();
+    
     QWidget *widget = new QWidget();
     QHBoxLayout *layout = new QHBoxLayout(widget);
     layout->setContentsMargins(16, 16, 16, 16);
     layout->setSpacing(20);
     
     // 设置实时数据样式
-    QString realtimeStyle = R"(
+    QString realtimeStyle = QString(R"(
         QLabel {
             padding: 16px 20px;
             border-radius: 10px;
-            font-size: 14px;
+            font-size: %1px;
             font-weight: 600;
             color: white;
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
-                stop:0 #28a745, stop:1 #20c997);
+                stop:0 %2, stop:1 %3);
             min-width: 150px;
         }
-    )";
+    )").arg(ThemeManager::Typography::FONT_SIZE_SM)
+       .arg(colors.SUCCESS)
+       .arg(colors.INFO);
     
     m_onlineUsersLabel->setStyleSheet(realtimeStyle);
-    m_todayEventsLabel->setStyleSheet(realtimeStyle + R"(
+    m_todayEventsLabel->setStyleSheet(realtimeStyle + QString(R"(
         QLabel {
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
-                stop:0 #007bff, stop:1 #17a2b8);
+                stop:0 %1, stop:1 %2);
         }
-    )");
+    )").arg(colors.PRIMARY).arg(colors.INFO));
     
     m_onlineUsersLabel->setAlignment(Qt::AlignCenter);
     m_todayEventsLabel->setAlignment(Qt::AlignCenter);

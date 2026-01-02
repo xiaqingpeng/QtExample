@@ -12,6 +12,7 @@
 #include <QProgressBar>
 #include <QWebEngineView>
 #include <QTimer>
+#include "../styles/theme_manager.h"
 
 class UserProfileTab : public QWidget
 {
@@ -33,6 +34,10 @@ private slots:
     void exportUserProfileToCSV();
     void exportUserProfileToExcel();
     void exportUserProfileToPDF();
+
+public slots:
+    // 主题应用
+    void applyTheme();
 
 private:
     // UI初始化方法

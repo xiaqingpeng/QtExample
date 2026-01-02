@@ -134,9 +134,11 @@ target_link_libraries(ECharts PRIVATE
     Qt6::Network
     NetworkManager
     Analytics
+    Styles
 )
 target_include_directories(ECharts PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/styles
 )
 
 # UserProfileTab模块
@@ -152,9 +154,11 @@ target_link_libraries(UserProfileTab PRIVATE
     Qt6::WebEngineWidgets
     Qt6::Network
     NetworkManager
+    Styles
 )
 target_include_directories(UserProfileTab PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/styles
 )
 
 # ReportsTab模块
@@ -171,9 +175,11 @@ target_link_libraries(ReportsTab PRIVATE
     Qt6::Network
     Qt6::PrintSupport
     NetworkManager
+    Styles
 )
 target_include_directories(ReportsTab PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/styles
 )
 
 # LoginPage模块
@@ -214,6 +220,11 @@ add_dependencies(LoginPage Analytics)
 add_dependencies(UserInfo Analytics)
 add_dependencies(ChangePasswordPage Analytics)
 add_dependencies(ECharts Analytics)
+
+# 添加Styles库依赖关系
+add_dependencies(ECharts Styles)
+add_dependencies(UserProfileTab Styles)
+add_dependencies(ReportsTab Styles)
 
 # 主应用程序源文件
 set(SOURCES

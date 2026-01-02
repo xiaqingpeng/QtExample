@@ -10,6 +10,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include "networkmanager.h"
+#include "theme_manager.h"
 
 class LogStatsTab : public QWidget
 {
@@ -34,6 +35,8 @@ private slots:
     void onNextPage();
     // 跳转到指定页
     void onGoToPage();
+    // 主题变化事件
+    void applyTheme();
 
 private:
     // 初始化UI

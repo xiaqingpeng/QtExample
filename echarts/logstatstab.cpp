@@ -1,6 +1,7 @@
 #include "logstatstab.h"
 #include "common.h"
 #include "../analytics/analytics.h"
+#include "theme_manager.h"
 #include <QElapsedTimer>
 #include <QHeaderView>
 #include <QMessageBox>
@@ -34,12 +35,6 @@ void LogStatsTab::setupUI()
     mainLayout->setContentsMargins(16, 16, 16, 16);
     mainLayout->setSpacing(12);
 
-    // 设置窗口样式
-    this->setStyleSheet(
-        "QWidget { background-color: #f5f7fa; }"
-        "QLabel { color: #333; font-size: 13px; font-weight: 500; }"
-    );
-
     // 创建筛选控件
     setupFilterControls();
     mainLayout->addLayout(m_filterLayout);
@@ -52,6 +47,13 @@ void LogStatsTab::setupUI()
     setupPaginationControls();
     mainLayout->addLayout(m_paginationLayout);
 
+    // 应用主题
+    applyTheme();
+    
+    // 连接主题变化信号
+    connect(ThemeManager::instance(), &ThemeManager::themeChanged,
+            this, &LogStatsTab::applyTheme);
+
     // 初始化默认选择"今天"
     onTimeShortcutClicked(0);
 }
@@ -62,39 +64,22 @@ void LogStatsTab::setupFilterControls()
 
     // Method选择下拉框
     m_methodCombo = new QComboBox(this);
+    m_methodCombo->setObjectName("methodCombo");
     m_methodCombo->addItem("All", "");  // All表示不筛选
     m_methodCombo->addItem("POST", "POST");
     m_methodCombo->addItem("GET", "GET");
     m_methodCombo->setCurrentIndex(0);  // 默认选择All
     m_methodCombo->setMinimumWidth(120);
     m_methodCombo->setMinimumHeight(36);
-    m_methodCombo->setStyleSheet(
-        "QComboBox {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "    padding: 6px 12px;"
-        "    font-size: 13px;"
-        "    color: #333;"
-        "}"
-        "QComboBox:hover { border: 1px solid #0078d4; }"
-        "QComboBox:focus { border: 1px solid #0078d4; }"
-        "QComboBox::drop-down { border: none; width: 24px; }"
-        "QComboBox::down-arrow { image: none; border: none; }"
-        "QComboBox QAbstractItemView {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "    selection-background-color: #0078d4;"
-        "    selection-color: white;"
-        "    outline: none;"
-        "}"
-    );
-    m_filterLayout->addWidget(new QLabel("Method:"));
+    
+    QLabel *methodLabel = new QLabel("Method:");
+    methodLabel->setObjectName("filterLabel");
+    m_filterLayout->addWidget(methodLabel);
     m_filterLayout->addWidget(m_methodCombo);
 
     // Platform选择下拉框
     m_platformCombo = new QComboBox(this);
+    m_platformCombo->setObjectName("platformCombo");
     m_platformCombo->addItem("All", "");  // All表示不筛选
     m_platformCombo->addItem("Web", "Web");
     m_platformCombo->addItem("Android", "Android");
@@ -104,88 +89,37 @@ void LogStatsTab::setupFilterControls()
     m_platformCombo->setCurrentIndex(0);  // 默认选择All
     m_platformCombo->setMinimumWidth(120);
     m_platformCombo->setMinimumHeight(36);
-    m_platformCombo->setStyleSheet(
-        "QComboBox {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "    padding: 6px 12px;"
-        "    font-size: 13px;"
-        "    color: #333;"
-        "}"
-        "QComboBox:hover { border: 1px solid #0078d4; }"
-        "QComboBox:focus { border: 1px solid #0078d4; }"
-        "QComboBox::drop-down { border: none; width: 24px; }"
-        "QComboBox::down-arrow { image: none; border: none; }"
-        "QComboBox QAbstractItemView {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "    selection-background-color: #0078d4;"
-        "    selection-color: white;"
-        "    outline: none;"
-        "}"
-    );
-    m_filterLayout->addWidget(new QLabel("Platform:"));
+    
+    QLabel *platformLabel = new QLabel("Platform:");
+    platformLabel->setObjectName("filterLabel");
+    m_filterLayout->addWidget(platformLabel);
     m_filterLayout->addWidget(m_platformCombo);
 
     // 创建时间筛选控件
     QHBoxLayout *timeFilterLayout = new QHBoxLayout();
 
     // 开始时间选择器
-    timeFilterLayout->addWidget(new QLabel("开始时间:"));
+    QLabel *startTimeLabel = new QLabel("开始时间:");
+    startTimeLabel->setObjectName("filterLabel");
+    timeFilterLayout->addWidget(startTimeLabel);
     m_startTimeEdit = new QDateTimeEdit(this);
+    m_startTimeEdit->setObjectName("startTimeEdit");
     m_startTimeEdit->setDisplayFormat("yyyy-MM-dd HH:mm:ss");
     m_startTimeEdit->setCalendarPopup(true);
     m_startTimeEdit->setDateTime(QDateTime::currentDateTime().addDays(-7));  // 默认7天前
     m_startTimeEdit->setMinimumHeight(36);
-    m_startTimeEdit->setStyleSheet(
-        "QDateTimeEdit {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "    padding: 6px 12px;"
-        "    font-size: 13px;"
-        "    color: #333;"
-        "}"
-        "QDateTimeEdit:hover { border: 1px solid #0078d4; }"
-        "QDateTimeEdit:focus { border: 1px solid #0078d4; }"
-        "QDateTimeEdit::drop-down { border: none; width: 24px; }"
-        "QDateTimeEdit::down-arrow { image: none; border: none; }"
-        "QDateTimeEdit QCalendarWidget {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "}"
-    );
     timeFilterLayout->addWidget(m_startTimeEdit);
 
     // 结束时间选择器
-    timeFilterLayout->addWidget(new QLabel("结束时间:"));
+    QLabel *endTimeLabel = new QLabel("结束时间:");
+    endTimeLabel->setObjectName("filterLabel");
+    timeFilterLayout->addWidget(endTimeLabel);
     m_endTimeEdit = new QDateTimeEdit(this);
+    m_endTimeEdit->setObjectName("endTimeEdit");
     m_endTimeEdit->setDisplayFormat("yyyy-MM-dd HH:mm:ss");
     m_endTimeEdit->setCalendarPopup(true);
     m_endTimeEdit->setDateTime(QDateTime::currentDateTime());  // 默认当前时间
     m_endTimeEdit->setMinimumHeight(36);
-    m_endTimeEdit->setStyleSheet(
-        "QDateTimeEdit {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "    padding: 6px 12px;"
-        "    font-size: 13px;"
-        "    color: #333;"
-        "}"
-        "QDateTimeEdit:hover { border: 1px solid #0078d4; }"
-        "QDateTimeEdit:focus { border: 1px solid #0078d4; }"
-        "QDateTimeEdit::drop-down { border: none; width: 24px; }"
-        "QDateTimeEdit::down-arrow { image: none; border: none; }"
-        "QDateTimeEdit QCalendarWidget {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "}"
-    );
     timeFilterLayout->addWidget(m_endTimeEdit);
 
     m_filterLayout->addLayout(timeFilterLayout);
@@ -194,39 +128,15 @@ void LogStatsTab::setupFilterControls()
     QHBoxLayout *shortcutLayout = new QHBoxLayout();
 
     m_btnToday = new QPushButton("今天", this);
+    m_btnToday->setObjectName("timeShortcutButton");
     m_btnYesterday = new QPushButton("昨天", this);
+    m_btnYesterday->setObjectName("timeShortcutButton");
     m_btnLast7Days = new QPushButton("最近7天", this);
+    m_btnLast7Days->setObjectName("timeShortcutButton");
     m_btnLast30Days = new QPushButton("最近30天", this);
+    m_btnLast30Days->setObjectName("timeShortcutButton");
     m_btnClearTime = new QPushButton("清除时间", this);
-
-    // 设置快捷按钮的初始样式
-    QString normalButtonStyle =
-        "QPushButton {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "    padding: 8px 16px;"
-        "    font-size: 13px;"
-        "    color: #333;"
-        "}"
-        "QPushButton:hover {"
-        "    background-color: #f0f0f0;"
-        "    border: 1px solid #0078d4;"
-        "}"
-        "QPushButton:pressed {"
-        "    background-color: #e0e0e0;"
-        "}"
-        "QPushButton:checked {"
-        "    background-color: #0078d4;"
-        "    color: white;"
-        "    border: 1px solid #005a9e;"
-        "}";
-
-    m_btnToday->setStyleSheet(normalButtonStyle);
-    m_btnYesterday->setStyleSheet(normalButtonStyle);
-    m_btnLast7Days->setStyleSheet(normalButtonStyle);
-    m_btnLast30Days->setStyleSheet(normalButtonStyle);
-    m_btnClearTime->setStyleSheet(normalButtonStyle);
+    m_btnClearTime->setObjectName("timeShortcutButton");
 
     shortcutLayout->addWidget(m_btnToday);
     shortcutLayout->addWidget(m_btnYesterday);
@@ -257,32 +167,9 @@ void LogStatsTab::setupFilterControls()
 void LogStatsTab::setupTable()
 {
     m_tableWidget = new QTableWidget(this);
+    m_tableWidget->setObjectName("logStatsTable");
     m_tableWidget->setColumnCount(7);
     m_tableWidget->setHorizontalHeaderLabels({"ID", "Path", "Method", "IP", "Request Time", "Duration (ms)", "Platform"});
-
-    // 设置表格样式
-    m_tableWidget->setStyleSheet(
-        "QTableWidget {"
-        "    background-color: white;"
-        "    border: 1px solid #e0e0e0;"
-        "    border-radius: 8px;"
-        "    gridline-color: #e0e0e0;"
-        "    selection-background-color: #0078d4;"
-        "    selection-color: white;"
-        "}"
-        "QTableWidget::item {"
-        "    padding: 8px;"
-        "    border-bottom: 1px solid #e0e0e0;"
-        "}"
-        "QHeaderView::section {"
-        "    background-color: #f8f9fa;"
-        "    color: #333;"
-        "    padding: 10px;"
-        "    border: none;"
-        "    border-bottom: 2px solid #0078d4;"
-        "    font-weight: 600;"
-        "}"
-    );
 
     // 设置表头属性
     m_tableWidget->horizontalHeader()->setStretchLastSection(true);
@@ -299,79 +186,26 @@ void LogStatsTab::setupPaginationControls()
 
     // 上一页按钮
     m_btnPrevious = new QPushButton("上一页", this);
+    m_btnPrevious->setObjectName("paginationButton");
     m_btnPrevious->setMinimumHeight(36);
-    m_btnPrevious->setStyleSheet(
-        "QPushButton {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "    padding: 8px 16px;"
-        "    font-size: 13px;"
-        "    color: #333;"
-        "}"
-        "QPushButton:hover {"
-        "    background-color: #f0f0f0;"
-        "    border: 1px solid #0078d4;"
-        "}"
-        "QPushButton:disabled {"
-        "    background-color: #f5f5f5;"
-        "    color: #999;"
-        "    border: 1px solid #e0e0e0;"
-        "}"
-    );
     connect(m_btnPrevious, &QPushButton::clicked, this, &LogStatsTab::onPreviousPage);
 
     // 页码选择器
     m_pageCombo = new QComboBox(this);
+    m_pageCombo->setObjectName("pageCombo");
     m_pageCombo->setMinimumWidth(80);
     m_pageCombo->setMinimumHeight(36);
-    m_pageCombo->setStyleSheet(
-        "QComboBox {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "    padding: 6px 12px;"
-        "    font-size: 13px;"
-        "    color: #333;"
-        "}"
-        "QComboBox:hover { border: 1px solid #0078d4; }"
-        "QComboBox:focus { border: 1px solid #0078d4; }"
-    );
     connect(m_pageCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &LogStatsTab::onGoToPage);
 
     // 页码信息标签
     m_pageInfoLabel = new QLabel(this);
-    m_pageInfoLabel->setStyleSheet(
-        "QLabel {"
-        "    color: #666;"
-        "    font-size: 13px;"
-        "    padding: 0 10px;"
-        "}"
-    );
+    m_pageInfoLabel->setObjectName("pageInfoLabel");
 
     // 下一页按钮
     m_btnNext = new QPushButton("下一页", this);
+    m_btnNext->setObjectName("paginationButton");
     m_btnNext->setMinimumHeight(36);
-    m_btnNext->setStyleSheet(
-        "QPushButton {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "    padding: 8px 16px;"
-        "    font-size: 13px;"
-        "    color: #333;"
-        "}"
-        "QPushButton:hover {"
-        "    background-color: #f0f0f0;"
-        "    border: 1px solid #0078d4;"
-        "}"
-        "QPushButton:disabled {"
-        "    background-color: #f5f5f5;"
-        "    color: #999;"
-        "    border: 1px solid #e0e0e0;"
-        "}"
-    );
     connect(m_btnNext, &QPushButton::clicked, this, &LogStatsTab::onNextPage);
 
     m_paginationLayout->addWidget(m_btnPrevious);
@@ -610,56 +444,277 @@ void LogStatsTab::onGoToPage()
 
 void LogStatsTab::updateButtonHighlight(int days)
 {
-    QString normalStyle =
-        "QPushButton {"
-        "    background-color: white;"
-        "    border: 1px solid #d0d0d0;"
-        "    border-radius: 6px;"
-        "    padding: 8px 16px;"
-        "    font-size: 13px;"
-        "    color: #333;"
+    ThemeManager *theme = ThemeManager::instance();
+    
+    // 定义按钮样式
+    QString normalStyle = QString(
+        "QPushButton#timeShortcutButton { "
+        "    background-color: %1; "
+        "    border: 1px solid %2; "
+        "    border-radius: %3px; "
+        "    padding: 8px 16px; "
+        "    font-size: %4px; "
+        "    color: %5; "
+        "    font-family: %6; "
         "}"
-        "QPushButton:hover {"
-        "    background-color: #f0f0f0;"
-        "    border: 1px solid #0078d4;"
+        "QPushButton#timeShortcutButton:hover { "
+        "    background-color: %7; "
+        "    border: 1px solid %8; "
         "}"
-        "QPushButton:pressed {"
-        "    background-color: #e0e0e0;"
-        "}";
+        "QPushButton#timeShortcutButton:pressed { "
+        "    background-color: %9; "
+        "}"
+    ).arg(theme->colors().SURFACE)
+     .arg(theme->colors().BORDER)
+     .arg(ThemeManager::BorderRadius::SM)
+     .arg(ThemeManager::Typography::FONT_SIZE_SM)
+     .arg(theme->colors().TEXT_PRIMARY)
+     .arg(ThemeManager::Typography::FONT_FAMILY)
+     .arg(theme->colors().GRAY_100)
+     .arg(theme->colors().PRIMARY)
+     .arg(theme->colors().GRAY_200);
 
-    QString checkedStyle =
-        "QPushButton {"
-        "    background-color: #0078d4;"
-        "    color: white;"
-        "    border: 1px solid #005a9e;"
-        "    border-radius: 6px;"
-        "    padding: 8px 16px;"
-        "    font-size: 13px;"
+    QString checkedStyle = QString(
+        "QPushButton#timeShortcutButton { "
+        "    background-color: %1; "
+        "    color: %2; "
+        "    border: 1px solid %3; "
+        "    border-radius: %4px; "
+        "    padding: 8px 16px; "
+        "    font-size: %5px; "
+        "    font-family: %6; "
         "}"
-        "QPushButton:hover {"
-        "    background-color: #106ebe;"
+        "QPushButton#timeShortcutButton:hover { "
+        "    background-color: %7; "
         "}"
-        "QPushButton:pressed {"
-        "    background-color: #005a9e;"
-        "}";
+        "QPushButton#timeShortcutButton:pressed { "
+        "    background-color: %8; "
+        "}"
+    ).arg(theme->colors().PRIMARY)
+     .arg(theme->colors().SURFACE)
+     .arg(theme->colors().PRIMARY_HOVER)
+     .arg(ThemeManager::BorderRadius::SM)
+     .arg(ThemeManager::Typography::FONT_SIZE_SM)
+     .arg(ThemeManager::Typography::FONT_FAMILY)
+     .arg(theme->colors().PRIMARY_HOVER)
+     .arg(theme->colors().PRIMARY_HOVER);
 
     // 重置所有按钮样式
-    m_btnToday->setStyleSheet(normalStyle);
-    m_btnYesterday->setStyleSheet(normalStyle);
-    m_btnLast7Days->setStyleSheet(normalStyle);
-    m_btnLast30Days->setStyleSheet(normalStyle);
-    m_btnClearTime->setStyleSheet(normalStyle);
+    if (m_btnToday) m_btnToday->setStyleSheet(normalStyle);
+    if (m_btnYesterday) m_btnYesterday->setStyleSheet(normalStyle);
+    if (m_btnLast7Days) m_btnLast7Days->setStyleSheet(normalStyle);
+    if (m_btnLast30Days) m_btnLast30Days->setStyleSheet(normalStyle);
+    if (m_btnClearTime) m_btnClearTime->setStyleSheet(normalStyle);
 
     // 根据days参数高亮对应按钮
     if (days == 0) {
-        m_btnToday->setStyleSheet(checkedStyle);
+        if (m_btnToday) m_btnToday->setStyleSheet(checkedStyle);
     } else if (days == 1) {
-        m_btnYesterday->setStyleSheet(checkedStyle);
+        if (m_btnYesterday) m_btnYesterday->setStyleSheet(checkedStyle);
     } else if (days == 7) {
-        m_btnLast7Days->setStyleSheet(checkedStyle);
+        if (m_btnLast7Days) m_btnLast7Days->setStyleSheet(checkedStyle);
     } else if (days == 30) {
-        m_btnLast30Days->setStyleSheet(checkedStyle);
+        if (m_btnLast30Days) m_btnLast30Days->setStyleSheet(checkedStyle);
     }
+}
+
+void LogStatsTab::applyTheme()
+{
+    ThemeManager *theme = ThemeManager::instance();
+    
+    // 应用主窗口样式
+    this->setStyleSheet(QString(
+        "QWidget { "
+        "    background-color: %1; "
+        "    color: %2; "
+        "    font-family: %3; "
+        "}"
+        "QLabel#filterLabel { "
+        "    color: %4; "
+        "    font-size: %5px; "
+        "    font-weight: 500; "
+        "}"
+        "QLabel#pageInfoLabel { "
+        "    color: %6; "
+        "    font-size: %7px; "
+        "    padding: 0 10px; "
+        "}"
+    ).arg(theme->colors().BACKGROUND)
+     .arg(theme->colors().TEXT_PRIMARY)
+     .arg(ThemeManager::Typography::FONT_FAMILY)
+     .arg(theme->colors().TEXT_PRIMARY)
+     .arg(ThemeManager::Typography::FONT_SIZE_SM)
+     .arg(theme->colors().TEXT_SECONDARY)
+     .arg(ThemeManager::Typography::FONT_SIZE_SM));
+    
+    // 应用下拉框样式
+    QString comboBoxStyle = QString(
+        "QComboBox { "
+        "    background-color: %1; "
+        "    border: 1px solid %2; "
+        "    border-radius: %3px; "
+        "    padding: 6px 12px; "
+        "    font-size: %4px; "
+        "    color: %5; "
+        "    font-family: %6; "
+        "}"
+        "QComboBox:hover { "
+        "    border: 1px solid %7; "
+        "}"
+        "QComboBox:focus { "
+        "    border: 1px solid %8; "
+        "}"
+        "QComboBox::drop-down { "
+        "    border: none; "
+        "    width: 24px; "
+        "}"
+        "QComboBox::down-arrow { "
+        "    image: none; "
+        "    border: none; "
+        "}"
+        "QComboBox QAbstractItemView { "
+        "    background-color: %9; "
+        "    border: 1px solid %10; "
+        "    border-radius: %11px; "
+        "    selection-background-color: %12; "
+        "    selection-color: %13; "
+        "    outline: none; "
+        "}"
+    ).arg(theme->colors().SURFACE)
+     .arg(theme->colors().BORDER)
+     .arg(ThemeManager::BorderRadius::SM)
+     .arg(ThemeManager::Typography::FONT_SIZE_SM)
+     .arg(theme->colors().TEXT_PRIMARY)
+     .arg(ThemeManager::Typography::FONT_FAMILY)
+     .arg(theme->colors().PRIMARY)
+     .arg(theme->colors().PRIMARY)
+     .arg(theme->colors().SURFACE)
+     .arg(theme->colors().BORDER)
+     .arg(ThemeManager::BorderRadius::SM)
+     .arg(theme->colors().PRIMARY)
+     .arg(theme->colors().SURFACE);
+    
+    if (m_methodCombo) m_methodCombo->setStyleSheet(comboBoxStyle);
+    if (m_platformCombo) m_platformCombo->setStyleSheet(comboBoxStyle);
+    if (m_pageCombo) m_pageCombo->setStyleSheet(comboBoxStyle);
+    
+    // 应用时间选择器样式
+    QString dateTimeStyle = QString(
+        "QDateTimeEdit { "
+        "    background-color: %1; "
+        "    border: 1px solid %2; "
+        "    border-radius: %3px; "
+        "    padding: 6px 12px; "
+        "    font-size: %4px; "
+        "    color: %5; "
+        "    font-family: %6; "
+        "}"
+        "QDateTimeEdit:hover { "
+        "    border: 1px solid %7; "
+        "}"
+        "QDateTimeEdit:focus { "
+        "    border: 1px solid %8; "
+        "}"
+        "QDateTimeEdit::drop-down { "
+        "    border: none; "
+        "    width: 24px; "
+        "}"
+        "QDateTimeEdit::down-arrow { "
+        "    image: none; "
+        "    border: none; "
+        "}"
+        "QDateTimeEdit QCalendarWidget { "
+        "    background-color: %9; "
+        "    border: 1px solid %10; "
+        "    border-radius: %11px; "
+        "}"
+    ).arg(theme->colors().SURFACE)
+     .arg(theme->colors().BORDER)
+     .arg(ThemeManager::BorderRadius::SM)
+     .arg(ThemeManager::Typography::FONT_SIZE_SM)
+     .arg(theme->colors().TEXT_PRIMARY)
+     .arg(ThemeManager::Typography::FONT_FAMILY)
+     .arg(theme->colors().PRIMARY)
+     .arg(theme->colors().PRIMARY)
+     .arg(theme->colors().SURFACE)
+     .arg(theme->colors().BORDER)
+     .arg(ThemeManager::BorderRadius::SM);
+    
+    if (m_startTimeEdit) m_startTimeEdit->setStyleSheet(dateTimeStyle);
+    if (m_endTimeEdit) m_endTimeEdit->setStyleSheet(dateTimeStyle);
+    
+    // 应用表格样式
+    if (m_tableWidget) {
+        m_tableWidget->setStyleSheet(QString(
+            "QTableWidget#logStatsTable { "
+            "    background-color: %1; "
+            "    border: 1px solid %2; "
+            "    border-radius: %3px; "
+            "    gridline-color: %4; "
+            "    selection-background-color: %5; "
+            "    selection-color: %6; "
+            "}"
+            "QTableWidget#logStatsTable::item { "
+            "    padding: 8px; "
+            "    border-bottom: 1px solid %7; "
+            "}"
+            "QHeaderView::section { "
+            "    background-color: %8; "
+            "    color: %9; "
+            "    padding: 10px; "
+            "    border: none; "
+            "    border-bottom: 2px solid %10; "
+            "    font-weight: 600; "
+            "}"
+        ).arg(theme->colors().SURFACE)
+         .arg(theme->colors().BORDER)
+         .arg(ThemeManager::BorderRadius::MD)
+         .arg(theme->colors().BORDER)
+         .arg(theme->colors().PRIMARY)
+         .arg(theme->colors().SURFACE)
+         .arg(theme->colors().BORDER)
+         .arg(theme->colors().GRAY_100)
+         .arg(theme->colors().TEXT_PRIMARY)
+         .arg(theme->colors().PRIMARY));
+    }
+    
+    // 应用分页按钮样式
+    QString paginationButtonStyle = QString(
+        "QPushButton#paginationButton { "
+        "    background-color: %1; "
+        "    border: 1px solid %2; "
+        "    border-radius: %3px; "
+        "    padding: 8px 16px; "
+        "    font-size: %4px; "
+        "    color: %5; "
+        "    font-family: %6; "
+        "}"
+        "QPushButton#paginationButton:hover { "
+        "    background-color: %7; "
+        "    border: 1px solid %8; "
+        "}"
+        "QPushButton#paginationButton:disabled { "
+        "    background-color: %9; "
+        "    color: %10; "
+        "    border: 1px solid %11; "
+        "}"
+    ).arg(theme->colors().SURFACE)
+     .arg(theme->colors().BORDER)
+     .arg(ThemeManager::BorderRadius::SM)
+     .arg(ThemeManager::Typography::FONT_SIZE_SM)
+     .arg(theme->colors().TEXT_PRIMARY)
+     .arg(ThemeManager::Typography::FONT_FAMILY)
+     .arg(theme->colors().GRAY_100)
+     .arg(theme->colors().PRIMARY)
+     .arg(theme->colors().GRAY_100)
+     .arg(theme->colors().TEXT_DISABLED)
+     .arg(theme->colors().BORDER);
+    
+    if (m_btnPrevious) m_btnPrevious->setStyleSheet(paginationButtonStyle);
+    if (m_btnNext) m_btnNext->setStyleSheet(paginationButtonStyle);
+    
+    // 更新快捷按钮样式
+    updateButtonHighlight(-2); // 使用特殊值来触发样式更新而不改变高亮状态
 }
 
 void LogStatsTab::updatePaginationInfo()
