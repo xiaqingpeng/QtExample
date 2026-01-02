@@ -96,6 +96,11 @@ jobs:
         ARCHIVE_NAME: example-${{ github.ref_name }}-${{ runner.os }}-qt${{ matrix.qt_version }}
       run: |
         New-Item -ItemType Directory -Path "$env:ARCHIVE_NAME" -Force
+        
+        # 调试：列出build目录内容
+        Write-Host "=== Build directory contents ==="
+        Get-ChildItem "build/" | Format-Table
+        
         Copy-Item "build/example.exe" "$env:ARCHIVE_NAME/"
         Get-ChildItem "build/*.dll" -ErrorAction SilentlyContinue | Copy-Item -Destination "$env:ARCHIVE_NAME/"
         Copy-Item "images" "$env:ARCHIVE_NAME/" -Recurse -Force
@@ -109,6 +114,11 @@ jobs:
         ARCHIVE_NAME: example-${{ github.ref_name }}-${{ runner.os }}-qt${{ matrix.qt_version }}
       run: |
         mkdir -p "$ARCHIVE_NAME"
+        
+        # 调试：列出build目录内容
+        echo "=== Build directory contents ==="
+        ls -la build/
+        
         if [ "$RUNNER_OS" == "macOS" ]; then
           cp -R build/example.app "$ARCHIVE_NAME/"
           cp -r images "$ARCHIVE_NAME/"

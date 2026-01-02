@@ -246,9 +246,9 @@ set(UIS
 # 创建可执行文件
 qt_add_executable(QTExample MACOSX_BUNDLE ${SOURCES} ${HEADERS} ${UIS} layoutexamplestab.qrc)
 
-# 设置应用程序显示名称
+# 设置应用程序显示名称和输出名称
 set_target_properties(QTExample PROPERTIES
-    OUTPUT_NAME "QT Example"
+    OUTPUT_NAME "example"
     MACOSX_BUNDLE_BUNDLE_NAME "QT Example"
 )
 
