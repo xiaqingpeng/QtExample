@@ -6,6 +6,7 @@
 #include <QWebChannel>
 #include <QVariant>
 #include "networkmanager.h"
+#include "theme_manager.h"
 // #include <QTimer>  // 已禁用定时器功能
 #include <QComboBox>
 #include <QDateTimeEdit>
@@ -46,6 +47,8 @@ private slots:
     void onPageLoaded(bool ok);
     // 图表类型切换事件
     void onChartTypeChanged(int index);
+    // 主题变化事件
+    void applyTheme();
 
 private:
     QWebEngineView *m_webView;  // 加载HTML的WebView

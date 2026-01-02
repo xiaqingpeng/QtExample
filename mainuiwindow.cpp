@@ -384,6 +384,21 @@ void MainUIWindow::applyTheme()
     if (contentStack) {
         contentStack->setStyleSheet(theme->getScrollBarStyle());
     }
+    
+    // 更新默认头像以匹配新主题（仅当没有自定义头像时）
+    if (avatarLabel && avatarLabel->pixmap().isNull()) {
+        setDefaultAvatar();
+    } else if (avatarLabel) {
+        // 检查是否使用的是默认头像（通过检查用户设置）
+        QSettings settings("YourCompany", "QtApp");
+        QString localAvatar = settings.value("user/avatar_local", "").toString();
+        QString networkAvatar = settings.value("user/avatar", "").toString();
+        
+        // 如果没有自定义头像，更新默认头像
+        if (localAvatar.isEmpty() && networkAvatar.isEmpty()) {
+            setDefaultAvatar();
+        }
+    }
 }
 
 void MainUIWindow::setupSubMenu(const QString &mainMenu)
@@ -765,18 +780,49 @@ void MainUIWindow::setDefaultAvatar()
     QPainter painter(&defaultAvatar);
     painter.setRenderHint(QPainter::Antialiasing);
     
+    // 获取当前主题管理器
+    ThemeManager *theme = ThemeManager::instance();
+    ThemeManager::ThemeType currentTheme = theme->getCurrentTheme();
+    
+    // 根据主题设置头像颜色
+    QString backgroundColor;
+    QString iconColor;
+    
+    switch (currentTheme) {
+        case ThemeManager::LIGHT:
+            backgroundColor = "#e2e8f0";  // 浅灰色背景
+            iconColor = "#94a3b8";       // 中灰色图标
+            break;
+        case ThemeManager::DARK:
+            backgroundColor = "#374151";  // 深灰色背景
+            iconColor = "#9ca3af";       // 浅灰色图标
+            break;
+        case ThemeManager::BLUE:
+            backgroundColor = "#dbeafe";  // 浅蓝色背景
+            iconColor = "#60a5fa";       // 蓝色图标
+            break;
+        case ThemeManager::GREEN:
+            backgroundColor = "#dcfce7";  // 浅绿色背景
+            iconColor = "#4ade80";       // 绿色图标
+            break;
+        default:
+            backgroundColor = "#e2e8f0";
+            iconColor = "#94a3b8";
+            break;
+    }
+    
     // 绘制圆形背景
-    painter.setBrush(QBrush(QColor("#e2e8f0")));
+    painter.setBrush(QBrush(QColor(backgroundColor)));
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(0, 0, 40, 40);
     
     // 绘制简单的用户图标
-    painter.setBrush(QBrush(QColor("#94a3b8")));
+    painter.setBrush(QBrush(QColor(iconColor)));
     painter.drawEllipse(12, 8, 16, 16); // 头部
     painter.drawEllipse(6, 26, 28, 16); // 身体
     
     avatarLabel->setPixmap(defaultAvatar);
-    // LOG_DEBUG("Default avatar set");
+    // LOG_DEBUG("Theme-responsive default avatar set for theme:" << static_cast<int>(currentTheme));
 }
 
 void MainUIWindow::loadNetworkAvatar(const QString &avatarUrl)
