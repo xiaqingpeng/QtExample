@@ -44,94 +44,11 @@ target_include_directories(Styles PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# BasicControls模块
-qt_add_library(BasicControls STATIC
-    basiccontrols/basiccontrolstab.cpp
-    basiccontrols/basiccontrolstab.h
-)
-target_link_libraries(BasicControls PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-)
-
-# DataDisplay模块
-qt_add_library(DataDisplay STATIC
-    datadisplay/datadisplaytab.cpp
-    datadisplay/datadisplaytab.h
-)
-target_link_libraries(DataDisplay PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-)
-
-# AdvancedControls模块
-qt_add_library(AdvancedControls STATIC
-    advancedcontrols/advancedcontrolstab.cpp
-    advancedcontrols/advancedcontrolstab.h
-)
-target_link_libraries(AdvancedControls PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-)
-
-# Dialogs模块
-qt_add_library(Dialogs STATIC
-    dialogs/dialogstab.cpp
-    dialogs/dialogstab.h
-)
-target_link_libraries(Dialogs PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-)
-
-# LayoutExamples模块
-if(NOT WIN32)
-    set(LAYOUT_QRC_FILES layoutexamplestab.qrc)
-else()
-    set(LAYOUT_QRC_FILES "")
-endif()
-
-qt_add_library(LayoutExamples1 STATIC
-    layoutexamples1/layoutexamplestab1.cpp
-    layoutexamples1/layoutexamplestab1.h
-    ${LAYOUT_QRC_FILES}
-)
-target_link_libraries(LayoutExamples1 PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-)
-
-# LayoutExamplesTab2模块
-qt_add_library(LayoutExamplesTab2 STATIC
-    layoutexamples2/layoutexamplestab2.cpp
-    layoutexamples2/layoutexamplestab2.h
-)
-target_link_libraries(LayoutExamplesTab2 PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-)
-
-# LayoutExamplesTab3模块
-qt_add_library(LayoutExamplesTab3 STATIC
-    layoutexamples3/layoutexamplestab3.cpp
-    layoutexamples3/layoutexamplestab3.h
-)
-target_link_libraries(LayoutExamplesTab3 PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-    Qt6::Network
-    NetworkManager
-)
-target_include_directories(LayoutExamplesTab3 PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
+# BasicControls模块 - 已移除
+# DataDisplay模块 - 已移除
+# AdvancedControls模块 - 已移除
+# Dialogs模块 - 已移除
+# LayoutExamples模块 - 已移除
 
 # ECharts模块
 qt_add_library(ECharts STATIC
@@ -213,7 +130,6 @@ add_subdirectory(analytics)
 add_dependencies(ChangePasswordPage NetworkManager)
 add_dependencies(LoginPage NetworkManager)
 add_dependencies(UserInfo NetworkManager)
-add_dependencies(LayoutExamplesTab3 NetworkManager)
 add_dependencies(ECharts NetworkManager)
 add_dependencies(UserProfileTab NetworkManager)
 add_dependencies(ReportsTab NetworkManager)
@@ -276,13 +192,6 @@ target_link_libraries(QTExample PRIVATE
     Qt6::Network
     Qt6::PrintSupport
     NetworkManager
-    BasicControls
-    DataDisplay
-    AdvancedControls
-    Dialogs
-    LayoutExamples1
-    LayoutExamplesTab2
-    LayoutExamplesTab3
     ECharts
     UserProfileTab
     ReportsTab
@@ -296,13 +205,6 @@ target_link_libraries(QTExample PRIVATE
 # 包含模块头文件目录
 target_include_directories(QTExample PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/advancedcontrols
-    ${CMAKE_CURRENT_SOURCE_DIR}/basiccontrols
-    ${CMAKE_CURRENT_SOURCE_DIR}/datadisplay
-    ${CMAKE_CURRENT_SOURCE_DIR}/dialogs
-    ${CMAKE_CURRENT_SOURCE_DIR}/LayoutExamples1
-    ${CMAKE_CURRENT_SOURCE_DIR}/layoutexamples2
-    ${CMAKE_CURRENT_SOURCE_DIR}/layoutexamples3
     ${CMAKE_CURRENT_SOURCE_DIR}/echarts
     ${CMAKE_CURRENT_SOURCE_DIR}/userprofiletab
     ${CMAKE_CURRENT_SOURCE_DIR}/reportstab
@@ -321,7 +223,7 @@ install(TARGETS QTExample
 )
 
 # 安装模块库
-install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts UserProfileTab ReportsTab LoginPage ChangePasswordPage UserInfo Analytics Styles
+install(TARGETS NetworkManager ECharts UserProfileTab ReportsTab LoginPage ChangePasswordPage UserInfo Analytics Styles
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

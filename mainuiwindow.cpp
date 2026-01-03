@@ -1,12 +1,5 @@
 #include "mainuiwindow.h"
 #include "utils/logger.h"
-#include "advancedcontrols/advancedcontrolstab.h"
-#include "basiccontrols/basiccontrolstab.h"
-#include "datadisplay/datadisplaytab.h"
-#include "dialogs/dialogstab.h"
-#include "layoutexamples1/layoutexamplestab1.h"
-#include "layoutexamples2/layoutexamplestab2.h"
-#include "layoutexamples3/layoutexamplestab3.h"
 #include "echarts/echartstab.h"
 #include "echarts/logstatstab.h"
 #include "userprofiletab/userprofiletab.h"
@@ -238,30 +231,18 @@ void MainUIWindow::setupMainMenu()
     mainMenuList = new QListWidget();
     mainMenuList->setMaximumWidth(220);
 
-    // 添加一级菜单项（移除emoji图标避免崩溃）
-    QListWidgetItem *item1 = new QListWidgetItem("控件示例");
+    // 添加一级菜单项
+    QListWidgetItem *item1 = new QListWidgetItem("图表示例");
     item1->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mainMenuList->addItem(item1);
 
-    QListWidgetItem *item2 = new QListWidgetItem("布局示例");
+    QListWidgetItem *item2 = new QListWidgetItem("数据分析");
     item2->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mainMenuList->addItem(item2);
 
-    QListWidgetItem *item3 = new QListWidgetItem("对话框示例");
+    QListWidgetItem *item3 = new QListWidgetItem("个人中心");
     item3->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mainMenuList->addItem(item3);
-
-    QListWidgetItem *item4 = new QListWidgetItem("图表示例");
-    item4->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    mainMenuList->addItem(item4);
-
-    QListWidgetItem *item5 = new QListWidgetItem("数据分析");
-    item5->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    mainMenuList->addItem(item5);
-
-    QListWidgetItem *item6 = new QListWidgetItem("个人中心");
-    item6->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    mainMenuList->addItem(item6);
 
     connect(mainMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onMainMenuClicked);
 
@@ -280,17 +261,7 @@ void MainUIWindow::setupSubMenuContent(const QString &mainMenu)
 {
     subMenuList->clear();
 
-    if (mainMenu.contains("控件示例")) {
-        new QListWidgetItem("基本控件", subMenuList);
-        new QListWidgetItem("高级控件", subMenuList);
-        new QListWidgetItem("数据显示", subMenuList);
-    } else if (mainMenu.contains("布局示例")) {
-        new QListWidgetItem("布局示例1", subMenuList);
-        new QListWidgetItem("布局示例2", subMenuList);
-        new QListWidgetItem("布局示例3", subMenuList);
-    } else if (mainMenu.contains("对话框示例")) {
-        new QListWidgetItem("对话框", subMenuList);
-    } else if (mainMenu.contains("图表示例")) {
+    if (mainMenu.contains("图表示例")) {
         new QListWidgetItem("ECharts示例", subMenuList);
         new QListWidgetItem("日志统计", subMenuList);
     } else if (mainMenu.contains("数据分析")) {
@@ -433,17 +404,7 @@ void MainUIWindow::setupSubMenu(const QString &mainMenu)
 {
     subMenuList->clear();
 
-    if (mainMenu.contains("控件示例")) {
-        new QListWidgetItem("基本控件", subMenuList);
-        new QListWidgetItem("高级控件", subMenuList);
-        new QListWidgetItem("数据显示", subMenuList);
-    } else if (mainMenu.contains("布局示例")) {
-        new QListWidgetItem("布局示例1", subMenuList);
-        new QListWidgetItem("布局示例2", subMenuList);
-        new QListWidgetItem("布局示例3", subMenuList);
-    } else if (mainMenu.contains("对话框示例")) {
-        new QListWidgetItem("对话框", subMenuList);
-    } else if (mainMenu.contains("图表示例")) {
+    if (mainMenu.contains("图表示例")) {
         new QListWidgetItem("ECharts示例", subMenuList);
         new QListWidgetItem("日志统计", subMenuList);
     } else if (mainMenu.contains("数据分析")) {
@@ -512,24 +473,7 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
 
     // 根据二级菜单创建对应的内容
     QWidget *contentWidget = nullptr;
-    if (subMenu.contains("基本控件")) {
-        contentWidget = new BasicControlsTab();
-    } else if (subMenu.contains("高级控件")) {
-        contentWidget = new AdvancedControlsTab();
-    } else if (subMenu.contains("数据显示")) {
-        contentWidget = new DataDisplayTab();
-    } 
-    else if (subMenu.contains("布局示例1")) {
-        contentWidget = new LayoutExamplesTab();
-    } 
-    else if (subMenu.contains("布局示例2")) {
-        contentWidget = new LayoutExamplesTab2();
-    } 
-    else if (subMenu.contains("布局示例3")) {
-        contentWidget = new LayoutExamplesTab3();
-    } else if (subMenu.contains("对话框")) {
-        contentWidget = new DialogsTab();
-    } else if (subMenu.contains("ECharts示例")) {
+    if (subMenu.contains("ECharts示例")) {
         contentWidget = new EChartsTab();
     } else if (subMenu.contains("日志统计")) {
         contentWidget = new LogStatsTab();
