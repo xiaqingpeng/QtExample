@@ -71,6 +71,9 @@ private:
     QPushButton *m_btnLast30Days;
     QPushButton *m_btnClearTime;
     
+    // 当前高亮的天数（用于主题切换时保持状态）
+    int m_currentHighlightedDays;
+    
     // API请求方法
     void fetchApiData();
     // 更新按钮高亮状态

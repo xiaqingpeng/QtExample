@@ -18,6 +18,7 @@
 #include <QFont>
 #include <QListWidgetItem>
 #include <QScrollArea>
+#include <QMetaMethod>
 #include <QSettings>
 #include <QHBoxLayout>
 #include <QNetworkAccessManager>
@@ -396,6 +397,34 @@ void MainUIWindow::applyTheme()
         // 如果没有自定义头像，更新默认头像
         if (localAvatar.isEmpty() && networkAvatar.isEmpty()) {
             setDefaultAvatar();
+        }
+    }
+    
+    // 通知所有已创建的页面更新主题
+    if (contentStack) {
+        for (int i = 0; i < contentStack->count(); ++i) {
+            QWidget *page = contentStack->widget(i);
+            if (page) {
+                // 使用Qt元对象系统动态调用applyTheme方法（如果存在）
+                const QMetaObject *metaObject = page->metaObject();
+                int methodIndex = metaObject->indexOfMethod("applyTheme()");
+                if (methodIndex != -1) {
+                    // 页面有applyTheme方法，调用它
+                    QMetaMethod method = metaObject->method(methodIndex);
+                    method.invoke(page, Qt::DirectConnection);
+                } else {
+                    // 页面没有applyTheme方法，只更新基本样式
+                    page->setStyleSheet(QString(
+                        "QWidget { "
+                        "    background-color: %1; "
+                        "    color: %2; "
+                        "    font-family: %3; "
+                        "}"
+                    ).arg(theme->colors().BACKGROUND)
+                     .arg(theme->colors().TEXT_PRIMARY)
+                     .arg(ThemeManager::Typography::FONT_FAMILY));
+                }
+            }
         }
     }
 }

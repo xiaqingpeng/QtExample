@@ -17,6 +17,7 @@
 #include "reportstab/reportstab.h"
 #include "loginpage.h"
 #include "changepasswordpage.h"
+#include "userinfo/userinfopage.h"
 #include "styles/theme_manager.h"
 
 class MainUIWindow : public QWidget

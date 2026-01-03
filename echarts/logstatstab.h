@@ -71,6 +71,9 @@ private:
     QPushButton *m_btnLast7Days;
     QPushButton *m_btnLast30Days;
     QPushButton *m_btnClearTime;
+    
+    // 当前高亮的天数（用于主题切换时保持状态）
+    int m_currentHighlightedDays;
 
     // 表格
     QTableWidget *m_tableWidget;

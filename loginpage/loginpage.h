@@ -34,10 +34,14 @@ private slots:
 private:
     void setupLoginUI();
     void setupRegisterUI();
-    void applyTheme(); // 应用主题方法
     void applyThemeToWidget(QWidget* widget); // 应用主题到特定widget
+
+public slots:
     void showError(const QString &message);
     void showSuccess(const QString &message);
+    void applyTheme(); // 应用主题方法
+
+public:
     void saveUserInfo(const QString &token, const QString &email, const QString &password,
                        const QString &userId = "", const QString &username = "",
                        const QString &avatar = "", const QString &createTime = "");
@@ -46,6 +50,7 @@ private:
     QString encryptPassword(const QString &password);
     QString decryptPassword(const QString &encrypted);
 
+private:
     // 登录界面控件
     QLineEdit *m_loginEmail;
     QLineEdit *m_loginPassword;

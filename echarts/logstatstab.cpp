@@ -54,6 +54,9 @@ void LogStatsTab::setupUI()
     connect(ThemeManager::instance(), &ThemeManager::themeChanged,
             this, &LogStatsTab::applyTheme);
 
+    // 初始化当前高亮状态
+    m_currentHighlightedDays = 0; // 默认选择"今天"
+    
     // 初始化默认选择"今天"
     onTimeShortcutClicked(0);
 }
@@ -499,6 +502,18 @@ void LogStatsTab::updateButtonHighlight(int days)
      .arg(theme->colors().PRIMARY_HOVER)
      .arg(theme->colors().PRIMARY_HOVER);
 
+    // 如果是特殊值-2，只更新样式不改变高亮状态
+    if (days == -2) {
+        // 保持当前高亮状态，只更新样式
+        // 重新应用所有按钮的样式
+        if (m_btnToday) m_btnToday->setStyleSheet(m_currentHighlightedDays == 0 ? checkedStyle : normalStyle);
+        if (m_btnYesterday) m_btnYesterday->setStyleSheet(m_currentHighlightedDays == 1 ? checkedStyle : normalStyle);
+        if (m_btnLast7Days) m_btnLast7Days->setStyleSheet(m_currentHighlightedDays == 7 ? checkedStyle : normalStyle);
+        if (m_btnLast30Days) m_btnLast30Days->setStyleSheet(m_currentHighlightedDays == 30 ? checkedStyle : normalStyle);
+        if (m_btnClearTime) m_btnClearTime->setStyleSheet(m_currentHighlightedDays == -1 ? checkedStyle : normalStyle);
+        return;
+    }
+
     // 重置所有按钮样式
     if (m_btnToday) m_btnToday->setStyleSheet(normalStyle);
     if (m_btnYesterday) m_btnYesterday->setStyleSheet(normalStyle);
@@ -509,12 +524,21 @@ void LogStatsTab::updateButtonHighlight(int days)
     // 根据days参数高亮对应按钮
     if (days == 0) {
         if (m_btnToday) m_btnToday->setStyleSheet(checkedStyle);
+        m_currentHighlightedDays = 0;
     } else if (days == 1) {
         if (m_btnYesterday) m_btnYesterday->setStyleSheet(checkedStyle);
+        m_currentHighlightedDays = 1;
     } else if (days == 7) {
         if (m_btnLast7Days) m_btnLast7Days->setStyleSheet(checkedStyle);
+        m_currentHighlightedDays = 7;
     } else if (days == 30) {
         if (m_btnLast30Days) m_btnLast30Days->setStyleSheet(checkedStyle);
+        m_currentHighlightedDays = 30;
+    } else if (days == -1) {
+        if (m_btnClearTime) m_btnClearTime->setStyleSheet(checkedStyle);
+        m_currentHighlightedDays = -1;
+    } else {
+        m_currentHighlightedDays = days;
     }
 }
 

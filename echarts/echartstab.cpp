@@ -208,6 +208,9 @@ EChartsTab::EChartsTab(QWidget *parent)
     connect(ThemeManager::instance(), &ThemeManager::themeChanged,
             this, &EChartsTab::applyTheme);
     
+    // 初始化当前高亮状态
+    m_currentHighlightedDays = 0; // 默认选择"今天"
+    
     // 初始化默认选择"今天"
     onTimeShortcutClicked(0);
     
@@ -382,6 +385,12 @@ void EChartsTab::updateButtonHighlight(int days)
     // 如果是特殊值-2，只更新样式不改变高亮状态
     if (days == -2) {
         // 保持当前高亮状态，只更新样式
+        // 重新应用所有按钮的样式
+        if (m_btnToday) m_btnToday->setStyleSheet(m_currentHighlightedDays == 0 ? highlightStyle : normalStyle);
+        if (m_btnYesterday) m_btnYesterday->setStyleSheet(m_currentHighlightedDays == 1 ? highlightStyle : normalStyle);
+        if (m_btnLast7Days) m_btnLast7Days->setStyleSheet(m_currentHighlightedDays == 7 ? highlightStyle : normalStyle);
+        if (m_btnLast30Days) m_btnLast30Days->setStyleSheet(m_currentHighlightedDays == 30 ? highlightStyle : normalStyle);
+        if (m_btnClearTime) m_btnClearTime->setStyleSheet(m_currentHighlightedDays == -1 ? highlightStyle : normalStyle);
         return;
     }
     
@@ -396,18 +405,26 @@ void EChartsTab::updateButtonHighlight(int days)
     switch (days) {
         case 0:
             if (m_btnToday) m_btnToday->setStyleSheet(highlightStyle);
+            m_currentHighlightedDays = 0;
             break;
         case 1:
             if (m_btnYesterday) m_btnYesterday->setStyleSheet(highlightStyle);
+            m_currentHighlightedDays = 1;
             break;
         case 7:
             if (m_btnLast7Days) m_btnLast7Days->setStyleSheet(highlightStyle);
+            m_currentHighlightedDays = 7;
             break;
         case 30:
             if (m_btnLast30Days) m_btnLast30Days->setStyleSheet(highlightStyle);
+            m_currentHighlightedDays = 30;
             break;
         case -1:
             if (m_btnClearTime) m_btnClearTime->setStyleSheet(highlightStyle);
+            m_currentHighlightedDays = -1;
+            break;
+        default:
+            m_currentHighlightedDays = days;
             break;
     }
 }
