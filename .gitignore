@@ -80,3 +80,18 @@ CMakeLists.txt.user*
 .rcc/
 .uic/
 /build*/
+
+# IDE directories
+.idea/
+.qtcreator/
+cmake-build-*/
+
+# Temporary and generated files
+moc_predefs.h
+*.py.bak
+*.py~
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
