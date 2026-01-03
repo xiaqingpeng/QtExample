@@ -28,15 +28,25 @@ echo ""
 
 # 步骤选择菜单
 echo -e "${YELLOW}请选择要执行的步骤:${NC}"
-echo -e "  ${CYAN}1.${NC} 本地构建测试"
-echo -e "  ${CYAN}2.${NC} 重建标签并推送"
-echo -e "  ${CYAN}3.${NC} 检测流水线状态"
-echo -e "  ${CYAN}4.${NC} 手动上传Release资产"
-echo -e "  ${CYAN}5.${NC} 完整流程 (1→2→3)"
-echo -e "  ${CYAN}6.${NC} 创建轻量级标签 (避免超时)"
-echo -e "  ${CYAN}7.${NC} 跨平台构建和打包"
-echo -e "  ${CYAN}8.${NC} 快速构建上传 (基于现有构建)"
+echo -e "  ${CYAN}1.${NC} 本地构建测试 ${YELLOW}(单平台快速验证)${NC}"
+echo -e "  ${CYAN}2.${NC} 重建标签并推送 ${YELLOW}(触发GitHub Actions)${NC}"
+echo -e "  ${CYAN}3.${NC} 检测流水线状态 ${YELLOW}(监控Actions运行)${NC}"
+echo -e "  ${CYAN}4.${NC} 手动上传Release资产 ${YELLOW}(备用上传方案)${NC}"
+echo -e "  ${CYAN}5.${NC} 完整流程 (1→2→3) ${YELLOW}(传统发布流程)${NC}"
+echo -e "  ${CYAN}6.${NC} 创建轻量级标签 ${YELLOW}(避免Actions超时)${NC}"
+echo -e "  ${CYAN}7.${NC} 跨平台构建和打包 ${YELLOW}(本地全平台构建)${NC}"
+echo -e "  ${CYAN}8.${NC} 快速构建上传 ${YELLOW}(基于现有构建快速发布)${NC}"
 echo -e "  ${CYAN}0.${NC} 退出"
+echo ""
+echo -e "${BLUE}💡 推荐选择:${NC}"
+echo -e "  ${GREEN}• 选项 7${NC} - 完整的跨平台构建，适合正式发布"
+echo -e "  ${GREEN}• 选项 8${NC} - 快速发布，适合基于现有构建的热修复"
+echo -e "  ${GREEN}• 选项 6${NC} - 轻量级发布，避免GitHub Actions超时问题"
+echo ""
+echo -e "${YELLOW}Windows用户提示:${NC}"
+echo -e "  ${CYAN}• Windows专用脚本:${NC} .\\complete-release-windows.ps1"
+echo -e "  ${CYAN}• DLL问题修复:${NC} .\\fix-all-windows-dll.ps1"
+echo -e "  ${CYAN}• DLL问题诊断:${NC} .\\diagnose-windows-dll.ps1"
 echo ""
 
 read -p "请输入选择 [1-8,0]: " choice
@@ -192,17 +202,106 @@ case $choice in
         ;;
     7)
         echo -e "${YELLOW}执行跨平台构建和打包...${NC}"
-        if [ -f "./build-all-platforms.sh" ]; then
-            ./build-all-platforms.sh
-        else
-            echo -e "${RED}✗ 错误: build-all-platforms.sh 不存在${NC}"
-            exit 1
-        fi
+        echo ""
+        echo -e "${BLUE}跨平台构建说明:${NC}"
+        echo -e "  • 构建 macOS、Linux、Windows 三个平台"
+        echo -e "  • 在当前平台进行真实构建，其他平台创建模拟包"
+        echo -e "  • 自动打包并可选择上传到GitHub Release"
+        echo ""
+        
+        # 询问用户选项
+        echo -e "${CYAN}构建选项:${NC}"
+        echo -e "  ${GREEN}1.${NC} 构建所有平台并上传"
+        echo -e "  ${GREEN}2.${NC} 构建所有平台但不上传（测试模式）"
+        echo -e "  ${GREEN}3.${NC} 只构建当前平台"
+        echo -e "  ${GREEN}4.${NC} 自定义选项"
+        echo ""
+        
+        read -p "请选择构建选项 [1-4]: " build_choice
+        
+        case $build_choice in
+            1)
+                echo -e "${CYAN}执行: 构建所有平台并上传${NC}"
+                ./build-all-platforms.sh
+                ;;
+            2)
+                echo -e "${CYAN}执行: 构建所有平台但不上传${NC}"
+                ./build-all-platforms.sh --no-upload
+                ;;
+            3)
+                echo -e "${CYAN}执行: 只构建当前平台${NC}"
+                if [[ "$OSTYPE" == "darwin"* ]]; then
+                    ./build-all-platforms.sh --no-linux --no-windows --no-upload
+                elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+                    ./build-all-platforms.sh --no-macos --no-windows --no-upload
+                else
+                    ./build-all-platforms.sh --no-macos --no-linux --no-upload
+                fi
+                ;;
+            4)
+                echo -e "${CYAN}自定义选项 - 请手动运行:${NC}"
+                echo -e "${YELLOW}./build-all-platforms.sh --help${NC}"
+                echo ""
+                read -p "请输入完整命令: " custom_cmd
+                eval "$custom_cmd"
+                ;;
+            *)
+                echo -e "${RED}无效选择，使用默认选项${NC}"
+                ./build-all-platforms.sh --no-upload
+                ;;
+        esac
         ;;
     8)
         echo -e "${YELLOW}执行快速构建上传...${NC}"
-        if [ -f "./quick-build-upload.sh" ]; then
-            ./quick-build-upload.sh
+        echo ""
+        echo -e "${BLUE}快速构建说明:${NC}"
+        echo -e "  • 基于现有构建快速创建三平台包"
+        echo -e "  • 如果没有构建，自动执行快速构建"
+        echo -e "  • 比完整构建更快，适合热修复发布"
+        echo ""
+        
+        # 检查是否有现有构建
+        if [ -d "build" ] && [ -f "build/example.app/Contents/MacOS/example" ]; then
+            echo -e "${GREEN}✓ 检测到现有构建${NC}"
+        else
+            echo -e "${YELLOW}⚠️  未检测到现有构建，将自动执行构建${NC}"
+        fi
+        
+        echo ""
+        echo -e "${CYAN}快速构建选项:${NC}"
+        echo -e "  ${GREEN}1.${NC} 快速构建并上传"
+        echo -e "  ${GREEN}2.${NC} 快速构建但不上传"
+        echo -e "  ${GREEN}3.${NC} 强制重新构建并上传"
+        echo -e "  ${GREEN}4.${NC} 自定义版本号"
+        echo ""
+        
+        read -p "请选择快速构建选项 [1-4]: " quick_choice
+        
+        case $quick_choice in
+            1)
+                echo -e "${CYAN}执行: 快速构建并上传${NC}"
+                ./quick-build-upload.sh
+                ;;
+            2)
+                echo -e "${CYAN}执行: 快速构建但不上传${NC}"
+                ./quick-build-upload.sh --no-upload
+                ;;
+            3)
+                echo -e "${CYAN}执行: 强制重新构建并上传${NC}"
+                ./quick-build-upload.sh --force-rebuild
+                ;;
+            4)
+                echo ""
+                read -p "请输入版本号 (如 v2.0.0): " custom_version
+                read -p "请输入标签名 (如 v2.0.0-hotfix): " custom_tag
+                echo -e "${CYAN}执行: 自定义版本快速构建${NC}"
+                ./quick-build-upload.sh --version "$custom_version" --tag "$custom_tag"
+                ;;
+            *)
+                echo -e "${RED}无效选择，使用默认选项${NC}"
+                ./quick-build-upload.sh --no-upload
+                ;;
+        esac
         else
             echo -e "${RED}✗ 错误: quick-build-upload.sh 不存在${NC}"
             exit 1

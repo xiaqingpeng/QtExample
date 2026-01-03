@@ -115,6 +115,27 @@ echo -e "${BLUE}========================================${NC}"
 # 提供下一步建议
 echo ""
 echo -e "${CYAN}下一步操作建议:${NC}"
-echo -e "  1. 测试应用程序运行: ${YELLOW}./build/example${NC} (Linux) 或打开 ${YELLOW}./build/example.app${NC} (macOS)"
-echo -e "  2. 如果构建成功，可以推送标签触发GitHub Actions"
-echo -e "  3. 使用 ${YELLOW}./recreate-tag.sh${NC} 重建标签并检测流水线"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo -e "  1. 测试应用程序: ${YELLOW}open ./build/example.app${NC}"
+    echo -e "  2. 跨平台构建: ${YELLOW}./build-all-platforms.sh --no-upload${NC}"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo -e "  1. 测试应用程序: ${YELLOW}./build/example${NC}"
+    echo -e "  2. 跨平台构建: ${YELLOW}./build-all-platforms.sh --no-upload${NC}"
+elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+    echo -e "  1. 测试应用程序: ${YELLOW}./build/example.exe${NC}"
+    echo -e "  2. Windows打包: ${YELLOW}.\\package-windows.ps1${NC}"
+    echo -e "  3. 修复DLL问题: ${YELLOW}.\\fix-all-windows-dll.ps1${NC}"
+else
+    echo -e "  1. 测试应用程序运行"
+    echo -e "  2. 跨平台构建: ${YELLOW}./build-all-platforms.sh --no-upload${NC}"
+fi
+
+echo -e "  3. 完整发布流程: ${YELLOW}./complete-release.sh${NC}"
+echo -e "  4. 查看所有选项: ${YELLOW}./show-build-options.sh${NC}"
+
+echo ""
+echo -e "${YELLOW}Windows用户注意:${NC}"
+echo -e "  如果遇到DLL缺失错误，请运行:"
+echo -e "  ${CYAN}.\\fix-all-windows-dll.ps1${NC}      # 一键修复所有DLL问题"
+echo -e "  ${CYAN}.\\diagnose-windows-dll.ps1${NC}     # 诊断DLL问题"
+echo -e "  ${CYAN}.\\complete-release-windows.ps1${NC} # Windows完整发布流程"

@@ -35,14 +35,23 @@ Write-Output ""
 
 # 步骤选择菜单
 Write-Yellow "请选择要执行的步骤:"
-Write-Cyan "  1. 本地构建测试"
-Write-Cyan "  2. 打包应用程序"
-Write-Cyan "  3. 上传到GitHub Release"
-Write-Cyan "  4. 完整流程 (1→2→3)"
+Write-Cyan "  1. 本地构建测试 ${YELLOW}(单平台快速验证)${NC}"
+Write-Cyan "  2. 打包应用程序 ${YELLOW}(创建Windows发布包)${NC}"
+Write-Cyan "  3. WebEngine依赖修复 ${YELLOW}(修复WebEngine DLL)${NC}"
+Write-Cyan "  4. 包完整性测试 ${YELLOW}(检查所有必需文件)${NC}"
+Write-Cyan "  5. DLL问题诊断 ${YELLOW}(诊断DLL缺失问题)${NC}"
+Write-Cyan "  6. 一键DLL修复 ${YELLOW}(修复所有DLL问题)${NC}"
+Write-Cyan "  7. 上传到GitHub Release ${YELLOW}(发布到GitHub)${NC}"
+Write-Cyan "  8. 完整流程 (1→2→6→4→7) ${YELLOW}(完整发布流程)${NC}"
 Write-Cyan "  0. 退出"
 Write-Output ""
+Write-Blue "💡 推荐选择:${NC}"
+Write-Green "  • 选项 6${NC} - 一键修复所有DLL问题（推荐）"
+Write-Green "  • 选项 5${NC} - 诊断具体的DLL问题"
+Write-Green "  • 选项 8${NC} - 完整发布流程"
+Write-Output ""
 
-$choice = Read-Host "请输入选择 [1-4,0]"
+$choice = Read-Host "请输入选择 [1-8,0]"
 
 switch ($choice) {
     "1" {
@@ -64,6 +73,42 @@ switch ($choice) {
         }
     }
     "3" {
+        Write-Yellow "执行WebEngine依赖修复..."
+        if (Test-Path ".\fix-windows-webengine.ps1") {
+            & ".\fix-windows-webengine.ps1"
+        } else {
+            Write-Red "✗ 错误: fix-windows-webengine.ps1 不存在"
+            exit 1
+        }
+    }
+    "4" {
+        Write-Yellow "执行包完整性测试..."
+        if (Test-Path ".\test-windows-package.ps1") {
+            & ".\test-windows-package.ps1"
+        } else {
+            Write-Red "✗ 错误: test-windows-package.ps1 不存在"
+            exit 1
+        }
+    }
+    "5" {
+        Write-Yellow "执行DLL问题诊断..."
+        if (Test-Path ".\diagnose-windows-dll.ps1") {
+            & ".\diagnose-windows-dll.ps1"
+        } else {
+            Write-Red "✗ 错误: diagnose-windows-dll.ps1 不存在"
+            exit 1
+        }
+    }
+    "6" {
+        Write-Yellow "执行一键DLL修复..."
+        if (Test-Path ".\fix-all-windows-dll.ps1") {
+            & ".\fix-all-windows-dll.ps1"
+        } else {
+            Write-Red "✗ 错误: fix-all-windows-dll.ps1 不存在"
+            exit 1
+        }
+    }
+    "7" {
         Write-Yellow "上传到GitHub Release..."
         Write-Output ""
         Write-Cyan "可用的打包文件:"
@@ -104,12 +149,12 @@ switch ($choice) {
             exit 1
         }
     }
-    "4" {
+    "8" {
         Write-Yellow "执行完整发布流程..."
         Write-Output ""
         
         # 步骤1: 本地构建测试
-        Write-Blue "[1/3] 本地构建测试"
+        Write-Blue "[1/5] 本地构建测试"
         if (Test-Path ".\test-build-windows.ps1") {
             & ".\test-build-windows.ps1"
             if ($LASTEXITCODE -ne 0) {
@@ -131,7 +176,7 @@ switch ($choice) {
         
         # 步骤2: 打包应用程序
         Write-Output ""
-        Write-Blue "[2/3] 打包应用程序"
+        Write-Blue "[2/5] 打包应用程序"
         if (Test-Path ".\package-windows.ps1") {
             & ".\package-windows.ps1" -Version $Version
             if ($LASTEXITCODE -ne 0) {
@@ -144,9 +189,42 @@ switch ($choice) {
             exit 1
         }
         
-        # 步骤3: 上传到GitHub Release
+        # 步骤3: 一键DLL修复
         Write-Output ""
-        Write-Blue "[3/3] 上传到GitHub Release"
+        Write-Blue "[3/5] 一键DLL修复"
+        if (Test-Path ".\fix-all-windows-dll.ps1") {
+            & ".\fix-all-windows-dll.ps1"
+            if ($LASTEXITCODE -ne 0) {
+                Write-Yellow "⚠️  DLL修复可能不完整，但继续流程"
+            } else {
+                Write-Green "✓ DLL修复成功"
+            }
+        } else {
+            Write-Yellow "⚠️  未找到DLL修复脚本，跳过此步骤"
+        }
+        
+        # 步骤4: 包完整性测试
+        Write-Output ""
+        Write-Blue "[4/5] 包完整性测试"
+        if (Test-Path ".\test-windows-package.ps1") {
+            & ".\test-windows-package.ps1"
+            if ($LASTEXITCODE -ne 0) {
+                Write-Yellow "⚠️  包测试发现问题，但继续流程"
+                $continueUpload = Read-Host "是否继续上传? [y/N]"
+                if ($continueUpload -notmatch "^[Yy]$") {
+                    Write-Yellow "用户取消上传"
+                    exit 0
+                }
+            } else {
+                Write-Green "✓ 包完整性测试通过"
+            }
+        } else {
+            Write-Yellow "⚠️  未找到包测试脚本，跳过此步骤"
+        }
+        
+        # 步骤5: 上传到GitHub Release
+        Write-Output ""
+        Write-Blue "[5/5] 上传到GitHub Release"
         
         # 查找刚刚创建的打包文件
         $archiveFiles = Get-ChildItem -Filter "example-$Version-Windows-*.zip" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending

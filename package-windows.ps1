@@ -102,7 +102,7 @@ catch {
     exit 1
 }
 
-Write-Yellow "[3/4] 检查Qt依赖..."
+Write-Yellow "[3/4] 部署Qt依赖（包含WebEngine）..."
 try {
     # 尝试使用windeployqt部署Qt依赖
     $windeployqt = $null
@@ -111,9 +111,18 @@ try {
     $qtPaths = @(
         "${env:QTDIR}\bin\windeployqt.exe",
         "${env:Qt6_DIR}\bin\windeployqt.exe",
+        "${env:QT_ROOT}\bin\windeployqt.exe",
         "C:\Qt\6.6.1\msvc2019_64\bin\windeployqt.exe",
-        "C:\Qt\6.6.1\msvc2022_64\bin\windeployqt.exe"
+        "C:\Qt\6.6.1\msvc2022_64\bin\windeployqt.exe",
+        "C:\Qt\6.7.0\msvc2019_64\bin\windeployqt.exe",
+        "C:\Qt\6.7.0\msvc2022_64\bin\windeployqt.exe"
     )
+    
+    # 也尝试从PATH中查找
+    $pathWinDeploy = Get-Command windeployqt.exe -ErrorAction SilentlyContinue
+    if ($pathWinDeploy) {
+        $qtPaths = @($pathWinDeploy.Source) + $qtPaths
+    }
     
     foreach ($qtPath in $qtPaths) {
         if ($qtPath -and (Test-Path $qtPath)) {
@@ -124,22 +133,75 @@ try {
     
     if ($windeployqt) {
         Write-Cyan "找到windeployqt: $windeployqt"
-        Write-Cyan "正在部署Qt依赖..."
+        Write-Cyan "正在部署Qt依赖（包含WebEngine模块）..."
         
-        & $windeployqt "$ArchiveName\example.exe" --dir $ArchiveName --compiler-runtime
+        # 使用更完整的windeployqt参数，特别针对WebEngine
+        $deployArgs = @(
+            "$ArchiveName\example.exe",
+            "--dir", $ArchiveName,
+            "--compiler-runtime",
+            "--webenginewidgets",  # 明确包含WebEngine
+            "--force",             # 强制覆盖
+            "--verbose", "2"       # 详细输出
+        )
+        
+        Write-Cyan "执行命令: $windeployqt $($deployArgs -join ' ')"
+        & $windeployqt @deployArgs
         
         if ($LASTEXITCODE -eq 0) {
             Write-Green "✓ Qt依赖部署成功"
+            
+            # 验证关键的WebEngine文件是否存在
+            $webEngineFiles = @(
+                "Qt6WebEngineWidgets.dll",
+                "Qt6WebEngineCore.dll", 
+                "Qt6WebEngine.dll"
+            )
+            
+            $missingFiles = @()
+            foreach ($file in $webEngineFiles) {
+                if (-not (Test-Path "$ArchiveName\$file")) {
+                    $missingFiles += $file
+                }
+            }
+            
+            if ($missingFiles.Count -gt 0) {
+                Write-Yellow "⚠️  缺少WebEngine文件: $($missingFiles -join ', ')"
+                Write-Cyan "尝试手动复制WebEngine文件..."
+                
+                # 尝试从Qt安装目录手动复制
+                $qtBinDir = Split-Path $windeployqt -Parent
+                foreach ($file in $missingFiles) {
+                    $sourcePath = Join-Path $qtBinDir $file
+                    if (Test-Path $sourcePath) {
+                        Copy-Item $sourcePath "$ArchiveName\"
+                        Write-Green "✓ 手动复制: $file"
+                    } else {
+                        Write-Red "✗ 未找到: $file"
+                    }
+                }
+            } else {
+                Write-Green "✓ WebEngine文件验证通过"
+            }
+            
         } else {
-            Write-Yellow "⚠️  Qt依赖部署可能不完整"
+            Write-Yellow "⚠️  Qt依赖部署可能不完整 (退出代码: $LASTEXITCODE)"
         }
     } else {
-        Write-Yellow "⚠️  未找到windeployqt，需要手动复制Qt依赖"
-        Write-Cyan "提示: 确保Qt的bin目录在PATH中，或设置QTDIR环境变量"
+        Write-Red "✗ 未找到windeployqt工具"
+        Write-Cyan "请确保:"
+        Write-Cyan "  1. Qt正确安装"
+        Write-Cyan "  2. Qt的bin目录在PATH中"
+        Write-Cyan "  3. 或设置QTDIR/Qt6_DIR环境变量"
+        Write-Cyan ""
+        Write-Cyan "手动部署步骤:"
+        Write-Cyan "  1. 找到Qt安装目录的bin文件夹"
+        Write-Cyan "  2. 运行: windeployqt.exe --webenginewidgets $ArchiveName\example.exe"
     }
 }
 catch {
-    Write-Yellow "⚠️  Qt依赖部署失败: $($_.Exception.Message)"
+    Write-Red "✗ Qt依赖部署失败: $($_.Exception.Message)"
+    Write-Cyan "请尝试手动运行: windeployqt.exe --webenginewidgets $ArchiveName\example.exe"
 }
 
 Write-Yellow "[4/4] 创建ZIP压缩包..."
@@ -182,10 +244,32 @@ Write-Cyan "目录内容:"
 Get-ChildItem $ArchiveName | Format-Table Name, Length, LastWriteTime
 
 Write-Cyan "下一步操作:"
-Write-Output "  1. 测试打包的应用程序: .\$ArchiveName\example.exe"
+Write-Output "  1. 运行WebEngine依赖修复: .\fix-windows-webengine.ps1 -PackageDir '$ArchiveName'"
+Write-Output "  2. 测试打包的应用程序: .\$ArchiveName\example.exe"
 if (Test-Path "$ArchiveName.zip") {
-    Write-Output "  2. 上传到GitHub Release: .\upload-release.ps1 $ArchiveName.zip"
+    Write-Output "  3. 上传到GitHub Release: .\upload-release-windows.ps1 $ArchiveName.zip"
 } else {
-    Write-Output "  2. 手动压缩并上传到GitHub Release"
+    Write-Output "  3. 手动压缩并上传到GitHub Release"
 }
-Write-Output "  3. 分发给最终用户"
+Write-Output "  4. 分发给最终用户"
+
+# 自动运行WebEngine修复
+Write-Yellow ""
+Write-Yellow "自动运行WebEngine依赖修复..."
+if (Test-Path ".\fix-windows-webengine.ps1") {
+    try {
+        & ".\fix-windows-webengine.ps1" -PackageDir $ArchiveName
+        if ($LASTEXITCODE -eq 0) {
+            Write-Green "✓ WebEngine依赖修复完成"
+        } else {
+            Write-Yellow "⚠️  WebEngine依赖修复可能不完整"
+        }
+    }
+    catch {
+        Write-Yellow "⚠️  WebEngine依赖修复失败: $($_.Exception.Message)"
+        Write-Cyan "请手动运行: .\fix-windows-webengine.ps1 -PackageDir '$ArchiveName'"
+    }
+} else {
+    Write-Yellow "⚠️  未找到WebEngine修复脚本"
+    Write-Cyan "请确保 fix-windows-webengine.ps1 存在于当前目录"
+}

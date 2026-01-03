@@ -11,6 +11,7 @@
 | `quick-test-windows.ps1` | 🔍 环境和脚本检查 | 验证Windows开发环境 |
 | `test-build-windows.ps1` | 🔨 本地构建测试 | 验证项目在Windows上的构建 |
 | `package-windows.ps1` | 📦 应用程序打包 | 创建可分发的Windows包 |
+| `fix-windows-webengine.ps1` | 🔧 WebEngine依赖修复 | 解决Qt6WebEngineWidgets.dll缺失问题 |
 | `upload-release-windows.ps1` | 📤 上传到GitHub Release | 发布Windows版本 |
 | `complete-release-windows.ps1` | 🎯 完整发布流程 | 一站式Windows发布管理 |
 
@@ -21,11 +22,24 @@
 - **Git** - 版本控制系统
 - **CMake 3.16+** - 构建系统
 - **Visual Studio 2017+** 或 **Visual Studio Build Tools** - C++编译器
-- **Qt 6.6.1+** - Qt框架
+- **Qt 6.6.1+** - Qt框架（**必须包含WebEngine模块**）
 
 ### 推荐工具
 - **GitHub CLI (`gh`)** - 用于Release上传
 - **windeployqt** - Qt依赖部署工具（通常随Qt安装）
+
+### ⚠️ Qt WebEngine 安装要求
+
+本项目使用Qt WebEngine模块，安装Qt时必须选择以下组件：
+- **Qt WebEngine** - Web引擎核心
+- **MSVC 2019/2022 64-bit** - 编译器支持
+- **Qt Creator** (可选) - 开发环境
+
+**验证WebEngine安装**:
+```powershell
+# 检查Qt安装目录中是否存在WebEngine文件
+Test-Path "C:\Qt\6.6.1\msvc2022_64\bin\Qt6WebEngineWidgets.dll"
+```
 
 ### 安装指南
 
@@ -106,9 +120,22 @@ choco install gh
 功能：
 - 创建发布目录结构
 - 复制可执行文件和DLL
-- 自动部署Qt依赖（使用windeployqt）
+- 自动部署Qt依赖（使用windeployqt with WebEngine支持）
 - 复制资源文件
 - 创建ZIP压缩包
+- **自动运行WebEngine依赖修复**
+
+#### 步骤2.5: WebEngine依赖修复（如需要）
+```powershell
+.\fix-windows-webengine.ps1 -PackageDir "example-v1.0.1-Windows-qt6.6.1"
+```
+
+功能：
+- 检查WebEngine相关DLL文件
+- 自动查找Qt安装目录
+- 复制缺失的WebEngine依赖
+- 运行完整的windeployqt部署
+- 验证修复结果
 
 #### 步骤3: 上传到GitHub Release
 ```powershell
@@ -166,7 +193,36 @@ Copy-Item "plugins" "$ArchiveName\" -Recurse -ErrorAction SilentlyContinue
 
 ### 常见问题
 
-#### 1. 构建失败：找不到编译器
+#### 1. Qt6WebEngineWidgets.dll缺失错误 ⚠️ **重要**
+```
+系统错误: 由于找不到Qt6WebEngineWidgets.dll，无法继续执行代码。重新安装程序可能会解决此问题。
+```
+
+**原因**: 本项目使用Qt WebEngine模块，需要额外的DLL依赖文件
+
+**解决方案**:
+```powershell
+# 方法1: 使用专门的修复脚本（推荐）
+.\fix-windows-webengine.ps1
+
+# 方法2: 手动运行windeployqt with WebEngine支持
+windeployqt.exe --webenginewidgets .\example-v1.0.1-Windows-qt6.6.1\example.exe
+
+# 方法3: 重新打包（会自动调用修复脚本）
+.\package-windows.ps1
+```
+
+**必需的WebEngine文件**:
+- `Qt6WebEngineWidgets.dll` - WebEngine Widgets模块
+- `Qt6WebEngineCore.dll` - WebEngine核心引擎
+- `Qt6WebEngine.dll` - WebEngine基础模块
+- `Qt6WebEngineQuick.dll` - WebEngine Quick模块
+- `Qt6Positioning.dll` - 定位服务支持
+- `Qt6WebChannel.dll` - Web通道支持
+- `Qt6Quick.dll` - Quick模块
+- `Qt6Qml.dll` - QML引擎
+
+#### 2. 构建失败：找不到编译器
 ```
 错误: 所有CMake生成器都失败了
 ```

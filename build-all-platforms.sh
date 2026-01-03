@@ -466,16 +466,48 @@ create_mock_windows_package() {
         echo -e "${YELLOW}⚠️  未找到可执行文件，创建占位符${NC}"
         echo "@echo off" > "$package_name/example.exe"
         echo "echo Windows version placeholder" >> "$package_name/example.exe"
+        echo "echo 注意: 这是模拟包，需要在Windows系统上重新构建" >> "$package_name/example.exe"
+        echo "pause" >> "$package_name/example.exe"
     fi
     
     # 复制资源文件
     [ -d "images" ] && cp -r "images" "$package_name/"
+    
+    # 创建说明文件
+    cat > "$package_name/README-Windows.txt" << EOF
+Windows版本说明
+===============
+
+这是在非Windows系统上创建的模拟包。
+
+要获得完整的Windows版本，请：
+
+1. 在Windows系统上运行构建：
+   .\test-build-windows.ps1
+
+2. 运行打包脚本：
+   .\package-windows.ps1
+
+3. 如果遇到Qt6WebEngineWidgets.dll缺失错误，运行：
+   .\fix-windows-webengine.ps1
+
+4. 或者使用完整的Windows构建脚本：
+   .\complete-release-windows.ps1
+
+系统要求：
+- Windows 10/11
+- Visual Studio 2019/2022
+- Qt 6.6.1+ with WebEngine module
+- CMake 3.16+
+
+EOF
     
     # 创建ZIP包
     zip -r "${package_name}.zip" "$package_name"
     rm -rf "$package_name"
     
     echo -e "${GREEN}✓ 模拟Windows包创建完成${NC}"
+    echo -e "${YELLOW}⚠️  注意: 这是模拟包，需要在Windows系统上重新构建以获得完整功能${NC}"
 }
 
 # 上传到GitHub Release
@@ -593,15 +625,61 @@ main() {
                 shift
                 ;;
             --help)
-                echo "用法: $0 [选项]"
-                echo "选项:"
-                echo "  --version VERSION    设置版本号 (默认: $VERSION)"
-                echo "  --tag TAG           设置Git标签 (默认: $TAG_NAME)"
-                echo "  --no-macos          跳过macOS构建"
-                echo "  --no-linux          跳过Linux构建"
-                echo "  --no-windows        跳过Windows构建"
-                echo "  --no-upload         跳过上传到GitHub Release"
-                echo "  --help              显示此帮助信息"
+                echo -e "${BLUE}========================================${NC}"
+                echo -e "${BLUE}    跨平台Qt应用构建和打包${NC}"
+                echo -e "${BLUE}========================================${NC}"
+                echo ""
+                echo -e "${YELLOW}用法:${NC} $0 [选项]"
+                echo ""
+                echo -e "${YELLOW}选项:${NC}"
+                echo -e "  ${CYAN}--version VERSION${NC}    设置版本号 (默认: $VERSION)"
+                echo -e "  ${CYAN}--tag TAG${NC}           设置Git标签 (默认: $TAG_NAME)"
+                echo -e "  ${CYAN}--no-macos${NC}          跳过macOS构建"
+                echo -e "  ${CYAN}--no-linux${NC}          跳过Linux构建"
+                echo -e "  ${CYAN}--no-windows${NC}        跳过Windows构建"
+                echo -e "  ${CYAN}--no-upload${NC}         跳过上传到GitHub Release"
+                echo -e "  ${CYAN}--help${NC}              显示此帮助信息"
+                echo ""
+                echo -e "${YELLOW}使用示例:${NC}"
+                echo -e "  ${GREEN}# 构建所有平台并上传${NC}"
+                echo -e "  $0"
+                echo ""
+                echo -e "  ${GREEN}# 构建所有平台但不上传（测试模式）${NC}"
+                echo -e "  $0 --no-upload"
+                echo ""
+                echo -e "  ${GREEN}# 只构建特定平台${NC}"
+                echo -e "  $0 --no-windows --no-linux  ${CYAN}# 只构建macOS${NC}"
+                echo -e "  $0 --no-macos --no-linux    ${CYAN}# 只构建Windows${NC}"
+                echo -e "  $0 --no-macos --no-windows  ${CYAN}# 只构建Linux${NC}"
+                echo ""
+                echo -e "  ${GREEN}# 自定义版本和标签${NC}"
+                echo -e "  $0 --version \"v2.0.0\" --tag \"v2.0.0-beta\""
+                echo ""
+                echo -e "  ${GREEN}# 组合选项${NC}"
+                echo -e "  $0 --version \"v1.5.0\" --no-upload --no-macos"
+                echo ""
+                echo -e "${YELLOW}输出文件:${NC}"
+                echo -e "  ${CYAN}macOS:${NC}   example-\${VERSION}-macOS-qt6.6.1.zip"
+                echo -e "  ${CYAN}Linux:${NC}   example-\${VERSION}-Linux-qt6.6.1.tar.gz"
+                echo -e "  ${CYAN}Windows:${NC} example-\${VERSION}-Windows-qt6.6.1.zip"
+                echo ""
+                echo -e "${YELLOW}相关脚本:${NC}"
+                echo -e "  ${CYAN}./complete-release.sh${NC}     交互式发布菜单"
+                echo -e "  ${CYAN}./quick-build-upload.sh${NC}   快速构建上传"
+                echo -e "  ${CYAN}./test-build.sh${NC}           本地构建测试"
+                echo -e "  ${CYAN}./show-build-options.sh${NC}   显示所有构建选项"
+                echo ""
+                echo -e "${YELLOW}Windows专用脚本:${NC}"
+                echo -e "  ${CYAN}.\\complete-release-windows.ps1${NC}  Windows完整发布流程"
+                echo -e "  ${CYAN}.\\fix-all-windows-dll.ps1${NC}      一键修复所有DLL问题"
+                echo -e "  ${CYAN}.\\diagnose-windows-dll.ps1${NC}     DLL问题诊断工具"
+                echo ""
+                echo -e "${YELLOW}Windows DLL问题修复:${NC}"
+                echo -e "  ${GREEN}# 如果Windows用户遇到DLL缺失错误${NC}"
+                echo -e "  ${GREEN}# 在Windows系统上运行以下命令:${NC}"
+                echo -e "  .\\fix-all-windows-dll.ps1"
+                echo -e "  .\\diagnose-windows-dll.ps1 -Verbose"
+                echo ""
                 exit 0
                 ;;
             *)
