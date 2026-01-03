@@ -229,7 +229,7 @@ void ReportsTab::loadActivityStats()
         [this](const QJsonObject &response) {
             updateKeyMetricsDisplay(response["data"].toObject());
         },
-        [this](const QString &error) {
+        [](const QString &error) {
             qWarning() << "加载活跃度统计失败:" << error;
         });
     
@@ -245,7 +245,7 @@ void ReportsTab::loadActivityStats()
             // 更新总事件数标签
             m_totalEventsLabel->setText(QString("总事件数: %1").arg(totalEvents));
         },
-        [this](const QString &error) {
+        [](const QString &error) {
             qWarning() << "加载事件统计失败:" << error;
         });
 }
@@ -280,7 +280,7 @@ void ReportsTab::loadRetentionStats()
             
             m_retentionLabel->setText(QString("留存率: %1%").arg(retention, 0, 'f', 2));
         },
-        [this](const QString &error) {
+        [](const QString &error) {
             qWarning() << "加载留存率统计失败:" << error;
         });
 }
@@ -296,7 +296,7 @@ void ReportsTab::loadPageViewStats()
             QJsonArray stats = response["data"].toArray();
             updateTopPagesTable(stats);
         },
-        [this](const QString &error) {
+        [](const QString &error) {
             qWarning() << "加载页面访问统计失败:" << error;
         });
 }
@@ -312,7 +312,7 @@ void ReportsTab::loadEventStats()
             QJsonArray stats = response["data"].toArray();
             updateTopEventsTable(stats);
         },
-        [this](const QString &error) {
+        [](const QString &error) {
             qWarning() << "加载事件统计失败:" << error;
         });
 }
@@ -398,7 +398,7 @@ void ReportsTab::loadTrendAnalysis()
             
             updateTrendChart(chartData, title);
         },
-        [this](const QString &error) {
+        [](const QString &error) {
             qWarning() << "加载趋势分析失败:" << error;
         });
 }
@@ -414,7 +414,7 @@ void ReportsTab::loadTopPages()
             QJsonArray pages = response["data"].toArray();
             updateTopPagesTable(pages);
         },
-        [this](const QString &error) {
+        [](const QString &error) {
             qWarning() << "加载热门页面失败:" << error;
         });
 }
@@ -430,7 +430,7 @@ void ReportsTab::loadTopEvents()
             QJsonArray events = response["data"].toArray();
             updateTopEventsTable(events);
         },
-        [this](const QString &error) {
+        [](const QString &error) {
             qWarning() << "加载热门事件失败:" << error;
         });
 }
@@ -476,7 +476,7 @@ void ReportsTab::loadTopUsers()
             
             updateTopUsersTable(users);
         },
-        [this](const QString &error) {
+        [](const QString &error) {
             qWarning() << "加载用户列表失败:" << error;
         });
 }
@@ -489,7 +489,7 @@ void ReportsTab::loadRealTimeStats()
         [this](const QJsonObject &response) {
             updateRealTimeStats(response["data"].toArray());
         },
-        [this](const QString &error) {
+        [](const QString &error) {
             qWarning() << "加载实时统计失败:" << error;
         });
 }

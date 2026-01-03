@@ -14,13 +14,16 @@ target_link_libraries(UserInfo PRIVATE
     Qt6::Network
     NetworkManager
     Analytics
+    Styles
 )
 
 # 添加依赖关系
 add_dependencies(UserInfo Analytics)
+add_dependencies(UserInfo Styles)
 
 # 导出头文件
 target_include_directories(UserInfo PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}/../styles
 )

@@ -14,10 +14,16 @@ target_link_libraries(ChangePasswordPage PRIVATE
     Qt6::Network
     NetworkManager
     Analytics
+    Styles
 )
 
 # 导出头文件
 target_include_directories(ChangePasswordPage PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}/../styles
 )
+
+# 添加依赖关系
+add_dependencies(ChangePasswordPage Analytics)
+add_dependencies(ChangePasswordPage Styles)

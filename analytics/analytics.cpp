@@ -252,7 +252,7 @@ void SDK::sendEvents(const QList<Event>& events) {
     }
     
     // 再次验证构建后的 URL
-    if (batchUrl.isEmpty() || !batchUrl.startsWith("http://") && !batchUrl.startsWith("https://")) {
+    if (batchUrl.isEmpty() || (!batchUrl.startsWith("http://") && !batchUrl.startsWith("https://"))) {
         qWarning() << "[Analytics] Invalid batchUrl:" << batchUrl;
         return;
     }
@@ -272,7 +272,7 @@ void SDK::sendEvents(const QList<Event>& events) {
     QNetworkReply* reply = m_networkManager->post(request, data);
     
     // 使用lambda捕获reply对象，避免使用不安全的sender()
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+    connect(reply, &QNetworkReply::finished, this, [reply]() {
         if (reply->error() == QNetworkReply::NoError) {
             // 请求成功
         } else {

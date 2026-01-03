@@ -30,6 +30,20 @@ endif()
 # NetworkManager模块
 add_subdirectory(networkmanager)
 
+# Styles主题管理模块 - 需要在其他模块之前定义
+qt_add_library(Styles STATIC
+    styles/theme_manager.cpp
+    styles/theme_manager.h
+)
+target_link_libraries(Styles PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+)
+target_include_directories(Styles PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 # BasicControls模块
 qt_add_library(BasicControls STATIC
     basiccontrols/basiccontrolstab.cpp
@@ -194,20 +208,6 @@ add_subdirectory(userinfo)
 
 # Analytics埋点SDK模块
 add_subdirectory(analytics)
-
-# Styles主题管理模块
-qt_add_library(Styles STATIC
-    styles/theme_manager.cpp
-    styles/theme_manager.h
-)
-target_link_libraries(Styles PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-)
-target_include_directories(Styles PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
 
 # 添加依赖关系，确保 NetworkManager 先于依赖它的模块构建
 add_dependencies(ChangePasswordPage NetworkManager)

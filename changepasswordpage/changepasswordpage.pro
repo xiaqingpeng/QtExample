@@ -23,8 +23,9 @@ HEADERS += \
 # 包含项目根目录以访问networkmanager.h和analytics.h
 INCLUDEPATH += .. ../analytics ../styles
 
-# 链接Styles库
-LIBS += -L../styles -lstyles
+# 链接Styles库 (静态库) - 使用PRE_TARGETDEPS确保构建顺序
+PRE_TARGETDEPS += $$OUT_PWD/../styles/libstyles.a
+LIBS += -L$$OUT_PWD/../styles -lstyles
 
 # 安装配置
 target.path = $[QT_INSTALL_LIBS]
