@@ -15,6 +15,7 @@
 │   ├── build/              # 构建脚本
 │   ├── release/            # 发布脚本
 │   ├── test/               # 测试脚本
+│   ├── setup/              # 设置脚本
 │   └── windows/            # Windows专用脚本
 ├── src/                    # 源代码目录
 └── README.md              # 项目说明
@@ -63,6 +64,25 @@
 
 # 🏷️ 自定义标签
 ./scripts/build/build-all-platforms.sh --tag "v2.0.0-beta"
+
+# 🚀 本地构建成功后推送到GitHub和GitLab
+./scripts/build/build-and-push.sh
+
+# 📤 跳过构建，直接推送代码
+./scripts/build/build-and-push.sh --skip-build
+
+# 🎯 只推送到特定平台
+./scripts/build/build-and-push.sh --github-only
+./scripts/build/build-and-push.sh --gitlab-only
+
+# 💪 强制推送（谨慎使用）
+./scripts/build/build-and-push.sh --force-push
+```
+
+### 🔧 初始设置
+```bash
+# 🛠️ 配置GitHub和GitLab远程仓库
+./scripts/setup/setup-remotes.sh
 ```
 
 ## 📋 使用场景
@@ -70,6 +90,7 @@
 | 场景 | 推荐命令 | 说明 |
 |------|----------|------|
 | 日常开发测试 | `./scripts/build/test-build.sh` | 快速验证构建 |
+| 构建并推送代码 | `./scripts/build/build-and-push.sh` | 本地构建成功后推送到远程仓库 |
 | 跨平台测试 | `./scripts/build/build-all-platforms.sh --no-upload` | 测试所有平台构建 |
 | 正式发布 | `./scripts/build/build-all-platforms.sh --version "v2.0.0"` | 完整构建并发布 |
 | 紧急修复 | `./scripts/release/quick-build-upload.sh --version "v1.0.1-hotfix"` | 快速修复发布 |
@@ -80,8 +101,10 @@
 - **`scripts/build/build-all-platforms.sh`** - 跨平台完整构建
 - **`scripts/release/quick-build-upload.sh`** - 快速构建上传
 - **`scripts/build/test-build.sh`** - 本地构建测试
+- **`scripts/build/build-and-push.sh`** - 构建并推送到远程仓库 ⭐
 - **`scripts/release/complete-release.sh`** - 交互式发布菜单
 - **`scripts/test/show-build-options.sh`** - 显示所有构建选项
+- **`scripts/setup/setup-remotes.sh`** - 配置远程仓库助手 🔧
 
 ## 🪟 Windows专用工具
 
@@ -122,6 +145,7 @@
 
 ### 构建文档
 - [跨平台构建指南](docs/build/BUILD_ALL_PLATFORMS_GUIDE.md)
+- [构建并推送代码指南](docs/build/BUILD_AND_PUSH_GUIDE.md) ⭐
 
 ### 发布文档
 - [跨平台发布指南](docs/release/CROSS_PLATFORM_RELEASE_README.md)

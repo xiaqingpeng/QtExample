@@ -130,8 +130,9 @@ else
     echo -e "  2. 跨平台构建: ${YELLOW}./build-all-platforms.sh --no-upload${NC}"
 fi
 
-echo -e "  3. 完整发布流程: ${YELLOW}./complete-release.sh${NC}"
-echo -e "  4. 查看所有选项: ${YELLOW}./show-build-options.sh${NC}"
+echo -e "  3. 完整发布流程: ${YELLOW}./scripts/release/complete-release.sh${NC}"
+echo -e "  4. 查看所有选项: ${YELLOW}./scripts/test/show-build-options.sh${NC}"
+echo -e "  5. 构建并推送代码: ${YELLOW}./scripts/build/build-and-push.sh${NC}"
 
 echo ""
 echo -e "${YELLOW}Windows用户注意:${NC}"

@@ -26,6 +26,11 @@ BUILD_LINUX=true
 BUILD_WINDOWS=true
 UPLOAD_TO_RELEASE=true
 CREATE_RELEASE_IF_NOT_EXISTS=true
+PUSH_TO_REMOTES=true  # 新增：是否推送到远程仓库
+
+# 远程仓库配置
+GITHUB_REMOTE="origin"
+GITLAB_REMOTE="gitlab"
 
 # 平台特定配置
 MACOS_ARCH="arm64"  # 或 x86_64
@@ -510,6 +515,58 @@ EOF
     echo -e "${YELLOW}⚠️  注意: 这是模拟包，需要在Windows系统上重新构建以获得完整功能${NC}"
 }
 
+# 推送代码到远程仓库
+push_to_remotes() {
+    if [ "$PUSH_TO_REMOTES" != true ]; then
+        echo -e "${YELLOW}跳过推送到远程仓库${NC}"
+        return 0
+    fi
+    
+    echo -e "${MAGENTA}推送代码到远程仓库...${NC}"
+    
+    # 检查是否有未提交的更改
+    if ! git diff --quiet || ! git diff --staged --quiet; then
+        echo -e "${YELLOW}⚠️  检测到未提交的更改，跳过推送${NC}"
+        echo -e "${CYAN}请先提交更改后再推送${NC}"
+        return 0
+    fi
+    
+    # 获取当前分支
+    local current_branch=$(git branch --show-current)
+    if [ -z "$current_branch" ]; then
+        echo -e "${RED}✗ 无法获取当前分支名${NC}"
+        return 1
+    fi
+    
+    echo -e "${CYAN}当前分支: ${current_branch}${NC}"
+    
+    # 推送到GitHub
+    if git remote get-url "$GITHUB_REMOTE" >/dev/null 2>&1; then
+        echo -e "${CYAN}推送到GitHub (${GITHUB_REMOTE})...${NC}"
+        if git push "$GITHUB_REMOTE" "$current_branch"; then
+            echo -e "${GREEN}✓ 成功推送到GitHub${NC}"
+        else
+            echo -e "${YELLOW}⚠️  推送到GitHub失败${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠️  GitHub远程仓库 '${GITHUB_REMOTE}' 不存在${NC}"
+    fi
+    
+    # 推送到GitLab
+    if git remote get-url "$GITLAB_REMOTE" >/dev/null 2>&1; then
+        echo -e "${CYAN}推送到GitLab (${GITLAB_REMOTE})...${NC}"
+        if git push "$GITLAB_REMOTE" "$current_branch"; then
+            echo -e "${GREEN}✓ 成功推送到GitLab${NC}"
+        else
+            echo -e "${YELLOW}⚠️  推送到GitLab失败${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠️  GitLab远程仓库 '${GITLAB_REMOTE}' 不存在，跳过推送${NC}"
+    fi
+    
+    echo -e "${GREEN}✓ 远程仓库推送完成${NC}"
+}
+
 # 上传到GitHub Release
 upload_to_release() {
     if [ "$UPLOAD_TO_RELEASE" != true ]; then
@@ -624,6 +681,18 @@ main() {
                 UPLOAD_TO_RELEASE=false
                 shift
                 ;;
+            --no-push)
+                PUSH_TO_REMOTES=false
+                shift
+                ;;
+            --github-remote)
+                GITHUB_REMOTE="$2"
+                shift 2
+                ;;
+            --gitlab-remote)
+                GITLAB_REMOTE="$2"
+                shift 2
+                ;;
             --help)
                 echo -e "${BLUE}========================================${NC}"
                 echo -e "${BLUE}    跨平台Qt应用构建和打包${NC}"
@@ -638,6 +707,9 @@ main() {
                 echo -e "  ${CYAN}--no-linux${NC}          跳过Linux构建"
                 echo -e "  ${CYAN}--no-windows${NC}        跳过Windows构建"
                 echo -e "  ${CYAN}--no-upload${NC}         跳过上传到GitHub Release"
+                echo -e "  ${CYAN}--no-push${NC}           跳过推送到远程仓库"
+                echo -e "  ${CYAN}--github-remote NAME${NC} 设置GitHub远程仓库名 (默认: origin)"
+                echo -e "  ${CYAN}--gitlab-remote NAME${NC} 设置GitLab远程仓库名 (默认: gitlab)"
                 echo -e "  ${CYAN}--help${NC}              显示此帮助信息"
                 echo ""
                 echo -e "${YELLOW}使用示例:${NC}"
@@ -698,6 +770,9 @@ main() {
     build_macos
     build_linux  
     build_windows
+    
+    # 推送代码到远程仓库
+    push_to_remotes
     
     # 上传到GitHub Release
     upload_to_release
