@@ -20,6 +20,11 @@
 #include "userinfo/userinfopage.h"
 #include "styles/theme_manager.h"
 
+// 企业级架构集成
+#include "src/Core/Application.h"
+#include "src/Interfaces/INetworkService.h"
+#include "src/Interfaces/IAuthenticationService.h"
+
 class MainUIWindow : public QWidget
 {
     Q_OBJECT
@@ -36,6 +41,7 @@ private slots:
     void updateUserInfo();
     void updateUserInfoSafe();
     void applyTheme();
+    void onAuthenticationChanged(bool authenticated); // 企业级认证状态变化
 
 private:
     void setupUI(QWidget *parent = nullptr);
@@ -49,6 +55,7 @@ private:
     QPixmap createCircularPixmap(const QPixmap &pixmap, int size);
     void setDefaultAvatar();
     void loadNetworkAvatar(const QString &avatarUrl);
+    void initializeEnterpriseServices(); // 初始化企业级服务
 
     QGridLayout *mainLayout;
     
@@ -76,6 +83,10 @@ private:
     // 其他组件
     LoginPage *loginPage;
     QStackedWidget *mainStack;
+    
+    // 企业级服务
+    INetworkService *m_networkService;
+    IAuthenticationService *m_authService;
 };
 
 #endif // MAINUIWINDOW_H

@@ -1,5 +1,5 @@
 #include "LocalizationManager.h"
-#include <QApplication>
+#include <QCoreApplication>
 #include <QDir>
 #include <QStandardPaths>
 #include <QSettings>
@@ -18,7 +18,7 @@ LocalizationManager::LocalizationManager(QObject *parent)
 LocalizationManager::~LocalizationManager()
 {
     if (m_translator) {
-        QApplication::removeTranslator(m_translator);
+        QCoreApplication::removeTranslator(m_translator);
         delete m_translator;
     }
 }
@@ -77,7 +77,7 @@ void LocalizationManager::setLanguage(const QString& languageCode)
 
     // 移除旧的翻译器
     if (m_translator) {
-        QApplication::removeTranslator(m_translator);
+        QCoreApplication::removeTranslator(m_translator);
         delete m_translator;
         m_translator = nullptr;
     }
@@ -87,7 +87,7 @@ void LocalizationManager::setLanguage(const QString& languageCode)
     if (QFile::exists(translationFile)) {
         m_translator = new QTranslator(this);
         if (m_translator->load(translationFile)) {
-            QApplication::installTranslator(m_translator);
+            QCoreApplication::installTranslator(m_translator);
             qDebug() << "Translation loaded successfully:" << translationFile;
         } else {
             qWarning() << "Failed to load translation:" << translationFile;
@@ -155,7 +155,7 @@ bool LocalizationManager::isLanguageAvailable(const QString& languageCode) const
 void LocalizationManager::loadTranslations()
 {
     // 扫描翻译文件目录
-    QString translationsDir = QApplication::applicationDirPath() + "/translations";
+    QString translationsDir = QCoreApplication::applicationDirPath() + "/translations";
     QDir dir(translationsDir);
     
     if (!dir.exists()) {
@@ -208,7 +208,7 @@ QString LocalizationManager::getTranslationFilePath(const QString& languageCode)
     QString fileName = QString("app_%1.qm").arg(languageCode);
     
     // 首先尝试应用程序目录
-    QString appDirPath = QApplication::applicationDirPath() + "/translations/" + fileName;
+    QString appDirPath = QCoreApplication::applicationDirPath() + "/translations/" + fileName;
     if (QFile::exists(appDirPath)) {
         return appDirPath;
     }

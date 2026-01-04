@@ -34,6 +34,18 @@ public:
     QObject* getService(const QString& name) const;
 
     /**
+     * @brief 获取服务（模板版本）
+     * @param name 服务名称
+     * @return 服务实例，如果不存在或类型不匹配返回nullptr
+     */
+    template<typename T>
+    T* getService(const QString& name) const
+    {
+        QObject* service = getService(name);
+        return qobject_cast<T*>(service);
+    }
+
+    /**
      * @brief 检查服务是否存在
      * @param name 服务名称
      * @return 如果服务存在返回true

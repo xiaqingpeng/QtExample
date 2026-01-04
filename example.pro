@@ -4,6 +4,9 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17 sdk_no_version_check
 
+# 启用企业级架构
+DEFINES += ENTERPRISE_EDITION
+
 # 设置macOS部署目标版本为14.0，与Qt库版本兼容
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
 
@@ -14,6 +17,7 @@ TEMPLATE = subdirs
 
 # 子项目列表
 SUBDIRS += \
+    src \
     networkmanager \
     analytics \
     loginpage \
@@ -32,5 +36,5 @@ echarts.depends = networkmanager styles
 reportstab.depends = styles
 userprofiletab.depends = styles
 
-# 设置app依赖所有库
-app.depends = loginpage changepasswordpage userinfo networkmanager analytics echarts reportstab userprofiletab styles
+# 设置app依赖所有库，包括企业级模块
+app.depends = src loginpage changepasswordpage userinfo networkmanager analytics echarts reportstab userprofiletab styles

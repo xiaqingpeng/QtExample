@@ -8,6 +8,8 @@
 #include "changepasswordpage.h"
 #include "userinfopage.h"
 #include "styles/theme_manager.h"
+#include "src/Core/ServiceManager.h"
+#include "src/Services/AuthenticationService.h"
 #include <QFont>
 #include <QListWidgetItem>
 #include <QScrollArea>
@@ -29,9 +31,14 @@
 #include <QDir>
 
 MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
+    , m_networkService(nullptr)
+    , m_authService(nullptr)
 {
     setWindowTitle("Qt UI控件综合示例");
     resize(1200, 800);
+
+    // 初始化企业级服务
+    initializeEnterpriseServices();
 
     // 创建主页面栈
     mainStack = new QStackedWidget(this);
@@ -679,47 +686,54 @@ void MainUIWindow::onLoginSuccess(const QString &token)
 
 void MainUIWindow::onLogoutClicked()
 {
-    // 安全检查：确保所有UI元素都已初始化
-    if (!mainStack || !usernameLabel || !avatarLabel || !statusIndicator || !statusText || !statusMessage) {
-        qWarning() << "UI elements not initialized in onLogoutClicked!";
-        return;
+    // 使用企业级认证服务进行登出
+    if (m_authService) {
+        m_authService->logout();
+        // onAuthenticationChanged 会被自动调用来更新UI
+    } else {
+        // 回退到原有的登出逻辑
+        // 安全检查：确保所有UI元素都已初始化
+        if (!mainStack || !usernameLabel || !avatarLabel || !statusIndicator || !statusText || !statusMessage) {
+            qWarning() << "UI elements not initialized in onLogoutClicked!";
+            return;
+        }
+        
+        // 清除用户信息
+        QSettings settings("YourCompany", "QtApp");
+        settings.remove("user/token");
+        settings.remove("user/email");
+        settings.remove("user/password");
+        settings.remove("user/remember");
+        settings.remove("user/id");
+        settings.remove("user/username");
+        settings.remove("user/avatar");
+        settings.remove("user/createTime");
+        settings.sync();
+        
+        // 用户登出，清除用户信息
+        
+        // 清除登录页面的输入
+        if (loginPage) {
+            loginPage->clearUserInfo();
+        }
+        
+        // 重置用户信息显示
+        usernameLabel->setText("未登录");
+        avatarLabel->clear();
+        
+        // 更新状态栏
+        statusIndicator->setStyleSheet(
+            "QLabel { "
+            "    background-color: #ef4444; "
+            "    border-radius: 5px; "
+            "}"
+        );
+        statusText->setText("离线");
+        statusMessage->setText("已登出");
+        
+        // 返回登录页面
+        mainStack->setCurrentIndex(0);
     }
-    
-    // 清除用户信息
-    QSettings settings("YourCompany", "QtApp");
-    settings.remove("user/token");
-    settings.remove("user/email");
-    settings.remove("user/password");
-    settings.remove("user/remember");
-    settings.remove("user/id");
-    settings.remove("user/username");
-    settings.remove("user/avatar");
-    settings.remove("user/createTime");
-    settings.sync();
-    
-    // 用户登出，清除用户信息
-    
-    // 清除登录页面的输入
-    if (loginPage) {
-        loginPage->clearUserInfo();
-    }
-    
-    // 重置用户信息显示
-    usernameLabel->setText("未登录");
-    avatarLabel->clear();
-    
-    // 更新状态栏
-    statusIndicator->setStyleSheet(
-        "QLabel { "
-        "    background-color: #ef4444; "
-        "    border-radius: 5px; "
-        "}"
-    );
-    statusText->setText("离线");
-    statusMessage->setText("已登出");
-    
-    // 返回登录页面
-    mainStack->setCurrentIndex(0);
 }
 
 void MainUIWindow::updateUserInfoSafe()
@@ -735,13 +749,25 @@ void MainUIWindow::updateUserInfoSafe()
         
         // LOG_DEBUG("UI elements check passed");
         
-        // 从设置中获取用户信息
-        QSettings settings("YourCompany", "QtApp");
-        QString username = settings.value("user/username", "").toString();
-        QString localAvatar = settings.value("user/avatar_local", "").toString();
-        QString networkAvatar = settings.value("user/avatar", "").toString();
+        QString username;
+        QString localAvatar;
+        QString networkAvatar;
         
-        // LOG_DEBUG("Updating user info - username:" << username);
+        // 优先使用企业级认证服务获取用户信息
+        if (m_authService && m_authService->isAuthenticated()) {
+            UserInfo userInfo = m_authService->getCurrentUser();
+            username = userInfo.username;
+            networkAvatar = userInfo.avatar;
+            // LOG_DEBUG("Using enterprise auth service - username:" << username);
+        } else {
+            // 回退到从设置中获取用户信息
+            QSettings settings("YourCompany", "QtApp");
+            username = settings.value("user/username", "").toString();
+            localAvatar = settings.value("user/avatar_local", "").toString();
+            networkAvatar = settings.value("user/avatar", "").toString();
+            // LOG_DEBUG("Using settings - username:" << username);
+        }
+        
         // LOG_DEBUG("Local avatar:" << localAvatar);
         // LOG_DEBUG("Network avatar:" << networkAvatar);
         
@@ -1023,5 +1049,101 @@ QPixmap MainUIWindow::createCircularPixmap(const QPixmap &pixmap, int size)
     } catch (...) {
         // LOG_DEBUG("Unknown exception in createCircularPixmap");
         return QPixmap();
+    }
+}
+
+void MainUIWindow::initializeEnterpriseServices()
+{
+    // 获取企业级应用程序实例
+    Application* app = Application::instance();
+    if (!app) {
+        qWarning() << "Enterprise Application not initialized!";
+        return;
+    }
+
+    // 获取服务管理器
+    ServiceManager* serviceManager = app->serviceManager();
+    if (!serviceManager) {
+        qWarning() << "Service Manager not available!";
+        return;
+    }
+
+    // 获取网络服务
+    m_networkService = serviceManager->getService<INetworkService>("NetworkService");
+    if (!m_networkService) {
+        qWarning() << "Network Service not available!";
+    }
+
+    // 获取认证服务
+    m_authService = serviceManager->getService<IAuthenticationService>("AuthenticationService");
+    if (m_authService) {
+        // 获取具体的AuthenticationService实例以连接信号
+        AuthenticationService* authServiceImpl = qobject_cast<AuthenticationService*>(
+            serviceManager->getService("AuthenticationService"));
+        
+        if (authServiceImpl) {
+            // 连接认证状态变化信号
+            connect(authServiceImpl, &AuthenticationService::authenticationChanged,
+                    this, &MainUIWindow::onAuthenticationChanged);
+        }
+        
+        // 检查当前认证状态
+        if (m_authService->isAuthenticated()) {
+            // 如果已经认证，直接显示主界面
+            QTimer::singleShot(100, [this]() {
+                onAuthenticationChanged(true);
+            });
+        }
+    } else {
+        qWarning() << "Authentication Service not available!";
+    }
+
+    qDebug() << "Enterprise services initialized successfully";
+}
+
+void MainUIWindow::onAuthenticationChanged(bool authenticated)
+{
+    if (!mainStack) return;
+
+    if (authenticated) {
+        // 认证成功，切换到主界面
+        mainStack->setCurrentIndex(1);
+        
+        // 更新状态栏
+        if (statusIndicator && statusText && statusMessage) {
+            statusIndicator->setStyleSheet(
+                "QLabel { "
+                "    background-color: #10b981; "
+                "    border-radius: 5px; "
+                "}"
+            );
+            statusText->setText("在线");
+            statusMessage->setText("已连接企业服务");
+        }
+        
+        // 更新用户信息显示
+        updateUserInfoSafe();
+    } else {
+        // 认证失败或登出，显示登录页面
+        mainStack->setCurrentIndex(0);
+        
+        // 更新状态栏
+        if (statusIndicator && statusText && statusMessage) {
+            statusIndicator->setStyleSheet(
+                "QLabel { "
+                "    background-color: #ef4444; "
+                "    border-radius: 5px; "
+                "}"
+            );
+            statusText->setText("离线");
+            statusMessage->setText("未连接");
+        }
+        
+        // 清除用户信息显示
+        if (usernameLabel && avatarLabel) {
+            usernameLabel->setText("未登录");
+            avatarLabel->clear();
+            setDefaultAvatar();
+        }
     }
 }

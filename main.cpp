@@ -2,28 +2,47 @@
 #include <QApplication>
 #include <QFont>
 #include "analytics/analytics.h"
-
-// 尝试使用企业级架构，如果不可用则回退到标准QApplication
-#ifdef ENTERPRISE_EDITION
 #include "src/Core/Application.h"
-#endif
+#include "src/Services/NetworkService.h"
+#include "src/Services/AuthenticationService.h"
+#include "src/Services/AnalyticsService.h"
+
+void initializeEnterpriseServices(Application* app)
+{
+    // 获取服务管理器
+    ServiceManager* serviceManager = app->serviceManager();
+    if (!serviceManager) {
+        qWarning() << "Service Manager not available!";
+        return;
+    }
+
+    // 注册网络服务
+    auto networkService = new NetworkService(app);
+    serviceManager->registerService("NetworkService", networkService);
+
+    // 注册认证服务
+    auto authService = new AuthenticationService(networkService, app);
+    serviceManager->registerService("AuthenticationService", authService);
+
+    // 注册分析服务
+    auto analyticsService = new AnalyticsService(networkService, app);
+    serviceManager->registerService("AnalyticsService", analyticsService);
+
+    qDebug() << "Enterprise services initialized successfully";
+}
 
 int main(int argc, char *argv[])
 {
-#ifdef ENTERPRISE_EDITION
-    // 使用企业级应用程序类
+    // 使用企业级应用程序类作为标准
     Application app(argc, argv);
     
-    qDebug() << "Using Enterprise Edition";
+    qDebug() << "Using Qt Enterprise Architecture";
     
     // 初始化企业级应用程序
     app.initialize();
-#else
-    // 使用标准QApplication
-    QApplication app(argc, argv);
     
-    qDebug() << "Using Standard Edition";
-#endif
+    // 初始化企业级服务
+    initializeEnterpriseServices(&app);
     
     // 设置安全的UI配置，避免emoji渲染崩溃
     QFont defaultFont = QApplication::font();

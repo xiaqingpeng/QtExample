@@ -6,6 +6,9 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17 sdk_no_version_check
 
+# 启用企业级架构
+DEFINES += ENTERPRISE_EDITION
+
 # 禁用过时的single_module链接器标志
 CONFIG -= single_module
 
@@ -35,6 +38,12 @@ FORMS += \
 # 包含项目根目录以访问networkmanager.h
 INCLUDEPATH += ..
 
+# 链接企业级模块
+LIBS += -L$$OUT_PWD/../src/Core -lenterprisecore
+LIBS += -L$$OUT_PWD/../src/Interfaces -lenterpriseinterfaces
+LIBS += -L$$OUT_PWD/../src/Services -lenterpriseservices
+LIBS += -L$$OUT_PWD/../src/Localization -lenterpriselocalization
+
 # 链接loginpage、changepasswordpage和userinfo模块
 LIBS += -L$$OUT_PWD/../loginpage -lloginpage
 LIBS += -L$$OUT_PWD/../changepasswordpage -lchangepasswordpage
@@ -51,6 +60,13 @@ LIBS += -L$$OUT_PWD/../echarts -lecharts
 LIBS += -L$$OUT_PWD/../reportstab -lreportstab
 LIBS += -L$$OUT_PWD/../userprofiletab -luserprofiletab
 LIBS += -L$$OUT_PWD/../styles -lstyles
+
+# 包含企业级模块头文件路径
+INCLUDEPATH += ../src
+INCLUDEPATH += ../src/Core
+INCLUDEPATH += ../src/Interfaces
+INCLUDEPATH += ../src/Services
+INCLUDEPATH += ../src/Localization
 
 # 包含模块头文件路径
 INCLUDEPATH += ../loginpage

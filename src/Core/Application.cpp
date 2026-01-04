@@ -1,14 +1,16 @@
 #include "Application.h"
 #include "ServiceManager.h"
 #include "DependencyContainer.h"
-#include "../Services/NetworkService.h"
-#include "../Services/AuthenticationService.h"
-#include "../Services/AnalyticsService.h"
 #include "../Localization/LocalizationManager.h"
 #include "../../styles/theme_manager.h"
 #include <QDir>
 #include <QStandardPaths>
 #include <QDebug>
+
+// Forward declarations to avoid circular dependencies
+class NetworkService;
+class AuthenticationService;
+class AnalyticsService;
 
 Application* Application::s_instance = nullptr;
 
@@ -98,19 +100,10 @@ void Application::setupServices()
 {
     qDebug() << "Setting up services...";
 
-    // 注册网络服务
-    auto networkService = new NetworkService(this);
-    m_serviceManager->registerService("NetworkService", networkService);
-
-    // 注册认证服务
-    auto authService = new AuthenticationService(networkService, this);
-    m_serviceManager->registerService("AuthenticationService", authService);
-
-    // 注册分析服务
-    auto analyticsService = new AnalyticsService(networkService, this);
-    m_serviceManager->registerService("AnalyticsService", analyticsService);
-
-    qDebug() << "Services setup complete";
+    // Service creation will be done by the main application
+    // after all libraries are linked properly
+    
+    qDebug() << "Services setup placeholder complete";
 }
 
 void Application::setupLocalization()

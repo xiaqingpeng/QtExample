@@ -13,6 +13,9 @@ set(CMAKE_AUTORCC ON)
 # 查找Qt模块
 find_package(Qt6 COMPONENTS Core Gui Widgets WebEngineWidgets Network PrintSupport REQUIRED)
 
+# 启用企业级架构作为标准
+add_definitions(-DENTERPRISE_EDITION)
+
 # 设置MacOS特定选项
 if(APPLE)
     # 设置部署目标为14.0以匹配Qt库版本
@@ -26,6 +29,70 @@ if(APPLE)
 endif()
 
 # 定义模块库
+
+# 企业级核心架构模块
+qt_add_library(EnterpriseCore STATIC
+    src/Core/Application.cpp
+    src/Core/Application.h
+    src/Core/Application.inl
+    src/Core/ServiceManager.cpp
+    src/Core/ServiceManager.h
+    src/Core/DependencyContainer.cpp
+    src/Core/DependencyContainer.h
+)
+target_link_libraries(EnterpriseCore PUBLIC
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::Network
+    EnterpriseLocalization
+    Styles
+)
+target_include_directories(EnterpriseCore PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# 企业级接口模块
+qt_add_library(EnterpriseInterfaces STATIC
+    src/Interfaces/INetworkService.h
+    src/Interfaces/IAuthenticationService.h
+)
+target_link_libraries(EnterpriseInterfaces PRIVATE
+    Qt6::Core
+)
+target_include_directories(EnterpriseInterfaces PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# 企业级服务模块
+qt_add_library(EnterpriseServices STATIC
+    src/Services/NetworkService.cpp
+    src/Services/NetworkService.h
+    src/Services/AuthenticationService.cpp
+    src/Services/AuthenticationService.h
+    src/Services/AnalyticsService.cpp
+    src/Services/AnalyticsService.h
+)
+target_link_libraries(EnterpriseServices PUBLIC
+    Qt6::Core
+    Qt6::Network
+    EnterpriseInterfaces
+)
+target_include_directories(EnterpriseServices PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# 企业级本地化模块
+qt_add_library(EnterpriseLocalization STATIC
+    src/Localization/LocalizationManager.cpp
+    src/Localization/LocalizationManager.h
+)
+target_link_libraries(EnterpriseLocalization PRIVATE
+    Qt6::Core
+)
+target_include_directories(EnterpriseLocalization PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 # NetworkManager模块
 add_subdirectory(networkmanager)
@@ -191,6 +258,10 @@ target_link_libraries(QTExample PRIVATE
     Qt6::WebEngineWidgets
     Qt6::Network
     Qt6::PrintSupport
+    EnterpriseServices
+    EnterpriseCore
+    EnterpriseInterfaces
+    EnterpriseLocalization
     NetworkManager
     ECharts
     UserProfileTab
@@ -205,6 +276,11 @@ target_link_libraries(QTExample PRIVATE
 # 包含模块头文件目录
 target_include_directories(QTExample PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Core
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Interfaces
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Services
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Localization
     ${CMAKE_CURRENT_SOURCE_DIR}/echarts
     ${CMAKE_CURRENT_SOURCE_DIR}/userprofiletab
     ${CMAKE_CURRENT_SOURCE_DIR}/reportstab
