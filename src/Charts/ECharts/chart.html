@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Qt + ECharts API数据监控</title>
+    <!-- 引入ECharts -->
+    <script src="echarts.min.js"></script>
+    <style>
+        /* 让图表占满整个页面 */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
+        #chart-container { width: 100%; height: 100%; }
+        
+        /* 控制面板样式 */
+        .control-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .control-panel button {
+            margin: 2px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background: #f5f5f5;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .control-panel button:hover {
+            background: #e0e0e0;
+        }
+        
+        .status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 控制面板 -->
+    <div class="control-panel">
+        <button onclick="switchChart('bar')">柱状图</button>
+        <button onclick="switchChart('line')">折线图</button>
+        <button onclick="switchChart('pie')">饼图</button>
+        <button onclick="switchChart('mixed')">混合图</button>
+        <div class="status" id="status">等待数据...</div>
+    </div>
+    
+    <div id="chart-container"></div>
+
+    <script>
+        // 初始化ECharts实例
+        var myChart = echarts.init(document.getElementById('chart-container'));
+        
+        // 全局变量
+        var currentChartType = 'bar';
+        var apiData = {
+            categories: [],
+            counts: [],
+            durations: []
+        };
+
+        // 生成默认配置
+        function getDefaultOption() {
+            return {
+                title: { 
+                    text: 'API访问统计监控', 
+                    subtext: '实时数据更新',
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'bold' }
+                },
+                tooltip: { 
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            result += item.marker + item.seriesName + ': ' + item.value + '<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: { 
+                    data: ['访问次数', '平均响应时间(ms)'], 
+                    left: 'left',
+                    top: '10%'
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: { title: '保存为图片' },
+                        dataView: { title: '数据视图', readOnly: true },
+                        restore: { title: '重置' }
+                    },
+                    right: '10%',
+                    top: '10%'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true,
+                    top: '20%'
+                }
+            };
+        }
+
+        // 柱状图配置
+        function getBarOption() {
+            var option = getDefaultOption();
+            option.xAxis = {
+                type: 'category',
+                data: apiData.categories,
+                axisLabel: { 
+                    rotate: 45,
+                    fontSize: 10
+                }
+            };
+            option.yAxis = [
+                { type: 'value', name: '访问次数', position: 'left' },
+                { type: 'value', name: '响应时间(ms)', position: 'right' }
+            ];
+            option.series = [
+                {
+                    name: '访问次数',
+                    type: 'bar',
+                    data: apiData.counts,
+                    itemStyle: { color: '#5470c6' }
+                },
+                {
+                    name: '平均响应时间(ms)',
+                    type: 'line',
+                    yAxisIndex: 1,
+                    data: apiData.durations,
+                    itemStyle: { color: '#ee6666' }
+                }
+            ];
+            return option;
+        }
+
+        // 折线图配置
+        function getLineOption() {
+            var option = getDefaultOption();
+            option.xAxis = {
+                type: 'category',
+                data: apiData.categories,
+                axisLabel: { rotate: 45, fontSize: 10 }
+            };
+            option.yAxis = [
+                { type: 'value', name: '访问次数', position: 'left' },
+                { type: 'value', name: '响应时间(ms)', position: 'right' }
+            ];
+            option.series = [
+                {
+                    name: '访问次数',
+                    type: 'line',
+                    data: apiData.counts,
+                    smooth: true,
+                    itemStyle: { color: '#5470c6' }
+                },
+                {
+                    name: '平均响应时间(ms)',
+                    type: 'line',
+                    yAxisIndex: 1,
+                    data: apiData.durations,
+                    smooth: true,
+                    itemStyle: { color: '#ee6666' }
+                }
+            ];
+            return option;
+        }
+
+        // 饼图配置
+        function getPieOption() {
+            var pieData = [];
+            for (var i = 0; i < apiData.categories.length; i++) {
+                pieData.push({
+                    name: apiData.categories[i],
+                    value: apiData.counts[i]
+                });
+            }
+            
+            return {
+                title: { 
+                    text: 'API访问分布', 
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'bold' }
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b} : {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    top: '10%'
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: { title: '保存为图片' }
+                    },
+                    right: '10%',
+                    top: '10%'
+                },
+                series: [{
+                    name: '访问次数',
+                    type: 'pie',
+                    radius: '50%',
+                    center: ['50%', '60%'],
+                    data: pieData,
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }]
+            };
+        }
+
+        // 混合图配置
+        function getMixedOption() {
+            return getBarOption(); // 混合图就是柱状图+折线图
+        }
+
+        // 雷达图配置
+        function getRadarOption() {
+            var radarData = [];
+            for (var i = 0; i < apiData.categories.length; i++) {
+                radarData.push({
+                    value: [apiData.counts[i], apiData.durations[i]],
+                    name: apiData.categories[i]
+                });
+            }
+            
+            return {
+                title: { 
+                    text: 'API访问雷达图', 
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'bold' }
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    data: apiData.categories,
+                    orient: 'vertical',
+                    left: 'left',
+                    top: '10%'
+                },
+                radar: {
+                    indicator: [
+                        { name: '访问次数', max: Math.max(...apiData.counts) * 1.2 },
+                        { name: '响应时间(ms)', max: Math.max(...apiData.durations) * 1.2 }
+                    ]
+                },
+                series: [{
+                    name: 'API访问统计',
+                    type: 'radar',
+                    data: radarData
+                }]
+            };
+        }
+
+        // 切换图表类型
+        function switchChart(type) {
+            currentChartType = type;
+            updateChartDisplay();
+        }
+
+        // 更新图表显示
+        function updateChartDisplay() {
+            var option;
+            switch (currentChartType) {
+                case 'line':
+                    option = getLineOption();
+                    break;
+                case 'pie':
+                    option = getPieOption();
+                    break;
+                case 'radar':
+                    option = getRadarOption();
+                    break;
+                case 'mixed':
+                    option = getMixedOption();
+                    break;
+                default:
+                    option = getBarOption();
+            }
+            
+            if (myChart && option) {
+                myChart.setOption(option, true);
+                document.getElementById('status').textContent = 
+                    '最后更新: ' + new Date().toLocaleString();
+            }
+        }
+
+        // 供Qt调用的函数：更新API数据
+        function updateApiChart(categories, counts, durations, chartType) {
+            if (categories && counts && durations && 
+                categories.length > 0 && counts.length > 0 && durations.length > 0) {
+                apiData.categories = categories;
+                apiData.counts = counts;
+                apiData.durations = durations;
+                // 如果传入了chartType参数，则更新当前图表类型
+                if (chartType) {
+                    currentChartType = chartType;
+                }
+                updateChartDisplay();
+                console.log('API数据已更新:', apiData);
+            } else {
+                console.log('API数据为空或格式错误:', {categories, counts, durations});
+                // 显示"暂无相关筛选数据"提示
+                showNoDataMessage();
+            }
+        }
+
+        // 显示加载中提示
+        function showLoadingMessage() {
+            var option = {
+                title: {
+                    text: 'API访问统计监控',
+                    subtext: '实时数据更新',
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'bold' }
+                },
+                graphic: [
+                    {
+                        type: 'text',
+                        left: 'center',
+                        top: 'center',
+                        style: {
+                            text: '正在加载中...',
+                            fontSize: 24,
+                            fontWeight: 'bold',
+                            fill: '#5470c6'
+                        }
+                    },
+                    {
+                        type: 'rect',
+                        left: 'center',
+                        top: '55%',
+                        shape: {
+                            width: 200,
+                            height: 4
+                        },
+                        style: {
+                            fill: '#e0e0e0'
+                        }
+                    },
+                    {
+                        type: 'rect',
+                        left: 'center',
+                        top: '55%',
+                        shape: {
+                            width: 100,
+                            height: 4
+                        },
+                        style: {
+                            fill: '#5470c6'
+                        }
+                    }
+                ],
+                xAxis: { show: false },
+                yAxis: { show: false },
+                series: []
+            };
+            myChart.setOption(option, true);
+            document.getElementById('status').textContent = '正在加载数据...';
+        }
+
+        // 显示无数据提示
+        function showNoDataMessage() {
+            var option = {
+                title: {
+                    text: 'API访问统计监控',
+                    subtext: '实时数据更新',
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'bold' }
+                },
+                graphic: {
+                    type: 'text',
+                    left: 'center',
+                    top: 'center',
+                    style: {
+                        text: '暂无相关筛选数据',
+                        fontSize: 24,
+                        fontWeight: 'bold',
+                        fill: '#999'
+                    }
+                },
+                xAxis: { show: false },
+                yAxis: { show: false },
+                series: []
+            };
+            myChart.setOption(option, true);
+            document.getElementById('status').textContent = 
+                '最后更新: ' + new Date().toLocaleString() + ' - 暂无数据';
+        }
+
+        // 显示网络错误提示
+        function showNetworkErrorMessage() {
+            var option = {
+                title: {
+                    text: 'API访问统计监控',
+                    subtext: '实时数据更新',
+                    left: 'center',
+                    textStyle: { fontSize: 18, fontWeight: 'bold' }
+                },
+                graphic: [
+                    // 错误图标（红色X）
+                    // {
+                    //     type: 'text',
+                    //     left: 'center',
+                    //     top: 'center',
+                    //     style: {
+                    //         text: '✕',
+                    //         fontSize: 60,
+                    //         fontWeight: 'bold',
+                    //         fill: '#ee6666'
+                    //     },
+                    //     position: [0, -40]
+                    // },
+                    // 错误文字
+                    // {
+                    //     type: 'text',
+                    //     left: 'center',
+                    //     top: 'center',
+                    //     style: {
+                    //         text: '网络请求异常',
+                    //         fontSize: 24,
+                    //         fontWeight: 'bold',
+                    //         fill: '#ee6666'
+                    //     },
+                    //     position: [0, 20]
+                    // },
+                    // 提示文字
+                    {
+                        type: 'text',
+                        left: 'center',
+                        top: 'center',
+                        style: {
+                            text: '请检查网络服务，网络请求异常',
+                            fontSize: 16,
+                            fill: '#999'
+                        },
+                        position: [0, 50]
+                    }
+                ],
+                xAxis: { show: false },
+                yAxis: { show: false },
+                series: []
+            };
+            myChart.setOption(option, true);
+            document.getElementById('status').textContent = 
+                '最后更新: ' + new Date().toLocaleString() + ' - 网络错误';
+        }
+
+
+
+        // 监听窗口大小变化，自适应图表
+        window.onresize = function() {
+            myChart.resize();
+        };
+
+        // ECharts点击事件：回调到Qt
+        myChart.on('click', function(params) {
+            if (window.qt) {
+                window.qt.onChartClicked(params.name, params.value);
+            }
+        });
+
+        // 初始化图表
+        // 等待Qt通过updateApiChart函数传入真实数据
+        showLoadingMessage();
+    </script>
+</body>
+</html>
