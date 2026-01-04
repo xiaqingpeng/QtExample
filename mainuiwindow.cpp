@@ -134,7 +134,8 @@ void MainUIWindow::setupNavigationBar()
     navLayout->setSpacing(20);
     
     // 应用标题
-    QLabel *appTitle = new QLabel("Qt 现代化应用");
+    appTitle = new QLabel("Qt 现代化应用");
+    appTitle->setObjectName("appTitle");
     appTitle->setStyleSheet(QString(
         "QLabel { "
         "    font-family: %1; "
@@ -169,7 +170,7 @@ void MainUIWindow::setupNavigationBar()
     themeComboBox->setCurrentIndex(static_cast<int>(ThemeManager::instance()->getCurrentTheme()));
     
     connect(themeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            [](int index) {
+            [this](int index) {
                 ThemeManager::instance()->setTheme(static_cast<ThemeManager::ThemeType>(index));
             });
     
@@ -327,9 +328,37 @@ void MainUIWindow::applyTheme()
         navigationBar->setStyleSheet(theme->getNavigationStyle());
     }
     
-    // 应用主题切换器样式
+    // 更新应用标题样式
+    if (appTitle) {
+        appTitle->setStyleSheet(QString(
+            "QLabel { "
+            "    font-family: %1; "
+            "    font-size: %2px; "
+            "    font-weight: 700; "
+            "    color: %3; "
+            "    padding: 0 8px; "
+            "}"
+        ).arg(ThemeManager::Typography::FONT_FAMILY)
+         .arg(ThemeManager::Typography::FONT_SIZE_XL)
+         .arg(theme->colors().TEXT_PRIMARY));
+    }
+    
+    // 应用主题切换器样式并同步当前选择
     if (themeComboBox) {
+        // 临时断开信号连接，避免递归调用
+        themeComboBox->blockSignals(true);
+        
+        // 同步当前主题选择
+        int currentThemeIndex = static_cast<int>(theme->getCurrentTheme());
+        if (themeComboBox->currentIndex() != currentThemeIndex) {
+            themeComboBox->setCurrentIndex(currentThemeIndex);
+        }
+        
+        // 应用样式
         themeComboBox->setStyleSheet(theme->getThemeSwitcherStyle());
+        
+        // 重新连接信号
+        themeComboBox->blockSignals(false);
     }
     
     // 应用按钮样式
@@ -376,28 +405,63 @@ void MainUIWindow::applyTheme()
         for (int i = 0; i < contentStack->count(); ++i) {
             QWidget *page = contentStack->widget(i);
             if (page) {
-                // 使用Qt元对象系统动态调用applyTheme方法（如果存在）
-                const QMetaObject *metaObject = page->metaObject();
-                int methodIndex = metaObject->indexOfMethod("applyTheme()");
-                if (methodIndex != -1) {
-                    // 页面有applyTheme方法，调用它
-                    QMetaMethod method = metaObject->method(methodIndex);
-                    method.invoke(page, Qt::DirectConnection);
-                } else {
-                    // 页面没有applyTheme方法，只更新基本样式
-                    page->setStyleSheet(QString(
-                        "QWidget { "
+                // 先检查是否是滚动区域
+                QScrollArea *scrollArea = qobject_cast<QScrollArea*>(page);
+                QWidget *actualPage = scrollArea ? scrollArea->widget() : page;
+                
+                if (actualPage) {
+                    // 使用Qt元对象系统动态调用applyTheme方法（如果存在）
+                    const QMetaObject *metaObject = actualPage->metaObject();
+                    int methodIndex = metaObject->indexOfMethod("applyTheme()");
+                    if (methodIndex != -1) {
+                        // 页面有applyTheme方法，调用它
+                        QMetaMethod method = metaObject->method(methodIndex);
+                        bool success = method.invoke(actualPage, Qt::DirectConnection);
+                        if (success) {
+                            // 强制重绘页面以确保主题立即生效
+                            actualPage->update();
+                            actualPage->repaint();
+                            if (scrollArea) {
+                                scrollArea->update();
+                                scrollArea->repaint();
+                            }
+                        }
+                    } else {
+                        // 页面没有applyTheme方法，只更新基本样式
+                        actualPage->setStyleSheet(QString(
+                            "QWidget { "
+                            "    background-color: %1; "
+                            "    color: %2; "
+                            "    font-family: %3; "
+                            "}"
+                        ).arg(theme->colors().BACKGROUND)
+                         .arg(theme->colors().TEXT_PRIMARY)
+                         .arg(ThemeManager::Typography::FONT_FAMILY));
+                        actualPage->update();
+                        actualPage->repaint();
+                        if (scrollArea) {
+                            scrollArea->update();
+                            scrollArea->repaint();
+                        }
+                    }
+                }
+                
+                // 如果是滚动区域，也要更新滚动区域的样式
+                if (scrollArea) {
+                    scrollArea->setStyleSheet(theme->getScrollBarStyle() + QString(
+                        "QScrollArea { "
+                        "    border: none; "
                         "    background-color: %1; "
-                        "    color: %2; "
-                        "    font-family: %3; "
                         "}"
-                    ).arg(theme->colors().BACKGROUND)
-                     .arg(theme->colors().TEXT_PRIMARY)
-                     .arg(ThemeManager::Typography::FONT_FAMILY));
+                    ).arg(theme->colors().BACKGROUND));
                 }
             }
         }
     }
+    
+    // 强制重绘整个窗口以确保所有更改立即生效
+    this->update();
+    this->repaint();
 }
 
 void MainUIWindow::setupSubMenu(const QString &mainMenu)
@@ -498,52 +562,47 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
 
     // 如果创建了内容控件，添加到内容区域
     if (contentWidget) {
+        // 确保新创建的页面应用当前主题
+        const QMetaObject *metaObject = contentWidget->metaObject();
+        int methodIndex = metaObject->indexOfMethod("applyTheme()");
+        if (methodIndex != -1) {
+            // 页面有applyTheme方法，调用它
+            QMetaMethod method = metaObject->method(methodIndex);
+            method.invoke(contentWidget, Qt::DirectConnection);
+            // 强制重绘以确保主题立即生效
+            contentWidget->update();
+            contentWidget->repaint();
+        } else {
+            // 页面没有applyTheme方法，应用基本主题样式
+            ThemeManager *theme = ThemeManager::instance();
+            contentWidget->setStyleSheet(QString(
+                "QWidget { "
+                "    background-color: %1; "
+                "    color: %2; "
+                "    font-family: %3; "
+                "}"
+            ).arg(theme->colors().BACKGROUND)
+             .arg(theme->colors().TEXT_PRIMARY)
+             .arg(ThemeManager::Typography::FONT_FAMILY));
+            contentWidget->update();
+            contentWidget->repaint();
+        }
+        
         // 将内容控件放在滚动区域中
         QScrollArea *scrollArea = new QScrollArea();
         scrollArea->setWidget(contentWidget);
         scrollArea->setWidgetResizable(true);
         scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
         scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-        scrollArea->setStyleSheet(
+        
+        // 应用主题到滚动区域
+        ThemeManager *theme = ThemeManager::instance();
+        scrollArea->setStyleSheet(theme->getScrollBarStyle() + QString(
             "QScrollArea { "
             "    border: none; "
-            "    background-color: #ffffff; "
+            "    background-color: %1; "
             "}"
-            "QScrollBar:vertical { "
-            "    background: #f8fafc; "
-            "    width: 8px; "
-            "    border-radius: 4px; "
-            "    margin: 0; "
-            "}"
-            "QScrollBar::handle:vertical { "
-            "    background: #cbd5e1; "
-            "    border-radius: 4px; "
-            "    min-height: 20px; "
-            "}"
-            "QScrollBar::handle:vertical:hover { "
-            "    background: #94a3b8; "
-            "}"
-            "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { "
-            "    height: 0px; "
-            "}"
-            "QScrollBar:horizontal { "
-            "    background: #f8fafc; "
-            "    height: 8px; "
-            "    border-radius: 4px; "
-            "    margin: 0; "
-            "}"
-            "QScrollBar::handle:horizontal { "
-            "    background: #cbd5e1; "
-            "    border-radius: 4px; "
-            "    min-width: 20px; "
-            "}"
-            "QScrollBar::handle:horizontal:hover { "
-            "    background: #94a3b8; "
-            "}"
-            "QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { "
-            "    width: 0px; "
-            "}"
-        );
+        ).arg(theme->colors().BACKGROUND));
 
         contentStack->addWidget(scrollArea);
         contentStack->setCurrentWidget(scrollArea);

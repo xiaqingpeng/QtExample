@@ -131,13 +131,7 @@ void UserInfoPage::setupUI()
     // 在线状态指示器
     QLabel *onlineIndicator = new QLabel();
     onlineIndicator->setFixedSize(24, 24);
-    onlineIndicator->setStyleSheet(
-        "QLabel { "
-        "    background-color: #10b981; "
-        "    border-radius: 12px; "
-        "    border: 4px solid white; "
-        "}"
-    );
+    onlineIndicator->setObjectName("onlineIndicator");
     
     // 使用绝对定位将状态指示器放在头像右下角
     onlineIndicator->setParent(avatarContainer);
@@ -170,15 +164,7 @@ void UserInfoPage::setupUI()
     // 用户名（现代简约风格）
     m_usernameLabel = new QLabel("加载中...");
     m_usernameLabel->setAlignment(Qt::AlignCenter);
-    m_usernameLabel->setStyleSheet(
-        "QLabel { "
-        "    font-size: 28px; "
-        "    font-weight: 700; "
-        "    color: #1e293b; "
-        "    padding: 8px; "
-        "    letter-spacing: 0.5px; "
-        "}"
-    );
+    m_usernameLabel->setObjectName("usernameLabel");
     profileLayout->addWidget(m_usernameLabel);
     
     // 上传头像按钮
@@ -233,13 +219,7 @@ void UserInfoPage::setupUI()
     // 用户状态
     QWidget *statusWidget = createInfoItem("账户状态", "正常");
     m_statusLabel = statusWidget->findChild<QLabel*>("valueLabel");
-    m_statusLabel->setStyleSheet(
-        "QLabel { "
-        "    font-size: 14px; "
-        "    color: #10b981; "
-        "    font-weight: 600; "
-        "}"
-    );
+    m_statusLabel->setObjectName("statusLabel");
     infoItemsLayout->addWidget(statusWidget, 1, 1);
     
     detailsLayout->addWidget(infoItemsWidget);
@@ -373,14 +353,21 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
 {
     QWidget *widget = new QWidget();
     widget->setFixedHeight(100);
-    widget->setStyleSheet(
+    
+    // 使用主题管理器的颜色而不是硬编码
+    ThemeManager* themeManager = ThemeManager::instance();
+    const auto& colors = themeManager->colors();
+    
+    widget->setStyleSheet(QString(
         "QWidget { "
         "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, "
-        "    stop:0 #ffffff, stop:1 #f8fafc); "
+        "    stop:0 %1, stop:1 %2); "
         "    border-radius: 12px; "
-        "    border: 1px solid #f1f5f9; "
+        "    border: 1px solid %3; "
         "}"
-    );
+    ).arg(colors.CARD)
+     .arg(colors.SURFACE)
+     .arg(colors.BORDER));
     
     // 添加微妙阴影 (暂时禁用以排查崩溃问题)
     // QGraphicsDropShadowEffect *itemShadow = new QGraphicsDropShadowEffect(this);
@@ -400,13 +387,14 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
     // 图标容器（现代简约设计）
     QLabel *iconLabel = new QLabel();
     iconLabel->setFixedSize(32, 32);
-    iconLabel->setStyleSheet(
+    iconLabel->setStyleSheet(QString(
         "QLabel { "
         "    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, "
-        "    stop:0 #3b82f6, stop:1 #1d4ed8); "
+        "    stop:0 %1, stop:1 %2); "
         "    border-radius: 16px; "
         "}"
-    );
+    ).arg(colors.PRIMARY)
+     .arg(colors.PRIMARY_HOVER));
     
     // 创建简单的文本标识符，避免emoji导致的崩溃
     QString iconText = "";
@@ -418,13 +406,13 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
     
     QLabel *iconTextWidget = new QLabel(iconText);
     iconTextWidget->setAlignment(Qt::AlignCenter);
-    iconTextWidget->setStyleSheet(
+    iconTextWidget->setStyleSheet(QString(
         "QLabel { "
         "    font-size: 12px; "
-        "    color: #64748b; "
+        "    color: %1; "
         "    font-weight: 500; "
         "}"
-    );
+    ).arg(colors.TEXT_SECONDARY));
     
     QVBoxLayout *iconLayout = new QVBoxLayout(iconLabel);
     iconLayout->setContentsMargins(0, 0, 0, 0);
@@ -432,14 +420,14 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
     
     // 标签（现代简约风格）
     QLabel *labelWidget = new QLabel(label);
-    labelWidget->setStyleSheet(
+    labelWidget->setStyleSheet(QString(
         "QLabel { "
         "    font-size: 12px; "
         "    font-weight: 600; "
-        "    color: #64748b; "
+        "    color: %1; "
         "    letter-spacing: 0.3px; "
         "}"
-    );
+    ).arg(colors.TEXT_SECONDARY));
     
     headerLayout->addWidget(iconLabel);
     headerLayout->addWidget(labelWidget);
@@ -448,14 +436,14 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
     // 值（现代简约风格）
     QLabel *valueLabel = new QLabel(value);
     valueLabel->setObjectName("valueLabel");
-    valueLabel->setStyleSheet(
+    valueLabel->setStyleSheet(QString(
         "QLabel { "
         "    font-size: 15px; "
-        "    color: #1e293b; "
+        "    color: %1; "
         "    font-weight: 600; "
         "    letter-spacing: 0.2px; "
         "}"
-    );
+    ).arg(colors.TEXT_PRIMARY));
     valueLabel->setWordWrap(true);
     
     layout->addLayout(headerLayout);
@@ -814,12 +802,36 @@ void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
 void UserInfoPage::onThemeChanged()
 {
     applyTheme();
+    
+    // 强制重绘所有子控件以确保主题立即生效
+    QList<QWidget*> allWidgets = this->findChildren<QWidget*>();
+    for (QWidget* widget : allWidgets) {
+        if (widget) {
+            widget->update();
+            widget->repaint();
+        }
+    }
+    
+    // 强制重绘整个页面
+    update();
+    repaint();
+    
+    // 重新创建信息项以确保主题完全应用
+    QTimer::singleShot(10, this, [this]() {
+        // 重新应用主题到动态创建的信息项
+        applyTheme();
+        update();
+        repaint();
+    });
 }
 
 void UserInfoPage::applyTheme()
 {
     ThemeManager* themeManager = ThemeManager::instance();
     const auto& colors = themeManager->colors();
+    
+    // 首先设置页面的基础背景色
+    this->setStyleSheet(QString("QWidget#userInfoPage { background-color: %1; }").arg(colors.BACKGROUND));
     
     // 应用主题到页面
     QString pageStyle = QString(
@@ -867,25 +879,17 @@ void UserInfoPage::applyTheme()
         "    border-radius: 76px; "
         "    background-color: %14; "
         "} "
-        "QPushButton#uploadAvatarButton { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 %15, stop:1 %16); "
-        "    color: white; "
-        "    border: none; "
-        "    padding: 14px 36px; "
-        "    border-radius: %17px; "
-        "    font-family: %18; "
-        "    font-size: %19px; "
+        "QLabel#usernameLabel { "
+        "    font-size: 28px; "
+        "    font-weight: 700; "
+        "    color: %15; "
+        "    padding: 8px; "
+        "    letter-spacing: 0.5px; "
+        "} "
+        "QLabel#statusLabel { "
+        "    font-size: 14px; "
+        "    color: %16; "
         "    font-weight: 600; "
-        "    letter-spacing: 0.3px; "
-        "} "
-        "QPushButton#uploadAvatarButton:hover { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 %20, stop:1 %21); "
-        "} "
-        "QPushButton#uploadAvatarButton:pressed { "
-        "    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-        "    stop:0 %22, stop:1 %23); "
         "}"
     ).arg(colors.BACKGROUND)
      .arg(colors.PRIMARY)
@@ -901,17 +905,10 @@ void UserInfoPage::applyTheme()
      .arg(colors.PRIMARY_HOVER)
      .arg(colors.PRIMARY)
      .arg(colors.SURFACE)
-     .arg(colors.PRIMARY)           // 按钮背景起始色
-     .arg(colors.PRIMARY_HOVER)     // 按钮背景结束色
-     .arg(ThemeManager::BorderRadius::MD)  // 按钮圆角
-     .arg(ThemeManager::Typography::FONT_FAMILY)  // 按钮字体
-     .arg(ThemeManager::Typography::FONT_SIZE_SM) // 按钮字体大小
-     .arg(colors.PRIMARY_HOVER)     // 悬停背景起始色
-     .arg(colors.PRIMARY_LIGHT)     // 悬停背景结束色
-     .arg(colors.PRIMARY_HOVER)     // 按下背景起始色
-     .arg(colors.PRIMARY_LIGHT);    // 按下背景结束色
+     .arg(colors.TEXT_PRIMARY)
+     .arg(colors.SUCCESS);
     
-    // 应用按钮样式
+    // 应用按钮样式 - 使用主题管理器的样式而不是内联样式
     QString buttonStyle = themeManager->getButtonStyle("primary");
     
     // 应用所有样式

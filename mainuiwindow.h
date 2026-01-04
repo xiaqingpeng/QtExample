@@ -54,6 +54,7 @@ private:
     
     // 导航栏组件
     QWidget *navigationBar;
+    QLabel *appTitle;
     QLabel *avatarLabel;
     QLabel *usernameLabel;
     QPushButton *logoutButton;

@@ -231,16 +231,46 @@ QString ThemeManager::getButtonStyle(const QString& variant) const
     if (variant == "primary") {
         return baseStyle + QString(
             "QPushButton { "
-            "    background-color: %1; "
-            "    color: white; "
+            "    background-color: %1 !important; "
+            "    color: white !important; "
             "} "
             "QPushButton:hover { "
-            "    background-color: %2; "
+            "    background-color: %2 !important; "
             "} "
             "QPushButton:pressed { "
-            "    background-color: %3; "
+            "    background-color: %3 !important; "
+            "} "
+            "QPushButton#uploadAvatarButton { "
+            "    background-color: %4 !important; "
+            "    color: white !important; "
+            "    padding: 14px 36px; "
+            "    font-weight: 600; "
+            "    letter-spacing: 0.3px; "
+            "} "
+            "QPushButton#uploadAvatarButton:hover { "
+            "    background-color: %5 !important; "
+            "} "
+            "QPushButton#uploadAvatarButton:pressed { "
+            "    background-color: %6 !important; "
+            "} "
+            "QPushButton#changePasswordButton { "
+            "    background-color: %7 !important; "
+            "    color: white !important; "
+            "    min-height: 44px; "
+            "} "
+            "QPushButton#changePasswordButton:hover { "
+            "    background-color: %8 !important; "
+            "} "
+            "QPushButton#changePasswordButton:pressed { "
+            "    background-color: %9 !important; "
             "}"
         ).arg(m_colors.PRIMARY)
+         .arg(m_colors.PRIMARY_HOVER)
+         .arg(m_colors.PRIMARY_HOVER)
+         .arg(m_colors.PRIMARY)
+         .arg(m_colors.PRIMARY_HOVER)
+         .arg(m_colors.PRIMARY_HOVER)
+         .arg(m_colors.PRIMARY)
          .arg(m_colors.PRIMARY_HOVER)
          .arg(m_colors.PRIMARY_HOVER);
     } else if (variant == "secondary") {

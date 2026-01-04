@@ -211,6 +211,9 @@ void ChangePasswordPage::applyTheme()
     ThemeManager* themeManager = ThemeManager::instance();
     const auto& colors = themeManager->colors();
     
+    // 首先设置页面的基础背景色
+    this->setStyleSheet(QString("QWidget#changePasswordPage { background-color: %1; }").arg(colors.BACKGROUND));
+    
     // 应用主题到页面
     QString pageStyle = QString(
         "QWidget#changePasswordPage { "
@@ -266,7 +269,7 @@ void ChangePasswordPage::applyTheme()
      .arg(ThemeManager::Typography::FONT_SIZE_MD)
      .arg(ThemeManager::Spacing::XS);
     
-    // 应用输入框样式
+    // 应用输入框样式和按钮样式 - 使用主题管理器的样式
     QString inputStyle = themeManager->getInputStyle();
     QString buttonPrimaryStyle = themeManager->getButtonStyle("primary");
     
@@ -277,4 +280,24 @@ void ChangePasswordPage::applyTheme()
 void ChangePasswordPage::onThemeChanged()
 {
     applyTheme();
+    
+    // 强制重绘所有子控件以确保主题立即生效
+    QList<QWidget*> allWidgets = this->findChildren<QWidget*>();
+    for (QWidget* widget : allWidgets) {
+        if (widget) {
+            widget->update();
+            widget->repaint();
+        }
+    }
+    
+    // 强制重绘整个页面
+    update();
+    repaint();
+    
+    // 延迟再次应用主题，确保完全生效
+    QTimer::singleShot(10, this, [this]() {
+        applyTheme();
+        update();
+        repaint();
+    });
 }
