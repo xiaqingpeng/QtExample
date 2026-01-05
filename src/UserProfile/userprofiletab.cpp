@@ -520,7 +520,7 @@ void UserProfileTab::updateInterestAnalysisDisplay(const QJsonArray &interests)
         <html>
         <head>
             <meta charset="utf-8">
-            <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+            <script src="qrc:/src/ECharts/echarts.min.js"></script>
         </head>
         <body style="margin:0;padding:0;background:#ffffff;">
             <div id="chart" style="width:100%%;height:350px;"></div>
@@ -603,7 +603,7 @@ void UserProfileTab::renderValueRadarChart(const QJsonObject &valueData)
         <html>
         <head>
             <meta charset="utf-8">
-            <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+            <script src="qrc:/src/ECharts/echarts.min.js"></script>
         </head>
         <body style="margin:0;padding:0;background:#ffffff;">
             <div id="chart" style="width:100%%;height:350px;"></div>
