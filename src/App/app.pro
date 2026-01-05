@@ -38,6 +38,7 @@ LIBS += -L$$OUT_PWD/../Auth -lauth
 LIBS += -L$$OUT_PWD/../UserProfile -luserprofile
 LIBS += -L$$OUT_PWD/../Charts -lcharts
 LIBS += -L$$OUT_PWD/../Reports -lreports
+LIBS += -L$$OUT_PWD/../Device -ldevice
 LIBS += -L$$OUT_PWD/../UI -lui
 
 # 包含所有模块头文件路径

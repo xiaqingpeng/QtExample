@@ -9,5 +9,6 @@
         <file>images/pony_dumplings.png</file>
         <file>src/ECharts/echarts.min.js</file>
         <file>src/ECharts/chart.html</file>
+        <file>src/ECharts/server_config.html</file>
     </qresource>
 </RCC>

@@ -14,6 +14,7 @@ SUBDIRS += \
     UserProfile \
     Charts \
     Reports \
+    Device \
     UI \
     App
 
@@ -33,9 +34,10 @@ Auth.depends = Core Services Network Styles
 UserProfile.depends = Core Services Network Auth Styles
 Charts.depends = Core Services Network Styles
 Reports.depends = Core Services Network Analytics Styles
+Device.depends = Core Services Network Styles
 
 # UI层
-UI.depends = Core Services Network Analytics Auth UserProfile Charts Reports Styles Utils
+UI.depends = Core Services Network Analytics Auth UserProfile Charts Reports Device Styles Utils
 
 # 应用层
 App.depends = UI

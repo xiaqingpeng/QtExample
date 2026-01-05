@@ -15,6 +15,8 @@
 #include "echarts/logstatstab.h"
 #include "userprofiletab/userprofiletab.h"
 #include "reportstab/reportstab.h"
+#include "src/Device/serverconfigtab.h"
+#include "src/Device/contenttab.h"
 #include "loginpage.h"
 #include "changepasswordpage.h"
 #include "userinfo/userinfopage.h"

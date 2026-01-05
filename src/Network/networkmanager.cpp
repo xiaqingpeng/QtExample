@@ -1,6 +1,6 @@
 #include "networkmanager.h"
-#include "common.h"
 #include <QDebug>
+#include "common.h"
 #include <QNetworkProxy>
 #include <QUrl>
 #include <QSettings>

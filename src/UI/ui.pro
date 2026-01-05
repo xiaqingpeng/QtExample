@@ -22,5 +22,9 @@ INCLUDEPATH += ../Auth
 INCLUDEPATH += ../UserProfile
 INCLUDEPATH += ../Charts
 INCLUDEPATH += ../Reports
+INCLUDEPATH += ../Device
 INCLUDEPATH += ../Styles
 INCLUDEPATH += ../Utils
+
+# 链接库
+LIBS += -L$$OUT_PWD/../Device -ldevice

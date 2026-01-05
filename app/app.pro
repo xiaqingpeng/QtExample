@@ -55,6 +55,9 @@ LIBS += -L$$OUT_PWD/../networkmanager -lnetworkmanager
 # 链接analytics模块
 LIBS += -L$$OUT_PWD/../analytics -lanalytics
 
+# 链接Device模块
+LIBS += -L$$OUT_PWD/../src/Device -ldevice
+
 # 链接保留的模块
 LIBS += -L$$OUT_PWD/../echarts -lecharts
 LIBS += -L$$OUT_PWD/../reportstab -lreportstab
@@ -78,6 +81,7 @@ INCLUDEPATH += ../echarts
 INCLUDEPATH += ../reportstab
 INCLUDEPATH += ../userprofiletab
 INCLUDEPATH += ../styles
+INCLUDEPATH += ../src/Device
 
 # 包含资源文件
 RESOURCES += ../layoutexamplestab.qrc

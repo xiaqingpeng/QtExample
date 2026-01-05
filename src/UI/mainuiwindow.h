@@ -18,6 +18,8 @@
 #include "../Auth/loginpage.h"
 #include "../Auth/changepasswordpage.h"
 #include "../UserProfile/userinfopage.h"
+#include "../Device/serverconfigtab.h"
+#include "../Device/contenttab.h"
 #include "../Styles/theme_manager.h"
 
 // 企业级架构集成

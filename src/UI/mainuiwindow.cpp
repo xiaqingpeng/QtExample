@@ -248,9 +248,13 @@ void MainUIWindow::setupMainMenu()
     item2->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mainMenuList->addItem(item2);
 
-    QListWidgetItem *item3 = new QListWidgetItem("个人中心");
+    QListWidgetItem *item3 = new QListWidgetItem("设备信息");
     item3->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mainMenuList->addItem(item3);
+
+    QListWidgetItem *item4 = new QListWidgetItem("个人中心");
+    item4->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mainMenuList->addItem(item4);
 
     connect(mainMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onMainMenuClicked);
 
@@ -275,6 +279,9 @@ void MainUIWindow::setupSubMenuContent(const QString &mainMenu)
     } else if (mainMenu.contains("数据分析")) {
         new QListWidgetItem("用户画像", subMenuList);
         new QListWidgetItem("统计报表", subMenuList);
+    } else if (mainMenu.contains("设备信息")) {
+        new QListWidgetItem("服务器配置", subMenuList);
+        new QListWidgetItem("内容", subMenuList);
     } else if (mainMenu.contains("个人中心")) {
         new QListWidgetItem("用户信息", subMenuList);
         new QListWidgetItem("修改密码", subMenuList);
@@ -481,6 +488,9 @@ void MainUIWindow::setupSubMenu(const QString &mainMenu)
     } else if (mainMenu.contains("数据分析")) {
         new QListWidgetItem("用户画像", subMenuList);
         new QListWidgetItem("统计报表", subMenuList);
+    } else if (mainMenu.contains("设备信息")) {
+        new QListWidgetItem("服务器配置", subMenuList);
+        new QListWidgetItem("内容", subMenuList);
     } else if (mainMenu.contains("个人中心")) {
         new QListWidgetItem("用户信息", subMenuList);
         new QListWidgetItem("修改密码", subMenuList);
@@ -561,6 +571,10 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         }
     } else if (subMenu.contains("统计报表")) {
         contentWidget = new ReportsTab();
+    } else if (subMenu.contains("服务器配置")) {
+        contentWidget = new ServerConfigTab();
+    } else if (subMenu.contains("内容")) {
+        contentWidget = new ContentTab();
     } else if (subMenu.contains("用户信息")) {
         contentWidget = new UserInfoPage();
     } else if (subMenu.contains("修改密码")) {

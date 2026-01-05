@@ -4,15 +4,15 @@ CONFIG += c++17 staticlib
 CONFIG -= single_module
 
 TEMPLATE = lib
-TARGET = charts
+TARGET = device
 
 HEADERS += \
-    echartstab.h \
-    logstatstab.h
+    serverconfigtab.h \
+    contenttab.h
 
 SOURCES += \
-    echartstab.cpp \
-    logstatstab.cpp
+    serverconfigtab.cpp \
+    contenttab.cpp
 
 # 包含路径
 INCLUDEPATH += ../..
