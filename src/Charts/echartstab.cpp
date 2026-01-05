@@ -52,7 +52,7 @@ EChartsTab::EChartsTab(QWidget *parent)
     m_webView->page()->setWebChannel(channel);
 
     // 5. 加载本地HTML文件（使用绝对路径确保文件能被找到）
-    QString htmlPath = "/Applications/qingpengxia/qt/qt6/example/echarts/ECharts/chart.html";
+    QString htmlPath = "/Applications/qingpengxia/qt/qt6/example/src/ECharts/chart.html";
     QFile file(htmlPath);
     if (!file.exists()) {
         // HTML文件不存在

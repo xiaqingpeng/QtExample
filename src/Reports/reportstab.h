@@ -69,8 +69,6 @@ private:
     
     // 图表渲染方法
     void renderTrendChart(const QJsonArray &trendData, const QString &title, const QString &chartType);
-    
-    // 辅助方法
     QWidget *createToolbarWidget();
     QWidget *createKeyMetricsWidget();
     QWidget *createTrendChartsWidget();

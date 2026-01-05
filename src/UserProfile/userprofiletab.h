@@ -60,8 +60,6 @@ private:
 
     // 图表渲染方法
     void renderValueRadarChart(const QJsonObject &valueData);
-    
-    // 辅助方法
     QWidget *createToolbarWidget();
     QWidget *createUserInfoWidget();
     QWidget *createUserTagsWidget();

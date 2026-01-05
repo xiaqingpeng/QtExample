@@ -16,6 +16,7 @@
 #include <QHeaderView>
 #include <QTimer>
 #include <QStandardPaths>
+#include <QCoreApplication>
 
 ReportsTab::ReportsTab(QWidget *parent)
     : QWidget(parent)
@@ -615,7 +616,7 @@ void ReportsTab::renderTrendChart(const QJsonArray &trendData, const QString &ti
         <html>
         <head>
             <meta charset="utf-8">
-            <script src="qrc:/echarts/ECharts/echarts.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
         </head>
         <body style="margin:0;padding:0;background:#ffffff;">
             <div id="chart" style="width:100%%;height:450px;"></div>
@@ -623,7 +624,7 @@ void ReportsTab::renderTrendChart(const QJsonArray &trendData, const QString &ti
                 var chart = echarts.init(document.getElementById('chart'));
                 var option = {
                     title: { 
-                        text: '%1',
+                        text: '%2',
                         left: 'center',
                         top: 20,
                         textStyle: {
@@ -658,7 +659,7 @@ void ReportsTab::renderTrendChart(const QJsonArray &trendData, const QString &ti
                     },
                     xAxis: { 
                         type: 'category', 
-                        data: [%2],
+                        data: [%3],
                         axisLine: {
                             lineStyle: {
                                 color: '#e9ecef'
@@ -689,8 +690,8 @@ void ReportsTab::renderTrendChart(const QJsonArray &trendData, const QString &ti
                     },
                     series: [{
                         name: '数值',
-                        type: '%3',
-                        data: [%4],
+                        type: '%4',
+                        data: [%5],
                         smooth: true,
                         itemStyle: {
                             color: '#007bff',
@@ -1453,3 +1454,4 @@ QWidget *ReportsTab::createRealTimeStatsWidget()
     
     return widget;
 }
+

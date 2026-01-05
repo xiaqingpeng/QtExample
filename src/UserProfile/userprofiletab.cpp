@@ -14,6 +14,7 @@
 #include <QPrinter>
 #include <QTextDocument>
 #include <QPushButton>
+#include <QCoreApplication>
 
 UserProfileTab::UserProfileTab(QWidget *parent)
     : QWidget(parent)
@@ -519,7 +520,7 @@ void UserProfileTab::updateInterestAnalysisDisplay(const QJsonArray &interests)
         <html>
         <head>
             <meta charset="utf-8">
-            <script src="qrc:/echarts/ECharts/echarts.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
         </head>
         <body style="margin:0;padding:0;background:#ffffff;">
             <div id="chart" style="width:100%%;height:350px;"></div>
@@ -602,7 +603,7 @@ void UserProfileTab::renderValueRadarChart(const QJsonObject &valueData)
         <html>
         <head>
             <meta charset="utf-8">
-            <script src="qrc:/echarts/ECharts/echarts.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
         </head>
         <body style="margin:0;padding:0;background:#ffffff;">
             <div id="chart" style="width:100%%;height:350px;"></div>
@@ -664,7 +665,7 @@ void UserProfileTab::renderValueRadarChart(const QJsonObject &valueData)
                         name: '价值评估',
                         type: 'radar',
                         data: [{
-                            value: [%1, %2, %3, %4, %5],
+                            value: [%2, %3, %4, %5, %6],
                             name: '评分',
                             itemStyle: {
                                 color: '#007bff'
@@ -1295,3 +1296,4 @@ QWidget *UserProfileTab::createModernCard(const QString &title, QWidget *content
     cardLayout->addWidget(content);
     return card;
 }
+
