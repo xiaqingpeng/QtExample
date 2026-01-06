@@ -279,7 +279,10 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
                         type: 'bar',
                         data: [0, 0, 0],
                         itemStyle: {
-                            color: '#3498db'
+                            color: function(params) {
+                                const colors = ['#e74c3c', '#f39c12', '#2ecc71'];
+                                return colors[params.dataIndex];
+                            }
                         }
                     }]
                 });
@@ -377,14 +380,20 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
             var cpuUsage = data.cpu_usage || data.cpuUsage || 0;
             var cpuCores = data.cpuCores || 0;
             
+            // 计算已用和空闲CPU百分比
+            var cpuUsed = cpuUsage;
+            var cpuIdle = 100 - cpuUsage;
+            
             if (cpuChart) {
                 cpuChart.setOption({
                     series: [{
                         data: [{ value: cpuUsage, name: '使用率' }],
-                        // 添加CPU核心数标注
+                        // 添加CPU数据标注：已用、核心数、空闲
                         markPoint: {
                             data: [
-                                { name: '核心数', value: cpuCores + '核', x: '50%', y: '90%' }
+                                { name: '已用', value: cpuUsed.toFixed(1) + '%', x: '30%', y: '90%' },
+                                { name: '核心数', value: cpuCores + '核', x: '50%', y: '90%' },
+                                { name: '空闲', value: cpuIdle.toFixed(1) + '%', x: '70%', y: '90%' }
                             ],
                             label: {
                                 formatter: '{b}: {c}',
@@ -399,7 +408,7 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
                         }
                     }]
                 });
-                console.log('CPU chart updated with value:', cpuUsage, '% (', cpuCores, 'cores)');
+                console.log('CPU chart updated with value:', cpuUsage, '% (', cpuCores, 'cores), Used:', cpuUsed, '%, Idle:', cpuIdle, '%');
             } else {
                 console.error('CPU chart object is null');
             }
