@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
+CONFIG += ordered sdk_no_version_check
 
 # Qt大型项目模块结构
 SUBDIRS += \

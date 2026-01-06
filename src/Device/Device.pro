@@ -1,6 +1,6 @@
 QT += core gui widgets webenginewidgets network
 
-CONFIG += c++17 staticlib
+CONFIG += c++17 staticlib sdk_no_version_check
 CONFIG -= single_module
 
 TEMPLATE = lib

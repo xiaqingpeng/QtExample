@@ -11,6 +11,7 @@ DEFINES += ENTERPRISE_EDITION
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
 
 TEMPLATE = subdirs
+CONFIG += sdk_no_version_check
 
 # Qt大型项目结构 - 只构建src目录
 SUBDIRS += src
