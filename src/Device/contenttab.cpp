@@ -712,9 +712,7 @@ void ContentTab::updateCharts(const QJsonObject &data)
     
     qDebug() << "[ContentTab] Running JavaScript to update charts:" << script.left(100) << "...";
     
-    m_webView->page()->runJavaScript(script, [](const QVariant &result) {
-        qDebug() << "[ContentTab] JavaScript execution result:" << result;
-    });
+    m_webView->page()->runJavaScript(script);
 }
 
 void ContentTab::applyTheme()

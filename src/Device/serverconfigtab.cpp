@@ -855,9 +855,7 @@ void ServerConfigTab::updateCharts(const QJsonObject &data)
     
     qDebug() << "[ServerConfigTab] Running JavaScript to update charts:" << script.left(100) << "...";
     
-    m_webView->page()->runJavaScript(script, [](const QVariant &result) {
-        qDebug() << "[ServerConfigTab] JavaScript execution result:" << result;
-    });
+    m_webView->page()->runJavaScript(script);
 }
 
 void ServerConfigTab::applyTheme()
