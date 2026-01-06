@@ -8,6 +8,7 @@
 #include <QWebEngineView>
 #include <QWebChannel>
 #include <QThread>
+#include <QTimer>
 #include "networkmanager.h"
 #include "theme_manager.h"
 
@@ -25,6 +26,7 @@ private slots:
     void applyTheme();
     void onPageLoaded(bool ok);
     void updateCharts(const QJsonObject &data);
+    void refreshSystemInfo();
 
 private:
     NetworkManager *m_networkManager;
@@ -34,6 +36,7 @@ private:
     ServerConfigBridge *m_bridge;
     bool m_pageLoaded;
     QJsonObject m_pendingData;
+    QTimer *m_refreshTimer;
     
     void setupUI();
     void fetchSystemInfo();
