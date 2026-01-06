@@ -67,6 +67,9 @@ ContentTab::ContentTab(QWidget *parent)
     m_bridge = new ServerConfigBridge(this);
     m_channel->registerObject("qtBridge", m_bridge);
     
+    // 在页面加载前设置WebChannel到WebEnginePage上
+    m_webView->page()->setWebChannel(m_channel);
+    
     mainLayout->addWidget(m_webView);
     
     // 使用包含WebChannel初始化的HTML内容

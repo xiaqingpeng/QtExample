@@ -17,7 +17,10 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
     , m_channel(nullptr)
     , m_bridge(nullptr)
     , m_networkManager(new NetworkManager(this))
+    , m_refreshTimer(new QTimer(this))
 {
+    // 连接定时器信号到槽函数
+    connect(m_refreshTimer, &QTimer::timeout, this, &ServerConfigTab::fetchSystemInfo);
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(20, 20, 20, 20);
     mainLayout->setSpacing(20);
@@ -66,7 +69,14 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
     qDebug() << "[ServerConfigTab] Creating WebChannel";
     m_channel = new QWebChannel(this);
     m_bridge = new ServerConfigBridge(this);
+    
+    // 连接刷新信号
+    connect(m_bridge, &ServerConfigBridge::refreshRequested, this, &ServerConfigTab::refreshSystemInfo);
+    
     m_channel->registerObject("qtBridge", m_bridge);
+    
+    // 在页面加载前设置WebChannel到WebEnginePage上
+    m_webView->page()->setWebChannel(m_channel);
     
     mainLayout->addWidget(m_webView);
     
@@ -603,7 +613,12 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
     </script>
 </head>
 <body>
-    <h1>服务器配置监控</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>服务器配置监控</h1>
+        <button id="refreshBtn" onclick="refreshSystemInfo()" style="padding: 8px 16px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            刷新数据
+        </button>
+    </div>
     
     <div class="system-info">
         <div class="info-row">
@@ -627,6 +642,18 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
         <div class="chart-container" id="loadChart"></div>
         <div class="chart-container" id="networkChart"></div>
     </div>
+    
+    <script>
+        // 刷新系统信息数据
+        function refreshSystemInfo() {
+            console.log('刷新数据按钮被点击');
+            qtBridge.refreshSystemInfo();
+        }
+        
+        // 设置定时器，每5分钟刷新一次数据
+        setInterval(refreshSystemInfo, 5 * 60 * 1000);
+        console.log('已设置5分钟自动刷新定时器');
+    </script>
 </body>
 </html>
 )HTML";
@@ -644,6 +671,10 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
     
     // 应用主题
     applyTheme();
+    
+    // 启动定时器，每5分钟刷新一次
+    m_refreshTimer->start(5 * 60 * 1000);
+    qDebug() << "[ServerConfigTab] 已启动5分钟自动刷新定时器";
     
     qDebug() << "[ServerConfigTab] Constructor finished";
 }
@@ -867,4 +898,10 @@ void ServerConfigTab::applyTheme()
         ).arg(theme->colors().BORDER)
          .arg(theme->colors().BACKGROUND));
     }
+}
+
+void ServerConfigTab::refreshSystemInfo()
+{
+    qDebug() << "[ServerConfigTab] 刷新系统信息数据";
+    fetchSystemInfo();
 }

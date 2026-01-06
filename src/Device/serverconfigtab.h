@@ -6,6 +6,7 @@
 #include <QWebChannel>
 #include <QVariant>
 #include <QLabel>
+#include <QTimer>
 #include "networkmanager.h"
 #include "theme_manager.h"
 
@@ -20,6 +21,13 @@ public slots:
         Q_UNUSED(name);
         Q_UNUSED(value);
     }
+    
+    void refreshSystemInfo() {
+        emit refreshRequested();
+    }
+    
+signals:
+    void refreshRequested();
 };
 
 class ServerConfigTab : public QWidget
@@ -33,6 +41,7 @@ public:
 private slots:
     void onPageLoaded(bool ok);
     void applyTheme();
+    void refreshSystemInfo();
 
 private:
     QWebEngineView *m_webView;
@@ -40,6 +49,7 @@ private:
     ServerConfigBridge *m_bridge;
     NetworkManager *m_networkManager;
     QLabel *m_titleLabel;
+    QTimer *m_refreshTimer;
     
     void fetchSystemInfo();
     void updateCharts(const QJsonObject &data);
