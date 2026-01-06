@@ -22,11 +22,11 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
     mainLayout->setContentsMargins(20, 20, 20, 20);
     mainLayout->setSpacing(20);
     
-    // 标题
-    m_titleLabel = new QLabel("服务器配置", this);
-    m_titleLabel->setObjectName("titleLabel");
-    m_titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; padding: 10px 0;");
-    mainLayout->addWidget(m_titleLabel);
+    // // 标题
+    // m_titleLabel = new QLabel("服务器配置", this);
+    // m_titleLabel->setObjectName("titleLabel");
+    // m_titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; padding: 10px 0;");
+    // mainLayout->addWidget(m_titleLabel);
     
     // 创建WebView用于显示图表
     qDebug() << "[ServerConfigTab] Creating WebView";
