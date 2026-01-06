@@ -81,26 +81,254 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
 <head>
     <title>服务器配置</title>
     <script src="qrc:/qtwebchannel/qwebchannel.js"></script>
+    <script src="qrc:/src/ECharts/echarts.min.js"></script>
+    <style>
+        body {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+        }
+        .system-info {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .info-row {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+    </style>
     <script>
         var qtBridge;
+        var cpuChart = null;
+        var memoryChart = null;
+        var diskChart = null;
+        var chartsInitialized = false;
+        
+        // 检查ECharts库是否加载
+        if (typeof echarts === 'undefined') {
+            console.error('ECharts library not loaded!');
+        }
         
         // 初始化WebChannel
-        new QWebChannel(qt.webChannelTransport, function(channel) {
-            qtBridge = channel.objects.qtBridge;
-            console.log("WebChannel initialized");
-        });
+        if (typeof qt !== 'undefined' && qt.webChannelTransport) {
+            new QWebChannel(qt.webChannelTransport, function(channel) {
+                qtBridge = channel.objects.qtBridge;
+                console.log("WebChannel initialized");
+            });
+        } else {
+            console.error('Qt WebChannel not available!');
+        }
         
-        // 测试函数，用于更新图表
+        // 页面加载完成后初始化图表
+        window.onload = function() {
+            console.log('Page loaded, initializing charts...');
+            initCharts();
+        };
+        
+        // 初始化图表配置
+        function initCharts() {
+            if (typeof echarts === 'undefined') {
+                console.error('Cannot initialize charts: ECharts not loaded');
+                return;
+            }
+            
+            try {
+                // 检查DOM元素是否存在
+                var cpuElement = document.getElementById('cpuChart');
+                var memoryElement = document.getElementById('memoryChart');
+                var diskElement = document.getElementById('diskChart');
+                
+                if (!cpuElement || !memoryElement || !diskElement) {
+                    console.error('Chart container elements not found');
+                    return;
+                }
+                
+                // 初始化图表
+                cpuChart = echarts.init(cpuElement);
+                memoryChart = echarts.init(memoryElement);
+                diskChart = echarts.init(diskElement);
+                
+                console.log('Charts initialized successfully');
+                
+                // 设置初始图表配置
+                setInitialChartOptions();
+                chartsInitialized = true;
+            } catch (error) {
+                console.error('Error initializing charts:', error);
+            }
+        }
+        
+        // 设置初始图表选项
+        function setInitialChartOptions() {
+            // CPU使用率图表
+            if (cpuChart) {
+                cpuChart.setOption({
+                    title: {
+                        text: 'CPU使用率',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b}: {c}%'
+                    },
+                    series: [{
+                        name: 'CPU',
+                        type: 'gauge',
+                        detail: { formatter: '{value}%' },
+                        data: [{ value: 0, name: '使用率' }]
+                    }]
+                });
+            }
+            
+            // 内存使用率图表
+            if (memoryChart) {
+                memoryChart.setOption({
+                    title: {
+                        text: '内存使用率',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b}: {c}%'
+                    },
+                    series: [{
+                        name: '内存',
+                        type: 'gauge',
+                        detail: { formatter: '{value}%' },
+                        data: [{ value: 0, name: '使用率' }]
+                    }]
+                });
+            }
+            
+            // 磁盘使用率图表
+            if (diskChart) {
+                diskChart.setOption({
+                    title: {
+                        text: '磁盘使用率',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b}: {c}%'
+                    },
+                    series: [{
+                        name: '磁盘',
+                        type: 'gauge',
+                        detail: { formatter: '{value}%' },
+                        data: [{ value: 0, name: '使用率' }]
+                    }]
+                });
+            }
+        }
+        
+        // 更新服务器监控图表
         function updateServerCharts(data) {
             console.log("Received data for charts:", data);
-            document.getElementById('serverInfo').innerHTML = JSON.stringify(data, null, 2);
+            
+            // 更新系统信息
+            if (document.getElementById('serverIp')) {
+                document.getElementById('serverIp').textContent = data.ip_address || '未知';
+            }
+            if (document.getElementById('osInfo')) {
+                document.getElementById('osInfo').textContent = data.os_info || data.os || '未知';
+            }
+            if (document.getElementById('uptime')) {
+                document.getElementById('uptime').textContent = data.uptime_days ? data.uptime_days + '天' : data.uptime || '未知';
+            }
+            
+            // 确保图表已初始化
+            if (!chartsInitialized) {
+                console.log('Charts not initialized yet, trying to initialize now...');
+                initCharts();
+                if (!chartsInitialized) {
+                    console.error('Cannot update charts: charts not initialized');
+                    return;
+                }
+            }
+            
+            // 更新CPU使用率图表
+            var cpuUsage = data.cpu_usage || data.cpuUsage || 0;
+            if (cpuChart) {
+                cpuChart.setOption({
+                    series: [{
+                        data: [{ value: cpuUsage, name: '使用率' }]
+                    }]
+                });
+                console.log('CPU chart updated with value:', cpuUsage);
+            } else {
+                console.error('CPU chart object is null');
+            }
+            
+            // 更新内存使用率图表
+            var memoryUsage = data.mem_usage || data.memoryUsage || 0;
+            if (memoryChart) {
+                memoryChart.setOption({
+                    series: [{
+                        data: [{ value: memoryUsage, name: '使用率' }]
+                    }]
+                });
+                console.log('Memory chart updated with value:', memoryUsage);
+            } else {
+                console.error('Memory chart object is null');
+            }
+            
+            // 更新磁盘使用率图表
+            var diskUsage = data.disk_usage || data.diskUsage || 0;
+            if (diskChart) {
+                diskChart.setOption({
+                    series: [{
+                        data: [{ value: diskUsage, name: '使用率' }]
+                    }]
+                });
+                console.log('Disk chart updated with value:', diskUsage);
+            } else {
+                console.error('Disk chart object is null');
+            }
         }
     </script>
 </head>
 <body>
-    <h1>服务器配置</h1>
-    <p>页面加载成功！</p>
-    <pre id="serverInfo"></pre>
+    <h1>服务器配置监控</h1>
+    
+    <div class="system-info">
+        <div class="info-row">
+            <span class="info-label">服务器IP: </span>
+            <span id="serverIp">未知</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">操作系统: </span>
+            <span id="osInfo">未知</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">运行时间: </span>
+            <span id="uptime">未知</span>
+        </div>
+    </div>
+    
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-around;">
+        <div class="chart-container" id="cpuChart"></div>
+        <div class="chart-container" id="memoryChart"></div>
+        <div class="chart-container" id="diskChart"></div>
+    </div>
 </body>
 </html>
 )HTML";
