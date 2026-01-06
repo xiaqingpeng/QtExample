@@ -281,7 +281,7 @@ void MainUIWindow::setupSubMenuContent(const QString &mainMenu)
         new QListWidgetItem("统计报表", subMenuList);
     } else if (mainMenu.contains("设备信息")) {
         new QListWidgetItem("服务器配置", subMenuList);
-        new QListWidgetItem("内容", subMenuList);
+        new QListWidgetItem("电脑本机配置", subMenuList);
     } else if (mainMenu.contains("个人中心")) {
         new QListWidgetItem("用户信息", subMenuList);
         new QListWidgetItem("修改密码", subMenuList);
@@ -570,7 +570,7 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         contentWidget = new ReportsTab();
     } else if (subMenu.contains("服务器配置")) {
         contentWidget = new ServerConfigTab();
-    } else if (subMenu.contains("内容")) {
+    } else if (subMenu.contains("电脑本机配置")) {
         contentWidget = new ContentTab();
     } else if (subMenu.contains("用户信息")) {
         contentWidget = new UserInfoPage();
