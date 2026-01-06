@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QWebEngineView>
 #include <QWebChannel>
+#include <QThread>
 #include "networkmanager.h"
 #include "theme_manager.h"
 
@@ -23,6 +24,7 @@ public:
 private slots:
     void applyTheme();
     void onPageLoaded(bool ok);
+    void updateCharts(const QJsonObject &data);
 
 private:
     NetworkManager *m_networkManager;
@@ -30,10 +32,11 @@ private:
     QWebEngineView *m_webView;
     QWebChannel *m_channel;
     ServerConfigBridge *m_bridge;
+    bool m_pageLoaded;
+    QJsonObject m_pendingData;
     
     void setupUI();
     void fetchSystemInfo();
-    void updateCharts(const QJsonObject &data);
 };
 
 #endif // CONTENTTAB_H
