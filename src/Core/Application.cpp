@@ -50,7 +50,7 @@ void Application::initialize()
         return;
     }
 
-    qDebug() << "Initializing Qt Enterprise Application...";
+    // qDebug() << "Initializing Qt Enterprise Application...";
 
     // 设置应用程序目录
     QString appDataDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -64,7 +64,7 @@ void Application::initialize()
     m_initialized = true;
     emit applicationInitialized();
 
-    qDebug() << "Qt Enterprise Application initialized successfully";
+    // qDebug() << "Qt Enterprise Application initialized successfully";
 }
 
 ServiceManager* Application::serviceManager() const
@@ -83,7 +83,7 @@ void Application::shutdown()
         return;
     }
 
-    qDebug() << "Shutting down Qt Enterprise Application...";
+    // qDebug() << "Shutting down Qt Enterprise Application...";
 
     emit applicationShutdown();
 
@@ -93,22 +93,22 @@ void Application::shutdown()
     }
 
     m_initialized = false;
-    qDebug() << "Qt Enterprise Application shutdown complete";
+    // qDebug() << "Qt Enterprise Application shutdown complete";
 }
 
 void Application::setupServices()
 {
-    qDebug() << "Setting up services...";
+    // qDebug() << "Setting up services...";
 
     // Service creation will be done by the main application
     // after all libraries are linked properly
     
-    qDebug() << "Services setup placeholder complete";
+    // qDebug() << "Services setup placeholder complete";
 }
 
 void Application::setupLocalization()
 {
-    qDebug() << "Setting up localization...";
+    // qDebug() << "Setting up localization...";
 
     // 初始化本地化管理器
     LocalizationManager::instance()->initialize();
@@ -117,15 +117,15 @@ void Application::setupLocalization()
     QString systemLocale = QLocale::system().name();
     LocalizationManager::instance()->setLanguage(systemLocale);
 
-    qDebug() << "Localization setup complete, system locale:" << systemLocale;
+    // qDebug() << "Localization setup complete, system locale:" << systemLocale;
 }
 
 void Application::setupTheme()
 {
-    qDebug() << "Setting up theme system...";
+    // qDebug() << "Setting up theme system...";
 
     // 初始化主题管理器
     ThemeManager::instance();
 
-    qDebug() << "Theme system setup complete";
+    // qDebug() << "Theme system setup complete";
 }

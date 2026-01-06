@@ -25,30 +25,30 @@ ContentTab::ContentTab(QWidget *parent)
     mainLayout->setSpacing(20);
     
     // 创建WebView用于显示图表
-    qDebug() << "[ContentTab] Creating WebView";
+    // qDebug() << "[ContentTab] Creating WebView";
     m_webView = new QWebEngineView(this);
     m_webView->setObjectName("webView");
     
     // 配置WebEngineView设置
     QWebEngineSettings *settings = m_webView->settings();
-    qDebug() << "[ContentTab] Setting up WebEngine settings";
+    // qDebug() << "[ContentTab] Setting up WebEngine settings";
     settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
     settings->setAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls, true);
     settings->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls, true);
     settings->setAttribute(QWebEngineSettings::ErrorPageEnabled, true);
     
     // 检查设置是否生效
-    qDebug() << "[ContentTab] JavaScriptEnabled:" << settings->testAttribute(QWebEngineSettings::JavascriptEnabled);
-    qDebug() << "[ContentTab] LocalContentCanAccessRemoteUrls:" << settings->testAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls);
-    qDebug() << "[ContentTab] LocalContentCanAccessFileUrls:" << settings->testAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls);
+    // qDebug() << "[ContentTab] JavaScriptEnabled:" << settings->testAttribute(QWebEngineSettings::JavascriptEnabled);
+    // qDebug() << "[ContentTab] LocalContentCanAccessRemoteUrls:" << settings->testAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls);
+    // qDebug() << "[ContentTab] LocalContentCanAccessFileUrls:" << settings->testAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls);
     
     // 连接所有相关信号，用于调试
     connect(m_webView->page(), &QWebEnginePage::loadStarted, this, [this]() {
-        qDebug() << "[ContentTab] Page load started:" << m_webView->url().toString();
+        // qDebug() << "[ContentTab] Page load started:" << m_webView->url().toString();
     });
     
     connect(m_webView->page(), &QWebEnginePage::loadProgress, this, [](int progress) {
-        qDebug() << "[ContentTab] Page load progress:" << progress << "%";
+        // qDebug() << "[ContentTab] Page load progress:" << progress << "%";
     });
     
     connect(m_webView, &QWebEngineView::loadFinished, this, &ContentTab::onPageLoaded);
@@ -58,12 +58,12 @@ ContentTab::ContentTab(QWidget *parent)
         if (!ok) {
             qWarning() << "[ContentTab] Page load failed";
         } else {
-            qDebug() << "[ContentTab] Page load succeeded";
+            // qDebug() << "[ContentTab] Page load succeeded";
         }
     });
     
     // 创建WebChannel用于Qt与JS通信
-    qDebug() << "[ContentTab] Creating WebChannel";
+    // qDebug() << "[ContentTab] Creating WebChannel";
     m_channel = new QWebChannel(this);
     m_bridge = new ServerConfigBridge(this);
     
@@ -87,7 +87,7 @@ ContentTab::ContentTab(QWidget *parent)
     fetchSystemInfo();
     
     // 使用包含WebChannel初始化的HTML内容
-    qDebug() << "[ContentTab] Loading HTML content with WebChannel support";
+    // qDebug() << "[ContentTab] Loading HTML content with WebChannel support";
     QString htmlContent = R"HTML(
 <html>
 <head>
@@ -754,24 +754,24 @@ ContentTab::ContentTab(QWidget *parent)
 )HTML";
     
     // 提前开始获取系统信息，而不是等页面加载完成
-    qDebug() << "[ContentTab] 提前开始获取系统信息...";
+    // qDebug() << "[ContentTab] 提前开始获取系统信息...";
     fetchSystemInfo();
     
     // 加载HTML内容
-    qDebug() << "[ContentTab] HTML内容长度:" << htmlContent.length();
-    qDebug() << "[ContentTab] 开始加载HTML内容...";
+    // qDebug() << "[ContentTab] HTML内容长度:" << htmlContent.length();
+    // qDebug() << "[ContentTab] 开始加载HTML内容...";
     m_webView->setHtml(htmlContent, QUrl("qrc:/html/serverconfig.html"));
     
     // 立即检查WebEngineView状态
-    qDebug() << "[ContentTab] WebView页面地址:" << m_webView->url().toString();
-    qDebug() << "[ContentTab] WebView标题:" << m_webView->title();
+    // qDebug() << "[ContentTab] WebView页面地址:" << m_webView->url().toString();
+    // qDebug() << "[ContentTab] WebView标题:" << m_webView->title();
     
     // WebChannel将在页面加载完成后设置
     
     // 应用主题
     applyTheme();
     
-    qDebug() << "[ContentTab] Constructor finished";
+    // qDebug() << "[ContentTab] Constructor finished";
 }
 
 ContentTab::~ContentTab()
@@ -779,22 +779,22 @@ ContentTab::~ContentTab()
 }
 
 void ContentTab::onPageLoaded(bool ok){
-    qDebug() << "[ContentTab] ********************页面加载完成回调********************";
-    qDebug() << "[ContentTab] 加载状态:" << ok;
-    qDebug() << "[ContentTab] 页面标题:" << m_webView->title();
-    qDebug() << "[ContentTab] 页面URL:" << m_webView->url().toString();
-    qDebug() << "[ContentTab] WebView是否可见:" << m_webView->isVisible();
-    qDebug() << "[ContentTab] WebView尺寸:" << m_webView->size();
+    // qDebug() << "[ContentTab] ********************页面加载完成回调********************";
+    // qDebug() << "[ContentTab] 加载状态:" << ok;
+    // qDebug() << "[ContentTab] 页面标题:" << m_webView->title();
+    // qDebug() << "[ContentTab] 页面URL:" << m_webView->url().toString();
+    // qDebug() << "[ContentTab] WebView是否可见:" << m_webView->isVisible();
+    // qDebug() << "[ContentTab] WebView尺寸:" << m_webView->size();
     
     // 检查WebChannel状态
     if (m_webView->page()->webChannel()) {
-        qDebug() << "[ContentTab] WebChannel is set up after page load";
+        // qDebug() << "[ContentTab] WebChannel is set up after page load";
     } else {
         qWarning() << "[ContentTab] WebChannel is NOT set up after page load";
         // 再次尝试设置WebChannel
         m_webView->page()->setWebChannel(m_channel);
         if (m_webView->page()->webChannel()) {
-            qDebug() << "[ContentTab] WebChannel set up successfully after retry";
+            // qDebug() << "[ContentTab] WebChannel set up successfully after retry";
         } else {
             qCritical() << "[ContentTab] Failed to set up WebChannel after retry";
         }
@@ -802,11 +802,11 @@ void ContentTab::onPageLoaded(bool ok){
     
     if (ok) {
             m_pageLoaded = true;
-            qDebug() << "[ContentTab] Server config page loaded successfully";
+            // qDebug() << "[ContentTab] Server config page loaded successfully";
             
             // 检查是否有待处理的数据
             if (!m_pendingData.isEmpty()) {
-                qDebug() << "[ContentTab] Processing cached data after page load";
+                // qDebug() << "[ContentTab] Processing cached data after page load";
                 updateCharts(m_pendingData);
                 m_pendingData = QJsonObject(); // 清空缓存
             }
@@ -814,17 +814,17 @@ void ContentTab::onPageLoaded(bool ok){
         // 获取页面内容验证
         m_webView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
             QString content = result.toString();
-            qDebug() << "[ContentTab] Page content loaded:" << content;
+            // qDebug() << "[ContentTab] Page content loaded:" << content;
         });
         
         // 获取页面标题验证
         m_webView->page()->runJavaScript("document.title", [](const QVariant &result) {
-            qDebug() << "[ContentTab] Page title from JS:" << result.toString();
+            // qDebug() << "[ContentTab] Page title from JS:" << result.toString();
         });
         
         // 简单的测试JavaScript执行
         m_webView->page()->runJavaScript("'Hello from JavaScript: ' + (new Date()).toLocaleString()", [](const QVariant &result) {
-            qDebug() << "[ContentTab] JavaScript execution result:" << result.toString();
+            // qDebug() << "[ContentTab] JavaScript execution result:" << result.toString();
         });
         
         // 如果系统信息已经获取完成，直接更新图表
@@ -839,21 +839,21 @@ void ContentTab::onPageLoaded(bool ok){
         
         // 尝试获取浏览器错误信息
         m_webView->page()->runJavaScript("window.navigator.userAgent", [](const QVariant &result) {
-            qDebug() << "[ContentTab] User Agent:" << result.toString();
+            // qDebug() << "[ContentTab] User Agent:" << result.toString();
         });
     }
 }
 
 void ContentTab::refreshSystemInfo()
 {
-    qDebug() << "[ContentTab] 刷新系统信息数据";
+    // qDebug() << "[ContentTab] 刷新系统信息数据";
     fetchSystemInfo();
 }
 
 // 获取本地系统信息
 void ContentTab::fetchSystemInfo()
 {
-    qDebug() << "[ContentTab] Fetching system info...";
+    // qDebug() << "[ContentTab] Fetching system info...";
     
     // 创建一个临时的系统信息对象，用于显示默认值
     QJsonObject defaultInfo;
@@ -990,9 +990,9 @@ void ContentTab::fetchSystemInfo()
     
     // 同时尝试从网络获取系统信息
     if (m_networkManager) {
-        qDebug() << "[ContentTab] Attempting to fetch system info from network...";
+        // qDebug() << "[ContentTab] Attempting to fetch system info from network...";
         m_networkManager->get("/system/info", [this](const QJsonObject &response) {
-            qDebug() << "[ContentTab] Network response received:" << response;
+            // qDebug() << "[ContentTab] Network response received:" << response;
             if (response["code"].toInt() == 0) {
                 QJsonObject data = response["data"].toObject();
                 
@@ -1070,7 +1070,7 @@ void ContentTab::fetchSystemInfo()
                     data["os_info"] = data["os"];
                 }
                 
-                qDebug() << "[ContentTab] Network system info received with processed data:" << data;
+                // qDebug() << "[ContentTab] Network system info received with processed data:" << data;
                 updateCharts(data);
             } else {
                 qWarning() << "[ContentTab] Failed to fetch real system info:" << response["msg"].toString();
@@ -1088,7 +1088,7 @@ void ContentTab::updateCharts(const QJsonObject &data)
     if (!m_pageLoaded) {
         // 页面未加载完成，缓存数据
         m_pendingData = data;
-        qDebug() << "[ContentTab] Page not loaded yet, caching data:" << QJsonDocument(data).toJson(QJsonDocument::Compact).left(100) << "...";
+        // qDebug() << "[ContentTab] Page not loaded yet, caching data:" << QJsonDocument(data).toJson(QJsonDocument::Compact).left(100) << "...";
         return;
     }
     
@@ -1100,7 +1100,7 @@ void ContentTab::updateCharts(const QJsonObject &data)
     QString jsonData = QJsonDocument(data).toJson(QJsonDocument::Compact);
     QString script = QString("updateServerCharts(%1);").arg(jsonData);
     
-    qDebug() << "[ContentTab] Running JavaScript to update charts:" << script.left(100) << "...";
+    // qDebug() << "[ContentTab] Running JavaScript to update charts:" << script.left(100) << "...";
     
     m_webView->page()->runJavaScript(script);
 }

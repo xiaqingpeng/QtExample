@@ -26,22 +26,22 @@ int main(int argc, char *argv[])
     
     // 连接信号用于调试
     QObject::connect(webView->page(), &QWebEnginePage::loadStarted, []() {
-        qDebug() << "页面加载开始";
+        // qDebug() << "页面加载开始";
     });
     
     QObject::connect(webView->page(), &QWebEnginePage::loadProgress, [](int progress) {
-        qDebug() << "页面加载进度:" << progress << "%";
+        // qDebug() << "页面加载进度:" << progress << "%";
     });
     
     QObject::connect(webView, &QWebEngineView::loadFinished, [webView](bool ok) {
-        qDebug() << "页面加载完成, 状态:" << ok;
-        qDebug() << "页面标题:" << webView->title();
-        qDebug() << "页面URL:" << webView->url().toString();
+        // qDebug() << "页面加载完成, 状态:" << ok;
+        // qDebug() << "页面标题:" << webView->title();
+        // qDebug() << "页面URL:" << webView->url().toString();
         
         // 获取页面内容
         webView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
             QString content = result.toString();
-            qDebug() << "页面内容:" << content;
+            // qDebug() << "页面内容:" << content;
         });
     });
     

@@ -21,7 +21,7 @@ void DependencyContainer::clear()
 {
     QMutexLocker locker(&m_mutex);
     
-    qDebug() << "Clearing DependencyContainer, services count:" << m_services.size();
+    // qDebug() << "Clearing DependencyContainer, services count:" << m_services.size();
     
     // 清理所有单例实例
     for (auto it = m_services.begin(); it != m_services.end(); ++it) {
@@ -32,5 +32,5 @@ void DependencyContainer::clear()
     }
     
     m_services.clear();
-    qDebug() << "DependencyContainer cleared";
+    // qDebug() << "DependencyContainer cleared";
 }

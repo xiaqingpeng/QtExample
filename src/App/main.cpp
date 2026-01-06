@@ -28,7 +28,7 @@ void initializeEnterpriseServices(Application* app)
     auto analyticsService = new AnalyticsService(networkService, app);
     serviceManager->registerService("AnalyticsService", analyticsService);
 
-    qDebug() << "Enterprise services initialized successfully";
+    // qDebug() << "Enterprise services initialized successfully";
 }
 
 int main(int argc, char *argv[])
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     // 使用企业级应用程序类作为标准
     Application app(argc, argv);
     
-    qDebug() << "Using Qt Enterprise Architecture";
+    // qDebug() << "Using Qt Enterprise Architecture";
     
     // 初始化企业级应用程序
     app.initialize();

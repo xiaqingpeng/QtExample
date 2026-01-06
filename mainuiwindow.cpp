@@ -1109,7 +1109,7 @@ void MainUIWindow::initializeEnterpriseServices()
         qWarning() << "Authentication Service not available!";
     }
 
-    qDebug() << "Enterprise services initialized successfully";
+    // qDebug() << "Enterprise services initialized successfully";
 }
 
 void MainUIWindow::onAuthenticationChanged(bool authenticated)

@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     app.initialize();
     
     // 简单测试 - 不显示UI
-    qDebug() << "Enterprise Application initialized successfully";
+    // qDebug() << "Enterprise Application initialized successfully";
     
     return 0; // 立即退出，只测试初始化
 }

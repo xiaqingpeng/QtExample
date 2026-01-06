@@ -37,7 +37,7 @@ void LocalizationManager::initialize()
         return;
     }
 
-    qDebug() << "Initializing LocalizationManager...";
+    // qDebug() << "Initializing LocalizationManager...";
 
     loadLanguageInfo();
     loadTranslations();
@@ -59,7 +59,7 @@ void LocalizationManager::initialize()
     }
 
     m_initialized = true;
-    qDebug() << "LocalizationManager initialized, current language:" << m_currentLanguage;
+    // qDebug() << "LocalizationManager initialized, current language:" << m_currentLanguage;
 }
 
 void LocalizationManager::setLanguage(const QString& languageCode)
@@ -73,7 +73,7 @@ void LocalizationManager::setLanguage(const QString& languageCode)
         return;
     }
 
-    qDebug() << "Changing language from" << m_currentLanguage << "to" << languageCode;
+    // qDebug() << "Changing language from" << m_currentLanguage << "to" << languageCode;
 
     // 移除旧的翻译器
     if (m_translator) {
@@ -88,14 +88,14 @@ void LocalizationManager::setLanguage(const QString& languageCode)
         m_translator = new QTranslator(this);
         if (m_translator->load(translationFile)) {
             QCoreApplication::installTranslator(m_translator);
-            qDebug() << "Translation loaded successfully:" << translationFile;
+            // qDebug() << "Translation loaded successfully:" << translationFile;
         } else {
             qWarning() << "Failed to load translation:" << translationFile;
             delete m_translator;
             m_translator = nullptr;
         }
     } else {
-        qDebug() << "Translation file not found:" << translationFile;
+        // qDebug() << "Translation file not found:" << translationFile;
     }
 
     m_currentLanguage = languageCode;
@@ -164,7 +164,7 @@ void LocalizationManager::loadTranslations()
         dir.setPath(translationsDir);
     }
 
-    qDebug() << "Loading translations from:" << translationsDir;
+    // qDebug() << "Loading translations from:" << translationsDir;
 
     QStringList filters;
     filters << "app_*.qm";
@@ -178,7 +178,7 @@ void LocalizationManager::loadTranslations()
         
         if (!languageCode.isEmpty()) {
             m_availableLanguages.append(languageCode);
-            qDebug() << "Found translation for language:" << languageCode;
+            // qDebug() << "Found translation for language:" << languageCode;
         }
     }
 

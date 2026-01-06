@@ -33,7 +33,7 @@ void ServiceManager::registerService(const QString& name, QObject* service)
         service->setParent(this);
     }
 
-    qDebug() << "Service registered:" << name;
+    // qDebug() << "Service registered:" << name;
     emit serviceRegistered(name, service);
 }
 
@@ -63,7 +63,7 @@ void ServiceManager::removeService(const QString& name)
         service->deleteLater();
     }
 
-    qDebug() << "Service removed:" << name;
+    // qDebug() << "Service removed:" << name;
     emit serviceRemoved(name);
 }
 
@@ -77,14 +77,14 @@ void ServiceManager::shutdown()
 {
     QMutexLocker locker(&m_mutex);
     
-    qDebug() << "Shutting down ServiceManager, services count:" << m_services.size();
+    // qDebug() << "Shutting down ServiceManager, services count:" << m_services.size();
     
     // 清理所有服务
     for (auto it = m_services.begin(); it != m_services.end(); ++it) {
         const QString& name = it.key();
         QObject* service = it.value();
         
-        qDebug() << "Shutting down service:" << name;
+        // qDebug() << "Shutting down service:" << name;
         
         if (service) {
             service->deleteLater();
@@ -94,5 +94,5 @@ void ServiceManager::shutdown()
     }
     
     m_services.clear();
-    qDebug() << "ServiceManager shutdown complete";
+    // qDebug() << "ServiceManager shutdown complete";
 }
