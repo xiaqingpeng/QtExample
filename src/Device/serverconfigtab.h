@@ -22,7 +22,7 @@ public slots:
     }
 };
 
-class ServerConfigTab : public QMainWindow
+class ServerConfigTab : public QWidget
 {
     Q_OBJECT
 

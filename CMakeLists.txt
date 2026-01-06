@@ -134,7 +134,9 @@ target_link_libraries(ECharts PRIVATE
     NetworkManager
     Analytics
     Styles
+    Device
 )
+
 target_include_directories(ECharts PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/styles
@@ -192,6 +194,9 @@ add_subdirectory(userinfo)
 
 # Analytics埋点SDK模块
 add_subdirectory(analytics)
+
+# Device模块
+add_subdirectory(src/Device)
 
 # 添加依赖关系，确保 NetworkManager 先于依赖它的模块构建
 add_dependencies(ChangePasswordPage NetworkManager)
@@ -271,6 +276,7 @@ target_link_libraries(QTExample PRIVATE
     UserInfo
     Analytics
     Styles
+    Device
 )
 
 # 包含模块头文件目录
@@ -289,6 +295,7 @@ target_include_directories(QTExample PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/userinfo
     ${CMAKE_CURRENT_SOURCE_DIR}/analytics
     ${CMAKE_CURRENT_SOURCE_DIR}/styles
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Device
 )
 
 # 安装规则
@@ -303,6 +310,8 @@ install(TARGETS NetworkManager ECharts UserProfileTab ReportsTab LoginPage Chang
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+
 
 # 复制共享库到应用程序的Frameworks目录中
 set_target_properties(QTExample PROPERTIES

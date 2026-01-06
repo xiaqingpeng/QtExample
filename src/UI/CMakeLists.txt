@@ -17,6 +17,7 @@ target_link_libraries(ui
     userprofile
     charts
     reports
+    device
     styles
     utils
 )

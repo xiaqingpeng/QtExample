@@ -20,3 +20,6 @@ INCLUDEPATH += ../Core
 INCLUDEPATH += ../Services
 INCLUDEPATH += ../Network
 INCLUDEPATH += ../Styles
+
+# 资源文件
+RESOURCES += ../../layoutexamplestab.qrc
