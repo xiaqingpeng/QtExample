@@ -201,7 +201,8 @@ void NetworkManager::getWithRetry(const QString &url,
     
     // 打印GET请求信息（格式与POST保持一致）
     QString queryData = queryParams.isEmpty() ? "(无查询参数)" : queryParams.toString();
-    LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << queryData;
+
+    // LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << queryData;
     
     // 发送GET请求
     QNetworkReply *reply = m_networkManager->get(request);
@@ -446,7 +447,7 @@ void NetworkManager::post(const QString &url,
     QJsonDocument doc(data);
     QByteArray jsonData = doc.toJson();
     
-    LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << doc.toJson(QJsonDocument::Compact);
+    // LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << doc.toJson(QJsonDocument::Compact);
     
     
     QNetworkReply *reply = m_networkManager->post(request, jsonData);
@@ -520,6 +521,9 @@ void NetworkManager::handleResponse(QNetworkReply *reply,
         // 获取请求的URL
         QString requestUrl = reply->request().url().toString();
         LOG_DEBUG() << "请求URL:" << requestUrl << "请求响应数据:" << doc.toJson(QJsonDocument::Compact);
+
+      
+
         if (doc.isObject()) {
             QJsonObject rootObj = doc.object();
             if (successCallback) {

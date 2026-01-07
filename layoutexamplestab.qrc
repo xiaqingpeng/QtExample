@@ -7,8 +7,13 @@
         <file>images/pony_holding_envelope.png</file>
         <file>images/pony_gold_ingot.png</file>
         <file>images/pony_dumplings.png</file>
+        <!-- 原始路径 -->
         <file>src/ECharts/echarts.min.js</file>
         <file>src/ECharts/chart.html</file>
         <file>src/ECharts/server_config.html</file>
+        <!-- 为 qrc:/echarts/ECharts/... 兼容添加别名 -->
+        <file alias="echarts/ECharts/echarts.min.js">src/ECharts/echarts.min.js</file>
+        <file alias="echarts/ECharts/chart.html">src/ECharts/chart.html</file>
+        <file alias="echarts/ECharts/server_config.html">src/ECharts/server_config.html</file>
     </qresource>
 </RCC>
