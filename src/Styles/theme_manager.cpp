@@ -10,7 +10,7 @@ const QString ThemeManager::Shadow::LG = "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0
 const QString ThemeManager::Shadow::XL = "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)";
 
 // 字体定义
-const QString ThemeManager::Typography::FONT_FAMILY = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+const QString ThemeManager::Typography::FONT_FAMILY = "Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif";
 
 ThemeManager::ThemeManager(QObject *parent) : QObject(parent), m_currentTheme(LIGHT)
 {
