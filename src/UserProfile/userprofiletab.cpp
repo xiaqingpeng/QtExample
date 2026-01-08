@@ -194,8 +194,8 @@ void UserProfileTab::loadUserList()
 {
     NetworkManager *networkManager = new NetworkManager(this);
     
-    // 获取用户列表（第一页，每页100个用户）
-    networkManager->getTopUsers(1, 100,
+    // 获取用户列表（第一页，每页20个用户）
+    networkManager->getTopUsers(1, 20,
         [this](const QJsonObject &response) {
             if (response["success"].toBool()) {
                 QJsonObject data = response["data"].toObject();

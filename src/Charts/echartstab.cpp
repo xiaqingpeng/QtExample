@@ -511,9 +511,9 @@ void EChartsTab::fetchApiData()
         queryParams.addQueryItem("endTime", endTime);
     }
     
-    // 添加分页参数（获取更多数据）
+    // 添加分页参数（合理的数据量用于图表展示）
     queryParams.addQueryItem("pageNum", "1");
-    queryParams.addQueryItem("pageSize", "1000");
+    queryParams.addQueryItem("pageSize", "20");  // 减少到20条，对图表展示足够了
     
     m_networkManager->get(apiUrl, [this, timer](const QJsonObject &rootObj) {
         // 记录API请求成功性能
