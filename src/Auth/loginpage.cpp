@@ -1,5 +1,6 @@
 #include "loginpage.h"
 #include "../Styles/theme_manager.h"
+#include "../Localization/LocalizationManager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -52,8 +53,15 @@ LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
     connect(ThemeManager::instance(), &ThemeManager::themeChanged, 
             this, &LoginPage::onThemeChanged);
     
+    // 连接语言变化信号
+    connect(LocalizationManager::instance(), &LocalizationManager::languageChanged,
+            this, &LoginPage::retranslateUi);
+    
     // 应用当前主题
     applyTheme();
+    
+    // 初始化界面文本（使用当前语言）
+    retranslateUi();
 }
 
 LoginPage::~LoginPage()
@@ -78,7 +86,7 @@ void LoginPage::setupLoginUI()
     topBarLayout->setContentsMargins(24, 0, 24, 0);
     
     // Logo标签
-    QLabel *logoLabel = new QLabel("Qt 现代化应用");
+    QLabel *logoLabel = new QLabel(tr("Qt 现代化应用"));
     logoLabel->setObjectName("logoLabel");
     topBarLayout->addStretch();
     topBarLayout->addWidget(logoLabel);
@@ -103,7 +111,7 @@ void LoginPage::setupLoginUI()
     cardLayout->setContentsMargins(40, 40, 40, 40);
 
     // 标题
-    QLabel *titleLabel = new QLabel("欢迎登录");
+    QLabel *titleLabel = new QLabel(tr("欢迎登录"));
     titleLabel->setObjectName("loginTitle");
     titleLabel->setAlignment(Qt::AlignCenter);
     cardLayout->addWidget(titleLabel);
@@ -115,27 +123,27 @@ void LoginPage::setupLoginUI()
     // 邮箱输入
     m_loginEmail = new QLineEdit();
     m_loginEmail->setObjectName("loginEmail");
-    m_loginEmail->setPlaceholderText("邮箱/手机号");
+    m_loginEmail->setPlaceholderText(tr("邮箱/手机号"));
     m_loginEmail->setMinimumHeight(44);
     formLayout->addWidget(m_loginEmail);
 
     // 密码输入
     m_loginPassword = new QLineEdit();
     m_loginPassword->setObjectName("loginPassword");
-    m_loginPassword->setPlaceholderText("密码");
+    m_loginPassword->setPlaceholderText(tr("密码"));
     m_loginPassword->setEchoMode(QLineEdit::Password);
     m_loginPassword->setMinimumHeight(44);
     formLayout->addWidget(m_loginPassword);
 
     // 记住密码复选框
-    m_rememberPassword = new QCheckBox("记住密码");
+    m_rememberPassword = new QCheckBox(tr("记住密码"));
     m_rememberPassword->setObjectName("rememberPassword");
     formLayout->addWidget(m_rememberPassword);
 
     cardLayout->addLayout(formLayout);
 
     // 登录按钮
-    m_loginButton = new QPushButton("登录");
+    m_loginButton = new QPushButton(tr("登录"));
     m_loginButton->setObjectName("loginButton");
     m_loginButton->setMinimumHeight(44);
     cardLayout->addWidget(m_loginButton);
@@ -148,7 +156,7 @@ void LoginPage::setupLoginUI()
     cardLayout->addWidget(m_loginMessage);
 
     // 切换到注册按钮
-    m_switchToRegisterButton = new QPushButton("还没有账号？立即注册");
+    m_switchToRegisterButton = new QPushButton(tr("还没有账号？立即注册"));
     m_switchToRegisterButton->setObjectName("switchButton");
     cardLayout->addWidget(m_switchToRegisterButton);
 
@@ -186,7 +194,7 @@ void LoginPage::setupRegisterUI()
     topBarLayout->setContentsMargins(24, 0, 24, 0);
     
     // Logo标签
-    QLabel *logoLabel = new QLabel("Qt 现代化应用");
+    QLabel *logoLabel = new QLabel(tr("Qt 现代化应用"));
     logoLabel->setObjectName("logoLabel");
     topBarLayout->addStretch();
     topBarLayout->addWidget(logoLabel);
@@ -211,7 +219,7 @@ void LoginPage::setupRegisterUI()
     cardLayout->setContentsMargins(40, 40, 40, 40);
 
     // 标题
-    QLabel *titleLabel = new QLabel("注册账号");
+    QLabel *titleLabel = new QLabel(tr("注册账号"));
     titleLabel->setObjectName("registerTitle");
     titleLabel->setAlignment(Qt::AlignCenter);
     cardLayout->addWidget(titleLabel);
@@ -223,21 +231,21 @@ void LoginPage::setupRegisterUI()
     // 用户名输入
     m_registerUsername = new QLineEdit();
     m_registerUsername->setObjectName("registerUsername");
-    m_registerUsername->setPlaceholderText("昵称");
+    m_registerUsername->setPlaceholderText(tr("昵称"));
     m_registerUsername->setMinimumHeight(44);
     formLayout->addWidget(m_registerUsername);
 
     // 邮箱输入
     m_registerEmail = new QLineEdit();
     m_registerEmail->setObjectName("registerEmail");
-    m_registerEmail->setPlaceholderText("邮箱");
+    m_registerEmail->setPlaceholderText(tr("邮箱"));
     m_registerEmail->setMinimumHeight(44);
     formLayout->addWidget(m_registerEmail);
 
     // 密码输入
     m_registerPassword = new QLineEdit();
     m_registerPassword->setObjectName("registerPassword");
-    m_registerPassword->setPlaceholderText("密码");
+    m_registerPassword->setPlaceholderText(tr("密码"));
     m_registerPassword->setEchoMode(QLineEdit::Password);
     m_registerPassword->setMinimumHeight(44);
     formLayout->addWidget(m_registerPassword);
@@ -245,7 +253,7 @@ void LoginPage::setupRegisterUI()
     // 确认密码输入
     m_registerConfirmPassword = new QLineEdit();
     m_registerConfirmPassword->setObjectName("registerConfirmPassword");
-    m_registerConfirmPassword->setPlaceholderText("确认密码");
+    m_registerConfirmPassword->setPlaceholderText(tr("确认密码"));
     m_registerConfirmPassword->setEchoMode(QLineEdit::Password);
     m_registerConfirmPassword->setMinimumHeight(44);
     formLayout->addWidget(m_registerConfirmPassword);
@@ -253,7 +261,7 @@ void LoginPage::setupRegisterUI()
     cardLayout->addLayout(formLayout);
 
     // 注册按钮
-    m_registerButton = new QPushButton("注册");
+    m_registerButton = new QPushButton(tr("注册"));
     m_registerButton->setObjectName("registerButton");
     m_registerButton->setMinimumHeight(44);
     cardLayout->addWidget(m_registerButton);
@@ -266,7 +274,7 @@ void LoginPage::setupRegisterUI()
     cardLayout->addWidget(m_registerMessage);
 
     // 切换到登录按钮
-    m_switchToLoginButton = new QPushButton("已有账号？立即登录");
+    m_switchToLoginButton = new QPushButton(tr("已有账号？立即登录"));
     m_switchToLoginButton->setObjectName("switchButton");
     cardLayout->addWidget(m_switchToLoginButton);
 
@@ -301,11 +309,12 @@ void LoginPage::onLoginClicked()
 
     if (email.isEmpty() || password.isEmpty()) {
         // 追踪表单验证错误
-        Analytics::SDK::instance()->trackError("validation_error", "邮箱和密码不能为空", {
+        QString errorMsg = tr("邮箱和密码不能为空");
+        Analytics::SDK::instance()->trackError("validation_error", errorMsg, {
             {"page", "login"},
             {"error_field", email.isEmpty() ? "email" : "password"}
         });
-        showError("邮箱和密码不能为空");
+        showError(errorMsg);
         return;
     }
 
@@ -314,7 +323,7 @@ void LoginPage::onLoginClicked()
     timer.start();
     
     m_loginButton->setEnabled(false);
-    m_loginButton->setText("登录中...");
+    m_loginButton->setText(tr("登录中..."));
 
     QJsonObject json;
     json["email"] = email;
@@ -369,7 +378,7 @@ void LoginPage::onLoginClicked()
                 {"status", "success"}
             });
             
-            showSuccess("登录成功！");
+            showSuccess(tr("登录成功！"));
             emit loginSuccess(cookie);
         } else {
             // 追踪登录失败事件
@@ -390,7 +399,7 @@ void LoginPage::onLoginClicked()
         }
 
         m_loginButton->setEnabled(true);
-        m_loginButton->setText("登录");
+        m_loginButton->setText(tr("登录"));
     },
     [this, timer](const QString &errorMsg) {
         // 记录登录失败性能
@@ -404,10 +413,10 @@ void LoginPage::onLoginClicked()
         
         // 错误回调
         // 登录错误
-        showError("网络错误：" + errorMsg);
+        showError(tr("网络错误：%1").arg(errorMsg));
 
         m_loginButton->setEnabled(true);
-        m_loginButton->setText("登录");
+        m_loginButton->setText(tr("登录"));
     });
 }
 
@@ -426,20 +435,22 @@ void LoginPage::onRegisterClicked()
 
     if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
         // 追踪表单验证错误
-        Analytics::SDK::instance()->trackError("validation_error", "用户名、邮箱和密码不能为空", {
+        QString errorMsg = tr("用户名、邮箱和密码不能为空");
+        Analytics::SDK::instance()->trackError("validation_error", errorMsg, {
             {"page", "register"}
         });
-        showError("用户名、邮箱和密码不能为空");
+        showError(errorMsg);
         return;
     }
 
     if (password != confirmPassword) {
         // 追踪表单验证错误
-        Analytics::SDK::instance()->trackError("validation_error", "两次输入的密码不一致", {
+        QString errorMsg = tr("两次输入的密码不一致");
+        Analytics::SDK::instance()->trackError("validation_error", errorMsg, {
             {"page", "register"},
             {"error_field", "password_confirm"}
         });
-        showError("两次输入的密码不一致");
+        showError(errorMsg);
         return;
     }
 
@@ -448,7 +459,7 @@ void LoginPage::onRegisterClicked()
     timer.start();
     
     m_registerButton->setEnabled(false);
-    m_registerButton->setText("注册中...");
+    m_registerButton->setText(tr("注册中..."));
 
     QJsonObject json;
     json["username"] = username;
@@ -481,7 +492,7 @@ void LoginPage::onRegisterClicked()
                 {"status", "success"}
             });
             
-            showSuccess("注册成功！请登录");
+            showSuccess(tr("注册成功！请登录"));
             // 延迟1秒后切换到登录页面
             QTimer::singleShot(1000, this, &LoginPage::onSwitchToLogin);
         } else {
@@ -503,7 +514,7 @@ void LoginPage::onRegisterClicked()
         }
 
         m_registerButton->setEnabled(true);
-        m_registerButton->setText("注册");
+        m_registerButton->setText(tr("注册"));
     },
     [this, timer](const QString &errorMsg) {
         // 记录注册失败性能
@@ -517,10 +528,10 @@ void LoginPage::onRegisterClicked()
         
         // 错误回调
         // 注册错误
-        showError("网络错误：" + errorMsg);
+        showError(tr("网络错误：%1").arg(errorMsg));
 
         m_registerButton->setEnabled(true);
-        m_registerButton->setText("注册");
+        m_registerButton->setText(tr("注册"));
     });
 }
 
@@ -635,14 +646,14 @@ bool LoginPage::checkAutoLogin()
             // 如果保存了密码，自动填充并触发登录
             m_loginPassword->setText(password);
             m_rememberPassword->setChecked(true);
-            showSuccess("正在自动登录...");
+            showSuccess(tr("正在自动登录..."));
             // 触发自动登录
             // 延迟500ms后自动触发登录
             QTimer::singleShot(500, this, &LoginPage::onLoginClicked);
         } else {
             // 没有保存密码，只填充邮箱
             m_rememberPassword->setChecked(false);
-            showSuccess("检测到已登录用户，请输入密码继续");
+            showSuccess(tr("检测到已登录用户，请输入密码继续"));
             // 邮箱已填充，但未保存密码
         }
         return true;
@@ -813,4 +824,106 @@ void LoginPage::applyThemeToWidget(QWidget* widget)
 void LoginPage::onThemeChanged()
 {
     applyTheme();
+}
+
+void LoginPage::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::LanguageChange) {
+        retranslateUi();
+    }
+    QWidget::changeEvent(event);
+}
+
+void LoginPage::retranslateUi()
+{
+    qDebug() << "LoginPage::retranslateUi() called";
+    
+    // 更新登录页面文本
+    if (m_loginEmail) {
+        QString text = tr("邮箱/手机号");
+        qDebug() << "Setting loginEmail placeholder:" << text;
+        m_loginEmail->setPlaceholderText(text);
+    }
+    if (m_loginPassword) {
+        QString text = tr("密码");
+        qDebug() << "Setting loginPassword placeholder:" << text;
+        m_loginPassword->setPlaceholderText(text);
+    }
+    if (m_rememberPassword) {
+        QString text = tr("记住密码");
+        qDebug() << "Setting rememberPassword text:" << text;
+        m_rememberPassword->setText(text);
+    }
+    if (m_loginButton) {
+        // 只有在按钮可用时才更新文本（避免覆盖"登录中..."等状态文本）
+        if (m_loginButton->isEnabled()) {
+            QString text = tr("登录");
+            qDebug() << "Setting loginButton text:" << text;
+            m_loginButton->setText(text);
+        }
+    }
+    if (m_switchToRegisterButton) {
+        QString text = tr("还没有账号？立即注册");
+        qDebug() << "Setting switchToRegisterButton text:" << text;
+        m_switchToRegisterButton->setText(text);
+    }
+    
+    // 更新注册页面文本
+    if (m_registerUsername) {
+        QString text = tr("昵称");
+        qDebug() << "Setting registerUsername placeholder:" << text;
+        m_registerUsername->setPlaceholderText(text);
+    }
+    if (m_registerEmail) {
+        QString text = tr("邮箱");
+        qDebug() << "Setting registerEmail placeholder:" << text;
+        m_registerEmail->setPlaceholderText(text);
+    }
+    if (m_registerPassword) {
+        QString text = tr("密码");
+        qDebug() << "Setting registerPassword placeholder:" << text;
+        m_registerPassword->setPlaceholderText(text);
+    }
+    if (m_registerConfirmPassword) {
+        QString text = tr("确认密码");
+        qDebug() << "Setting registerConfirmPassword placeholder:" << text;
+        m_registerConfirmPassword->setPlaceholderText(text);
+    }
+    if (m_registerButton) {
+        // 只有在按钮可用时才更新文本（避免覆盖"注册中..."等状态文本）
+        if (m_registerButton->isEnabled()) {
+            QString text = tr("注册");
+            qDebug() << "Setting registerButton text:" << text;
+            m_registerButton->setText(text);
+        }
+    }
+    if (m_switchToLoginButton) {
+        QString text = tr("已有账号？立即登录");
+        qDebug() << "Setting switchToLoginButton text:" << text;
+        m_switchToLoginButton->setText(text);
+    }
+    
+    // 更新标题和Logo文本（需要查找对应的QLabel）
+    QList<QLabel*> logoLabels = this->findChildren<QLabel*>("logoLabel");
+    for (QLabel* label : logoLabels) {
+        QString text = tr("Qt 现代化应用");
+        qDebug() << "Setting logoLabel text:" << text;
+        label->setText(text);
+    }
+    
+    QList<QLabel*> loginTitles = this->findChildren<QLabel*>("loginTitle");
+    for (QLabel* label : loginTitles) {
+        QString text = tr("欢迎登录");
+        qDebug() << "Setting loginTitle text:" << text;
+        label->setText(text);
+    }
+    
+    QList<QLabel*> registerTitles = this->findChildren<QLabel*>("registerTitle");
+    for (QLabel* label : registerTitles) {
+        QString text = tr("注册账号");
+        qDebug() << "Setting registerTitle text:" << text;
+        label->setText(text);
+    }
+    
+    qDebug() << "LoginPage::retranslateUi() completed";
 }

@@ -111,6 +111,10 @@ void LocalizationManager::setLanguage(const QString& languageCode)
     QSettings settings;
     settings.setValue("language", languageCode);
 
+    // 发送语言变化事件（Qt会自动发送给所有窗口）
+    // 各个窗口需要在 changeEvent() 中处理 QEvent::LanguageChange 事件
+    QCoreApplication::postEvent(QCoreApplication::instance(), new QEvent(QEvent::LanguageChange));
+    
     emit languageChanged(languageCode);
 }
 

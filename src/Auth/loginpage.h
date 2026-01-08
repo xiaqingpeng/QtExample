@@ -8,6 +8,7 @@
 #include <QStackedWidget>
 #include <QNetworkReply>
 #include <QCheckBox>
+#include <QEvent>
 #include "networkmanager.h"
 // analytics.h 在 loginpage.cpp 中被大量使用，因此需要在头文件中包含
 #include "analytics.h" // IWYU pragma: export
@@ -20,6 +21,7 @@ public:
     explicit LoginPage(QWidget *parent = nullptr);
     ~LoginPage();
     void clearUserInfo();
+    void changeEvent(QEvent *event) override; // 处理语言变化事件
 
 signals:
     void loginSuccess(const QString &token);
@@ -30,6 +32,7 @@ private slots:
     void onSwitchToLogin();
     void onSwitchToRegister();
     void onThemeChanged(); // 主题变化槽函数
+    void retranslateUi(); // 多语言更新槽函数
 
 private:
     void setupLoginUI();

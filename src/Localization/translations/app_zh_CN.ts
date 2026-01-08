@@ -54,6 +54,142 @@
         <source>Network error: %1</source>
         <translation type="vanished">网络错误：%1</translation>
     </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="89"/>
+        <location filename="../../Auth/loginpage.cpp" line="197"/>
+        <location filename="../../Auth/loginpage.cpp" line="909"/>
+        <source>Qt 现代化应用</source>
+        <translation>Qt 现代化应用</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="114"/>
+        <location filename="../../Auth/loginpage.cpp" line="916"/>
+        <source>欢迎登录</source>
+        <translation>欢迎登录</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="126"/>
+        <location filename="../../Auth/loginpage.cpp" line="843"/>
+        <source>邮箱/手机号</source>
+        <translation>邮箱/手机号</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="133"/>
+        <location filename="../../Auth/loginpage.cpp" line="248"/>
+        <location filename="../../Auth/loginpage.cpp" line="848"/>
+        <location filename="../../Auth/loginpage.cpp" line="883"/>
+        <source>密码</source>
+        <translation>密码</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="139"/>
+        <location filename="../../Auth/loginpage.cpp" line="853"/>
+        <source>记住密码</source>
+        <translation>记住密码</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="146"/>
+        <location filename="../../Auth/loginpage.cpp" line="402"/>
+        <location filename="../../Auth/loginpage.cpp" line="419"/>
+        <location filename="../../Auth/loginpage.cpp" line="860"/>
+        <source>登录</source>
+        <translation>登录</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="159"/>
+        <location filename="../../Auth/loginpage.cpp" line="866"/>
+        <source>还没有账号？立即注册</source>
+        <translation>还没有账号？立即注册</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="222"/>
+        <location filename="../../Auth/loginpage.cpp" line="923"/>
+        <source>注册账号</source>
+        <translation>注册账号</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="234"/>
+        <location filename="../../Auth/loginpage.cpp" line="873"/>
+        <source>昵称</source>
+        <translation>昵称</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="241"/>
+        <location filename="../../Auth/loginpage.cpp" line="878"/>
+        <source>邮箱</source>
+        <translation>邮箱</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="256"/>
+        <location filename="../../Auth/loginpage.cpp" line="888"/>
+        <source>确认密码</source>
+        <translation>确认密码</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="264"/>
+        <location filename="../../Auth/loginpage.cpp" line="517"/>
+        <location filename="../../Auth/loginpage.cpp" line="534"/>
+        <location filename="../../Auth/loginpage.cpp" line="895"/>
+        <source>注册</source>
+        <translation>注册</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="277"/>
+        <location filename="../../Auth/loginpage.cpp" line="901"/>
+        <source>已有账号？立即登录</source>
+        <translation>已有账号？立即登录</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="312"/>
+        <source>邮箱和密码不能为空</source>
+        <translation>邮箱和密码不能为空</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="326"/>
+        <source>登录中...</source>
+        <translation>登录中...</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="381"/>
+        <source>登录成功！</source>
+        <translation>登录成功！</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="416"/>
+        <location filename="../../Auth/loginpage.cpp" line="531"/>
+        <source>网络错误：%1</source>
+        <translation>网络错误：%1</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="438"/>
+        <source>用户名、邮箱和密码不能为空</source>
+        <translation>用户名、邮箱和密码不能为空</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="448"/>
+        <source>两次输入的密码不一致</source>
+        <translation>两次输入的密码不一致</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="462"/>
+        <source>注册中...</source>
+        <translation>注册中...</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="495"/>
+        <source>注册成功！请登录</source>
+        <translation>注册成功！请登录</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="649"/>
+        <source>正在自动登录...</source>
+        <translation>正在自动登录...</translation>
+    </message>
+    <message>
+        <location filename="../../Auth/loginpage.cpp" line="656"/>
+        <source>检测到已登录用户，请输入密码继续</source>
+        <translation>检测到已登录用户，请输入密码继续</translation>
+    </message>
 </context>
 <context>
     <name>MainUIWindow</name>
