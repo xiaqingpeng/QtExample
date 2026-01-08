@@ -7,8 +7,10 @@
 #include <QApplication>
 #include <QFile>
 #include <QDebug>
+#ifdef WEBENGINE_AVAILABLE
 #include <QWebEngineSettings>
-#include "theme_manager.h"
+#include <QWebEnginePage>
+#endif
 #include "theme_manager.h"
 
 ServerConfigTab::ServerConfigTab(QWidget *parent)
@@ -25,8 +27,7 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
     mainLayout->setContentsMargins(20, 20, 20, 20);
     mainLayout->setSpacing(20);
     
-  
-    
+#ifdef WEBENGINE_AVAILABLE
     // 创建WebView用于显示图表
     // qDebug()() << "[ServerConfigTab] Creating WebView";
     m_webView = new QWebEngineView(this);
@@ -77,6 +78,18 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
     
     // 在页面加载前设置WebChannel到WebEnginePage上
     m_webView->page()->setWebChannel(m_channel);
+#else
+    // WebEngine不可用时，创建一个简单的标签作为占位符
+    m_webView = new QLabel("WebEngine 不可用 - 服务器配置功能已禁用", this);
+    m_webView->setObjectName("webView");
+    m_webView->setAlignment(Qt::AlignCenter);
+    m_webView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
+    
+    // WebEngine不可用时的简化处理
+    m_channel = nullptr;
+    m_bridge = new ServerConfigBridge(this);
+    connect(m_bridge, &ServerConfigBridge::refreshRequested, this, &ServerConfigTab::refreshSystemInfo);
+#endif
     
     mainLayout->addWidget(m_webView);
     
@@ -658,10 +671,18 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
 </html>
 )HTML";
     
+#ifdef WEBENGINE_AVAILABLE
     // 加载HTML内容
     // qDebug()() << "[ServerConfigTab] HTML内容长度:" << htmlContent.length();
     // qDebug()() << "[ServerConfigTab] 开始加载HTML内容...";
     m_webView->setHtml(htmlContent, QUrl("qrc:/html/serverconfig.html"));
+#else
+    // WebEngine不可用时，显示简单信息
+    QLabel* webViewLabel = qobject_cast<QLabel*>(m_webView);
+    if (webViewLabel) {
+        webViewLabel->setText("WebEngine 不可用\n服务器配置功能已禁用\n\n系统信息将通过其他方式显示");
+    }
+#endif
     
     // 立即检查WebEngineView状态
     // qDebug()() << "[ServerConfigTab] WebView页面地址:" << m_webView->url().toString();
@@ -686,6 +707,8 @@ ServerConfigTab::~ServerConfigTab()
 void ServerConfigTab::onPageLoaded(bool ok){
     // qDebug()() << "[ServerConfigTab] ********************页面加载完成回调********************";
     // qDebug()() << "[ServerConfigTab] 加载状态:" << ok;
+    
+#ifdef WEBENGINE_AVAILABLE
     // qDebug()() << "[ServerConfigTab] 页面标题:" << m_webView->title();
     // qDebug()() << "[ServerConfigTab] 页面URL:" << m_webView->url().toString();
     // qDebug()() << "[ServerConfigTab] WebView是否可见:" << m_webView->isVisible();
@@ -740,6 +763,14 @@ void ServerConfigTab::onPageLoaded(bool ok){
             // qDebug()() << "[ServerConfigTab] User Agent:" << result.toString();
         });
     }
+#else
+    // WebEngine不可用时的简化处理
+    Q_UNUSED(ok);
+    // qDebug()() << "[ServerConfigTab] WebEngine not available, using fallback";
+    
+    // 直接获取系统信息，不依赖页面加载
+    fetchSystemInfo();
+#endif
 }
 
 void ServerConfigTab::fetchSystemInfo()
@@ -845,6 +876,7 @@ void ServerConfigTab::fetchSystemInfo()
 
 void ServerConfigTab::updateCharts(const QJsonObject &data)
 {
+#ifdef WEBENGINE_AVAILABLE
     if (!m_webView || !m_webView->page()) {
         qWarning() << "[ServerConfigTab] WebView not available for updating charts";
         return;
@@ -856,6 +888,23 @@ void ServerConfigTab::updateCharts(const QJsonObject &data)
     // qDebug()() << "[ServerConfigTab] Running JavaScript to update charts:" << script.left(100) << "...";
     
     m_webView->page()->runJavaScript(script);
+#else
+    // WebEngine不可用时，更新QLabel显示系统信息
+    QLabel* webViewLabel = qobject_cast<QLabel*>(m_webView);
+    if (webViewLabel) {
+        QString info = "服务器配置信息:\n";
+        if (data.contains("cpu")) {
+            info += QString("CPU: %1%\n").arg(data["cpu"].toDouble(), 0, 'f', 1);
+        }
+        if (data.contains("memory")) {
+            info += QString("内存: %1%\n").arg(data["memory"].toDouble(), 0, 'f', 1);
+        }
+        if (data.contains("disk")) {
+            info += QString("磁盘: %1%\n").arg(data["disk"].toDouble(), 0, 'f', 1);
+        }
+        webViewLabel->setText(info);
+    }
+#endif
 }
 
 void ServerConfigTab::applyTheme()
@@ -887,6 +936,7 @@ void ServerConfigTab::applyTheme()
     }
     
     if (m_webView) {
+#ifdef WEBENGINE_AVAILABLE
         m_webView->setStyleSheet(QString(
             "QWebEngineView { "
             "    border: 1px solid %1; "
@@ -895,6 +945,18 @@ void ServerConfigTab::applyTheme()
             "}"
         ).arg(theme->colors().BORDER)
          .arg(theme->colors().BACKGROUND));
+#else
+        m_webView->setStyleSheet(QString(
+            "QLabel { "
+            "    border: 1px solid %1; "
+            "    border-radius: 8px; "
+            "    background-color: %2; "
+            "    color: %3; "
+            "}"
+        ).arg(theme->colors().BORDER)
+         .arg(theme->colors().BACKGROUND)
+         .arg(theme->colors().TEXT_PRIMARY));
+#endif
     }
 }
 

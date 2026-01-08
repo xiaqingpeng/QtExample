@@ -8,6 +8,9 @@ qt_add_library(Device STATIC
     serverconfigtab.h
 )
 
+# 定义WEBENGINE_AVAILABLE宏，因为Device模块使用了WebEngineWidgets
+target_compile_definitions(Device PRIVATE WEBENGINE_AVAILABLE)
+
 target_link_libraries(Device PRIVATE
     Qt6::Core
     Qt6::Gui

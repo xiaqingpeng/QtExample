@@ -1,4 +1,14 @@
-QT += core gui widgets network webenginewidgets
+QT += core gui widgets network
+
+# WebEngine 模块设为可选
+# 如果系统中没有安装 Qt WebEngine，将禁用相关功能
+qtHaveModule(webenginewidgets) {
+    QT += webenginewidgets
+    DEFINES += WEBENGINE_AVAILABLE
+    message("WebEngine available - enabling web features")
+} else {
+    message("WebEngine not available - web features disabled")
+}
 
 CONFIG += c++17 staticlib
 CONFIG -= single_module
@@ -19,5 +29,6 @@ INCLUDEPATH += ../Services
 INCLUDEPATH += ../Network
 INCLUDEPATH += ../Analytics
 INCLUDEPATH += ../Styles
+INCLUDEPATH += ../App
 # 包含资源文件
 RESOURCES += ../../layoutexamplestab.qrc

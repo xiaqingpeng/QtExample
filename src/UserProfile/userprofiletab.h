@@ -10,7 +10,9 @@
 #include <QGroupBox>
 #include <QComboBox>
 #include <QProgressBar>
+#ifdef WEBENGINE_AVAILABLE
 #include <QWebEngineView>
+#endif
 #include <QTimer>
 #include "../Styles/theme_manager.h"
 
@@ -85,8 +87,13 @@ private:
     QLabel *m_topPagesLabel;
     QLabel *m_topFeaturesLabel;
     
+#ifdef WEBENGINE_AVAILABLE
     QWebEngineView *m_interestChartView;
     QWebEngineView *m_valueRadarView;
+#else
+    QLabel *m_interestChartView;  // 使用QLabel作为占位符
+    QLabel *m_valueRadarView;
+#endif
     
     QPushButton *m_refreshButton;
     QPushButton *m_exportButton;

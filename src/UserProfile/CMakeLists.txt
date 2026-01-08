@@ -5,6 +5,9 @@ qt6_add_library(userprofile STATIC
     userprofiletab.cpp
 )
 
+# 定义WEBENGINE_AVAILABLE宏，因为userprofile模块使用了WebEngineWidgets
+target_compile_definitions(userprofile PRIVATE WEBENGINE_AVAILABLE)
+
 target_link_libraries(userprofile
     Qt6::Core
     Qt6::Widgets

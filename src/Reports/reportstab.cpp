@@ -154,6 +154,7 @@ void ReportsTab::setupKeyMetrics()
 
 void ReportsTab::setupTrendCharts()
 {
+#ifdef WEBENGINE_AVAILABLE
     m_trendChartView = new QWebEngineView();
     m_trendChartView->setMinimumHeight(450);
     m_trendChartView->setObjectName("chartView");
@@ -161,6 +162,19 @@ void ReportsTab::setupTrendCharts()
     m_activityChartView = new QWebEngineView();
     m_activityChartView->setMinimumHeight(350);
     m_activityChartView->setObjectName("chartView");
+#else
+    m_trendChartView = new QLabel("WebEngine 不可用 - 趋势图表已禁用");
+    m_trendChartView->setMinimumHeight(450);
+    m_trendChartView->setObjectName("chartView");
+    m_trendChartView->setAlignment(Qt::AlignCenter);
+    m_trendChartView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
+    
+    m_activityChartView = new QLabel("WebEngine 不可用 - 活动图表已禁用");
+    m_activityChartView->setMinimumHeight(350);
+    m_activityChartView->setObjectName("chartView");
+    m_activityChartView->setAlignment(Qt::AlignCenter);
+    m_activityChartView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
+#endif
 }
 
 void ReportsTab::setupTopRankings()
@@ -729,8 +743,16 @@ void ReportsTab::renderTrendChart(const QJsonArray &trendData, const QString &ti
         </html>
     )").arg(title).arg(xAxisData).arg(chartType).arg(seriesData);
     
+#ifdef WEBENGINE_AVAILABLE
     m_trendChartView->setHtml(html);
+#else
+    QLabel* chartLabel = qobject_cast<QLabel*>(m_trendChartView);
+    if (chartLabel) {
+        chartLabel->setText("WebEngine 不可用\n趋势图表已禁用");
+    }
+#endif
 }
+
 
 void ReportsTab::onReportTypeChanged(int index)
 {

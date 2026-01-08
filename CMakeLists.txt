@@ -10,11 +10,22 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-# 查找Qt模块
-find_package(Qt6 COMPONENTS Core Gui Widgets WebEngineWidgets Network PrintSupport REQUIRED)
+# 查找Qt模块 - 将WebEngine设为可选
+find_package(Qt6 COMPONENTS Core Gui Widgets Network PrintSupport REQUIRED)
+find_package(Qt6 COMPONENTS WebEngineWidgets QUIET)
 
-# 启用企业级架构作为标准
-add_definitions(-DENTERPRISE_EDITION)
+# 检查WebEngine是否可用
+if(Qt6WebEngineWidgets_FOUND)
+    message(STATUS "Qt WebEngine found - enabling web features")
+    add_definitions(-DWEBENGINE_AVAILABLE)
+    set(WEBENGINE_LIBRARIES Qt6::WebEngineWidgets)
+else()
+    message(WARNING "Qt WebEngine not found - web features will be disabled")
+    set(WEBENGINE_LIBRARIES "")
+endif()
+
+# 企业级架构作为标准（移除条件编译）
+# add_definitions(-DENTERPRISE_EDITION) # 不再需要条件编译
 
 # 设置MacOS特定选项
 if(APPLE)
@@ -129,7 +140,7 @@ target_link_libraries(ECharts PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    Qt6::WebEngineWidgets
+    ${WEBENGINE_LIBRARIES}
     Qt6::Network
     network
     analytics
@@ -152,7 +163,7 @@ target_link_libraries(UserProfileTab PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    Qt6::WebEngineWidgets
+    ${WEBENGINE_LIBRARIES}
     Qt6::Network
     network
     Styles
@@ -172,7 +183,7 @@ target_link_libraries(ReportsTab PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    Qt6::WebEngineWidgets
+    ${WEBENGINE_LIBRARIES}
     Qt6::Network
     Qt6::PrintSupport
     network
@@ -263,7 +274,7 @@ target_link_libraries(QTExample PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    Qt6::WebEngineWidgets
+    ${WEBENGINE_LIBRARIES}
     Qt6::Network
     Qt6::PrintSupport
     EnterpriseServices

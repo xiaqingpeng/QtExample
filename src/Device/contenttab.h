@@ -5,8 +5,10 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#ifdef WEBENGINE_AVAILABLE
 #include <QWebEngineView>
 #include <QWebChannel>
+#endif
 #include <QThread>
 #include <QTimer>
 #include "../Network/networkmanager.h"
@@ -31,8 +33,13 @@ private slots:
 private:
     NetworkManager *m_networkManager;
     QLabel *m_titleLabel;
+#ifdef WEBENGINE_AVAILABLE
     QWebEngineView *m_webView;
     QWebChannel *m_channel;
+#else
+    QLabel *m_webView;  // 使用QLabel作为占位符
+    QObject *m_channel; // 占位符
+#endif
     ServerConfigBridge *m_bridge;
     bool m_pageLoaded;
     QJsonObject m_pendingData;

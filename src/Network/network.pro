@@ -16,3 +16,4 @@ SOURCES += \
 INCLUDEPATH += ../..
 INCLUDEPATH += ../Core
 INCLUDEPATH += ../Services
+INCLUDEPATH += ../App

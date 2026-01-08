@@ -162,16 +162,32 @@ void UserProfileTab::setupBehaviorStats()
 
 void UserProfileTab::setupInterestAnalysis()
 {
+#ifdef WEBENGINE_AVAILABLE
     m_interestChartView = new QWebEngineView();
     m_interestChartView->setMinimumHeight(350);
     m_interestChartView->setObjectName("chartView");
+#else
+    m_interestChartView = new QLabel("WebEngine 不可用 - 兴趣分析图表已禁用");
+    m_interestChartView->setMinimumHeight(350);
+    m_interestChartView->setObjectName("chartView");
+    m_interestChartView->setAlignment(Qt::AlignCenter);
+    m_interestChartView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
+#endif
 }
 
 void UserProfileTab::setupValueAssessment()
 {
+#ifdef WEBENGINE_AVAILABLE
     m_valueRadarView = new QWebEngineView();
     m_valueRadarView->setMinimumHeight(350);
     m_valueRadarView->setObjectName("chartView");
+#else
+    m_valueRadarView = new QLabel("WebEngine 不可用 - 价值评估图表已禁用");
+    m_valueRadarView->setMinimumHeight(350);
+    m_valueRadarView->setObjectName("chartView");
+    m_valueRadarView->setAlignment(Qt::AlignCenter);
+    m_valueRadarView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
+#endif
 }
 
 void UserProfileTab::loadUserList()
@@ -588,8 +604,16 @@ void UserProfileTab::updateInterestAnalysisDisplay(const QJsonArray &interests)
         </html>
     )").arg(chartData);
     
+#ifdef WEBENGINE_AVAILABLE
     m_interestChartView->setHtml(html);
+#else
+    QLabel* chartLabel = qobject_cast<QLabel*>(m_interestChartView);
+    if (chartLabel) {
+        chartLabel->setText("WebEngine 不可用\n兴趣分析图表已禁用");
+    }
+#endif
 }
+
 
 void UserProfileTab::updateValueAssessmentDisplay(const QJsonObject &valueAssessment)
 {
@@ -695,8 +719,16 @@ void UserProfileTab::renderValueRadarChart(const QJsonObject &valueData)
       .arg(valueData["timeScore"].toInt())
       .arg(valueData["totalScore"].toInt());
     
+#ifdef WEBENGINE_AVAILABLE
     m_valueRadarView->setHtml(html);
+#else
+    QLabel* chartLabel = qobject_cast<QLabel*>(m_valueRadarView);
+    if (chartLabel) {
+        chartLabel->setText("WebEngine 不可用\n价值评估图表已禁用");
+    }
+#endif
 }
+
 
 void UserProfileTab::exportUserProfile()
 {

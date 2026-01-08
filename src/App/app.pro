@@ -1,10 +1,20 @@
-QT += core gui widgets webenginewidgets network
+QT += core gui widgets network
+
+# WebEngine 模块设为可选
+# 如果系统中没有安装 Qt WebEngine，将禁用相关功能
+qtHaveModule(webenginewidgets) {
+    QT += webenginewidgets
+    DEFINES += WEBENGINE_AVAILABLE
+    message("WebEngine available - enabling web features")
+} else {
+    message("WebEngine not available - web features disabled")
+}
 
 CONFIG += c++17
 CONFIG -= single_module
 
-# 启用企业级架构
-DEFINES += ENTERPRISE_EDITION
+# 企业级架构作为标准（移除条件编译）
+# DEFINES += ENTERPRISE_EDITION # 不再需要条件编译
 
 # 设置macOS部署目标版本为14.0，与Qt库版本兼容
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0

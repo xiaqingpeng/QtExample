@@ -12,7 +12,9 @@
 #include <QDateEdit>
 #include <QTableWidget>
 #include <QTableWidgetItem>
+#ifdef WEBENGINE_AVAILABLE
 #include <QWebEngineView>
+#endif
 #include <QJsonObject>
 #include <QJsonArray>
 #include "../Styles/theme_manager.h"
@@ -101,8 +103,13 @@ private:
     QLabel *m_totalEventsLabel;
     
     // 趋势图表组件
+#ifdef WEBENGINE_AVAILABLE
     QWebEngineView *m_trendChartView;
     QWebEngineView *m_activityChartView;
+#else
+    QLabel *m_trendChartView;  // 使用QLabel作为占位符
+    QLabel *m_activityChartView;
+#endif
     
     // 排行榜表格组件
     QTableWidget *m_topPagesTable;

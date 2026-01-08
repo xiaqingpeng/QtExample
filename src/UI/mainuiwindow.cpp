@@ -280,8 +280,8 @@ void MainUIWindow::setupSubMenuContent(const QString &mainMenu)
         new QListWidgetItem("用户画像", subMenuList);
         new QListWidgetItem("统计报表", subMenuList);
     } else if (mainMenu.contains("设备信息")) {
-        new QListWidgetItem("服务器配置", subMenuList);
-        new QListWidgetItem("内容", subMenuList);
+        new QListWidgetItem("服务器配置监控", subMenuList);
+        new QListWidgetItem("电脑本机配置监控", subMenuList);
     } else if (mainMenu.contains("个人中心")) {
         new QListWidgetItem("用户信息", subMenuList);
         new QListWidgetItem("修改密码", subMenuList);
@@ -489,8 +489,8 @@ void MainUIWindow::setupSubMenu(const QString &mainMenu)
         new QListWidgetItem("用户画像", subMenuList);
         new QListWidgetItem("统计报表", subMenuList);
     } else if (mainMenu.contains("设备信息")) {
-        new QListWidgetItem("服务器配置", subMenuList);
-        new QListWidgetItem("内容", subMenuList);
+        new QListWidgetItem("服务器配置监控", subMenuList);
+        new QListWidgetItem("电脑本机配置监控", subMenuList);
     } else if (mainMenu.contains("个人中心")) {
         new QListWidgetItem("用户信息", subMenuList);
         new QListWidgetItem("修改密码", subMenuList);
@@ -571,9 +571,9 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         }
     } else if (subMenu.contains("统计报表")) {
         contentWidget = new ReportsTab();
-    } else if (subMenu.contains("服务器配置")) {
+    } else if (subMenu.contains("服务器配置监控")) {
         contentWidget = new ServerConfigTab();
-    } else if (subMenu.contains("内容")) {
+    } else if (subMenu.contains("电脑本机配置监控")) {
         contentWidget = new ContentTab();
     } else if (subMenu.contains("用户信息")) {
         contentWidget = new UserInfoPage();

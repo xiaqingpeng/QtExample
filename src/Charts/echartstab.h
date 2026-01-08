@@ -2,8 +2,10 @@
 #define ECHARTSTAB_H
 
 #include <QMainWindow>
+#ifdef WEBENGINE_AVAILABLE
 #include <QWebEngineView>
 #include <QWebChannel>
+#endif
 #include <QVariant>
 #include "networkmanager.h"
 #include "theme_manager.h"
@@ -51,8 +53,13 @@ private slots:
     void applyTheme();
 
 private:
+#ifdef WEBENGINE_AVAILABLE
     QWebEngineView *m_webView;  // 加载HTML的WebView
     QWebChannel *m_channel;
+#else
+    QLabel *m_webView;  // 使用QLabel作为占位符
+    QObject *m_channel; // 占位符
+#endif
     ChartBridge *m_bridge;      // Qt与JS的桥接对象
     NetworkManager *m_networkManager;
     // QTimer *m_apiTimer;         // API自动更新定时器 - 已禁用

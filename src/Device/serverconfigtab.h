@@ -2,8 +2,10 @@
 #define SERVERCONFIGTAB_H
 
 #include <QMainWindow>
+#ifdef WEBENGINE_AVAILABLE
 #include <QWebEngineView>
 #include <QWebChannel>
+#endif
 #include <QVariant>
 #include <QLabel>
 #include <QTimer>
@@ -44,8 +46,13 @@ private slots:
     void refreshSystemInfo();
 
 private:
+#ifdef WEBENGINE_AVAILABLE
     QWebEngineView *m_webView;
     QWebChannel *m_channel;
+#else
+    QLabel *m_webView;  // 使用QLabel作为占位符
+    QObject *m_channel; // 占位符
+#endif
     ServerConfigBridge *m_bridge;
     NetworkManager *m_networkManager;
     QLabel *m_titleLabel;

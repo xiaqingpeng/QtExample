@@ -5,8 +5,10 @@
 #include <QDir>
 #include <QDebug>
 #include <QCoreApplication>
+#ifdef WEBENGINE_AVAILABLE
 #include <QWebChannel>
 #include <QWebEngineView>
+#endif
 #include <QFile>
 #include "networkmanager.h"
 #include <QJsonDocument>
@@ -40,6 +42,7 @@ EChartsTab::EChartsTab(QWidget *parent)
     layout->setSpacing(12);
     this->setCentralWidget(centralWidget);
 
+#ifdef WEBENGINE_AVAILABLE
     // 3. 创建WebEngineView，加载ECharts HTML页面
     m_webView = new QWebEngineView(this);
     m_webView->setObjectName("echartsWebView");
@@ -53,6 +56,23 @@ EChartsTab::EChartsTab(QWidget *parent)
 
     // 5. 加载本地HTML文件（使用绝对路径确保文件能被找到）
     QString htmlPath = "/Applications/qingpengxia/qt/qt6/example/src/ECharts/chart.html";
+    
+    // 连接WebView加载完成信号
+    connect(m_webView, &QWebEngineView::loadFinished, this, &EChartsTab::onPageLoaded);
+    
+    m_webView->load(QUrl::fromLocalFile(htmlPath));
+#else
+    // WebEngine不可用时，创建一个简单的标签作为占位符
+    m_webView = new QLabel("WebEngine 不可用 - ECharts功能已禁用", this);
+    m_webView->setObjectName("echartsWebView");
+    m_webView->setAlignment(Qt::AlignCenter);
+    m_webView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
+    layout->addWidget(m_webView);
+
+    // 创建桥接对象但不使用WebChannel
+    m_bridge = new ChartBridge(this);
+    m_channel = nullptr;
+#endif
     QFile file(htmlPath);
     if (!file.exists()) {
         // HTML文件不存在
@@ -570,7 +590,15 @@ void EChartsTab::fetchApiData()
              .arg(jsonArrayToString(avgDurations))
              .arg(chartType);
             
+#ifdef WEBENGINE_AVAILABLE
             m_webView->page()->runJavaScript(jsCode);
+#else
+            // WebEngine不可用时，更新QLabel显示信息
+            QLabel* chartLabel = qobject_cast<QLabel*>(m_webView);
+            if (chartLabel) {
+                chartLabel->setText("WebEngine 不可用\nECharts功能已禁用\n\n图表数据已更新");
+            }
+#endif
             
         } else {
             qWarning() << "API返回错误:" << rootObj["msg"].toString();
@@ -656,6 +684,7 @@ void EChartsTab::applyTheme()
     
     // 应用WebView样式
     if (m_webView) {
+#ifdef WEBENGINE_AVAILABLE
         m_webView->setStyleSheet(QString(
             "QWebEngineView#echartsWebView { "
             "    border: 1px solid %1; "
@@ -665,6 +694,19 @@ void EChartsTab::applyTheme()
         ).arg(theme->colors().BORDER)
          .arg(ThemeManager::BorderRadius::MD)
          .arg(theme->colors().SURFACE));
+#else
+        m_webView->setStyleSheet(QString(
+            "QLabel#echartsWebView { "
+            "    border: 1px solid %1; "
+            "    border-radius: %2px; "
+            "    background-color: %3; "
+            "    color: %4; "
+            "}"
+        ).arg(theme->colors().BORDER)
+         .arg(ThemeManager::BorderRadius::MD)
+         .arg(theme->colors().SURFACE)
+         .arg(theme->colors().TEXT_PRIMARY));
+#endif
     }
     
     // 应用下拉框样式

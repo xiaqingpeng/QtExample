@@ -4,7 +4,10 @@
 #include <QApplication>
 #include <QFile>
 #include <QDebug>
+#ifdef WEBENGINE_AVAILABLE
 #include <QWebEngineSettings>
+#include <QWebEnginePage>
+#endif
 #include <QProcess>
 #include <QRegularExpression>
 #include <QPointer>
@@ -25,6 +28,7 @@ ContentTab::ContentTab(QWidget *parent)
     mainLayout->setContentsMargins(20, 20, 20, 20);
     mainLayout->setSpacing(20);
     
+#ifdef WEBENGINE_AVAILABLE
     // 创建WebView用于显示图表
     // qDebug() << "[ContentTab] Creating WebView";
     m_webView = new QWebEngineView(this);
@@ -47,7 +51,15 @@ ContentTab::ContentTab(QWidget *parent)
     connect(m_webView->page(), &QWebEnginePage::loadStarted, this, [this]() {
         // qDebug() << "[ContentTab] Page load started:" << m_webView->url().toString();
     });
+#else
+    // WebEngine不可用时，创建一个简单的标签作为占位符
+    m_webView = new QLabel("WebEngine 不可用 - 图表功能已禁用", this);
+    m_webView->setObjectName("webView");
+    m_webView->setAlignment(Qt::AlignCenter);
+    m_webView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
+#endif
     
+#ifdef WEBENGINE_AVAILABLE
     connect(m_webView->page(), &QWebEnginePage::loadProgress, this, [](int progress) {
         // qDebug() << "[ContentTab] Page load progress:" << progress << "%";
     });
@@ -75,6 +87,12 @@ ContentTab::ContentTab(QWidget *parent)
     
     // 在页面加载前设置WebChannel到WebEnginePage上
     m_webView->page()->setWebChannel(m_channel);
+#else
+    // WebEngine不可用时的简化处理
+    m_channel = nullptr;
+    m_bridge = new ServerConfigBridge(this);
+    connect(m_bridge, &ServerConfigBridge::refreshRequested, this, &ContentTab::refreshSystemInfo);
+#endif
     
     mainLayout->addWidget(m_webView);
     
@@ -758,6 +776,7 @@ ContentTab::ContentTab(QWidget *parent)
     // qDebug() << "[ContentTab] 提前开始获取系统信息...";
     fetchSystemInfo();
     
+#ifdef WEBENGINE_AVAILABLE
     // 加载HTML内容
     // qDebug() << "[ContentTab] HTML内容长度:" << htmlContent.length();
     // qDebug() << "[ContentTab] 开始加载HTML内容...";
@@ -766,6 +785,13 @@ ContentTab::ContentTab(QWidget *parent)
     // 立即检查WebEngineView状态
     // qDebug() << "[ContentTab] WebView页面地址:" << m_webView->url().toString();
     // qDebug() << "[ContentTab] WebView标题:" << m_webView->title();
+#else
+    // WebEngine不可用时，显示简单信息
+    QLabel* webViewLabel = qobject_cast<QLabel*>(m_webView);
+    if (webViewLabel) {
+        webViewLabel->setText("WebEngine 不可用\n图表功能已禁用\n\n系统信息将通过其他方式显示");
+    }
+#endif
     
     // WebChannel将在页面加载完成后设置
     
@@ -805,6 +831,7 @@ void ContentTab::onPageLoaded(bool ok){
     // qDebug() << "[ContentTab] WebView尺寸:" << m_webView->size();
     
     // 检查WebChannel状态
+#ifdef WEBENGINE_AVAILABLE
     if (m_webView->page()->webChannel()) {
         // qDebug() << "[ContentTab] WebChannel is set up after page load";
     } else {
@@ -817,6 +844,7 @@ void ContentTab::onPageLoaded(bool ok){
             qCritical() << "[ContentTab] Failed to set up WebChannel after retry";
         }
     }
+#endif
     
     if (ok) {
             m_pageLoaded = true;
@@ -829,6 +857,7 @@ void ContentTab::onPageLoaded(bool ok){
                 m_pendingData = QJsonObject(); // 清空缓存
             }
         
+#ifdef WEBENGINE_AVAILABLE
         // 获取页面内容验证
         m_webView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
             QString content = result.toString();
@@ -844,12 +873,14 @@ void ContentTab::onPageLoaded(bool ok){
         m_webView->page()->runJavaScript("'Hello from JavaScript: ' + (new Date()).toLocaleString()", [](const QVariant &result) {
             // qDebug() << "[ContentTab] JavaScript execution result:" << result.toString();
         });
+#endif
         
         // 如果系统信息已经获取完成，直接更新图表
         // 否则，等待fetchSystemInfo完成后自动更新
     } else {
         qWarning() << "[ContentTab] Failed to load server config page";
         
+#ifdef WEBENGINE_AVAILABLE
         // 尝试获取页面内容，查看是否有错误信息
         m_webView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
             qWarning() << "[ContentTab] Page content on error:" << result.toString();
@@ -859,6 +890,7 @@ void ContentTab::onPageLoaded(bool ok){
         m_webView->page()->runJavaScript("window.navigator.userAgent", [](const QVariant &result) {
             // qDebug() << "[ContentTab] User Agent:" << result.toString();
         });
+#endif
     }
 }
 
@@ -1134,6 +1166,7 @@ void ContentTab::updateCharts(const QJsonObject &data)
         return;
     }
     
+#ifdef WEBENGINE_AVAILABLE
     if (!m_webView || !m_webView->page()) {
         qWarning() << "[ContentTab] WebView not available for updating charts";
         return;
@@ -1145,6 +1178,23 @@ void ContentTab::updateCharts(const QJsonObject &data)
     // qDebug() << "[ContentTab] Running JavaScript to update charts:" << script.left(100) << "...";
     
     m_webView->page()->runJavaScript(script);
+#else
+    // WebEngine不可用时，更新QLabel显示系统信息
+    QLabel* webViewLabel = qobject_cast<QLabel*>(m_webView);
+    if (webViewLabel) {
+        QString info = "系统信息:\n";
+        if (data.contains("cpu")) {
+            info += QString("CPU: %1%\n").arg(data["cpu"].toDouble(), 0, 'f', 1);
+        }
+        if (data.contains("memory")) {
+            info += QString("内存: %1%\n").arg(data["memory"].toDouble(), 0, 'f', 1);
+        }
+        if (data.contains("disk")) {
+            info += QString("磁盘: %1%\n").arg(data["disk"].toDouble(), 0, 'f', 1);
+        }
+        webViewLabel->setText(info);
+    }
+#endif
 }
 
 void ContentTab::applyTheme()

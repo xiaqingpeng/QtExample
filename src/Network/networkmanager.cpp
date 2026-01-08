@@ -201,7 +201,7 @@ void NetworkManager::getWithRetry(const QString &url,
     
     // 打印GET请求信息（格式与POST保持一致）
     QString queryData = queryParams.isEmpty() ? "(无查询参数)" : queryParams.toString();
-    LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << queryData;
+    // LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << queryData;
     
     // 发送GET请求
     QNetworkReply *reply = m_networkManager->get(request);
@@ -446,7 +446,7 @@ void NetworkManager::post(const QString &url,
     QJsonDocument doc(data);
     QByteArray jsonData = doc.toJson();
     
-    LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << doc.toJson(QJsonDocument::Compact);
+    // LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << doc.toJson(QJsonDocument::Compact);
     
     
     QNetworkReply *reply = m_networkManager->post(request, jsonData);
@@ -470,7 +470,7 @@ void NetworkManager::put(const QString &url,
     QJsonDocument doc(data);
     QByteArray jsonData = doc.toJson();
     
-    LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << doc.toJson(QJsonDocument::Compact);
+    // LOG_DEBUG() << "请求URL:" << fullUrl << "请求的数据为:" << doc.toJson(QJsonDocument::Compact);
    
     
     QNetworkReply *reply = m_networkManager->put(request, jsonData);
@@ -490,7 +490,7 @@ void NetworkManager::deleteResource(const QString &url,
     QString fullUrl = buildFullUrl(url);
     QNetworkRequest request = createRequest(fullUrl);
     
-    LOG_DEBUG() << "NetworkManager - DELETE request:" << fullUrl;
+    // LOG_DEBUG() << "NetworkManager - DELETE request:" << fullUrl;
     
     QNetworkReply *reply = m_networkManager->deleteResource(request);
     
