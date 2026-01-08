@@ -8,7 +8,7 @@
 #include <QPushButton>
 #include <QNetworkReply>
 #include "networkmanager.h"
-#include "analytics.h"
+#include "../Analytics/analytics.h"
 
 class UserInfoPage : public QWidget
 {

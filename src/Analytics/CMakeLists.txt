@@ -6,8 +6,8 @@ qt6_add_library(analytics STATIC
 target_link_libraries(analytics
     Qt6::Core
     Qt6::Network
-    enterprisecore
-    enterpriseservices
+    EnterpriseCore
+    EnterpriseServices
     network
 )
 

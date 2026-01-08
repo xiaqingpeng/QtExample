@@ -9,17 +9,16 @@ target_link_libraries(ui
     Qt6::Widgets
     Qt6::WebEngineWidgets
     Qt6::Network
-    enterprisecore
-    enterpriseservices
+    EnterpriseCore
+    EnterpriseServices
     network
     analytics
     auth
     userprofile
-    charts
-    reports
-    device
-    styles
-    utils
+    ECharts
+    ReportsTab
+    Device
+    Styles
 )
 
 target_include_directories(ui PUBLIC

@@ -9,8 +9,8 @@
 #include <QWebChannel>
 #include <QThread>
 #include <QTimer>
-#include "networkmanager.h"
-#include "theme_manager.h"
+#include "../Network/networkmanager.h"
+#include "../Styles/theme_manager.h"
 
 class ServerConfigBridge;
 

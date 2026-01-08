@@ -5,7 +5,7 @@ qt6_add_library(utils STATIC
 
 target_link_libraries(utils
     Qt6::Core
-    enterprisecore
+    EnterpriseCore
 )
 
 target_include_directories(utils PUBLIC

@@ -6,7 +6,7 @@
 #include <QSettings>
 #include <QCryptographicHash>
 #include <QTimer>
-#include "analytics/analytics.h"
+#include "../Analytics/analytics.h"
 
 ChangePasswordPage::ChangePasswordPage(QWidget *parent)
     : QWidget(parent)

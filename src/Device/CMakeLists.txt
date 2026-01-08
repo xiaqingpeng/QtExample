@@ -14,7 +14,7 @@ target_link_libraries(Device PRIVATE
     Qt6::Widgets
     Qt6::WebEngineWidgets
     Qt6::Network
-    NetworkManager
+    network
     Styles
 )
 

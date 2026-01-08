@@ -1,7 +1,7 @@
 #include "logstatstab.h"
 #include "common.h"
 #include "../Analytics/analytics.h"
-#include "theme_manager.h"
+#include "../Styles/theme_manager.h"
 #include <QElapsedTimer>
 #include <QHeaderView>
 #include <QMessageBox>

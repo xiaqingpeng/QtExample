@@ -21,8 +21,8 @@
 #include <QDate>
 #include "echartstab.h"
 #include "common.h"
-#include "analytics/analytics.h"
-#include "theme_manager.h"
+#include "../Analytics/analytics.h"
+#include "../Styles/theme_manager.h"
 
 EChartsTab::EChartsTab(QWidget *parent)
     : QMainWindow(parent)

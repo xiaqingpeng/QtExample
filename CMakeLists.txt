@@ -95,12 +95,12 @@ target_include_directories(EnterpriseLocalization PRIVATE
 )
 
 # NetworkManager模块
-add_subdirectory(networkmanager)
+add_subdirectory(src/Network)
 
 # Styles主题管理模块 - 需要在其他模块之前定义
 qt_add_library(Styles STATIC
-    styles/theme_manager.cpp
-    styles/theme_manager.h
+    src/Styles/theme_manager.cpp
+    src/Styles/theme_manager.h
 )
 target_link_libraries(Styles PRIVATE
     Qt6::Core
@@ -119,10 +119,10 @@ target_include_directories(Styles PRIVATE
 
 # ECharts模块
 qt_add_library(ECharts STATIC
-    echarts/echartstab.cpp
-    echarts/echartstab.h
-    echarts/logstatstab.cpp
-    echarts/logstatstab.h
+    src/Charts/echartstab.cpp
+    src/Charts/echartstab.h
+    src/Charts/logstatstab.cpp
+    src/Charts/logstatstab.h
     layoutexamplestab.qrc
 )
 target_link_libraries(ECharts PRIVATE
@@ -131,21 +131,21 @@ target_link_libraries(ECharts PRIVATE
     Qt6::Widgets
     Qt6::WebEngineWidgets
     Qt6::Network
-    NetworkManager
-    Analytics
+    network
+    analytics
     Styles
     Device
 )
 
 target_include_directories(ECharts PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/styles
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Styles
 )
 
 # UserProfileTab模块
 qt_add_library(UserProfileTab STATIC
-    userprofiletab/userprofiletab.cpp
-    userprofiletab/userprofiletab.h
+    src/UserProfile/userprofiletab.cpp
+    src/UserProfile/userprofiletab.h
     layoutexamplestab.qrc
 )
 target_link_libraries(UserProfileTab PRIVATE
@@ -154,18 +154,18 @@ target_link_libraries(UserProfileTab PRIVATE
     Qt6::Widgets
     Qt6::WebEngineWidgets
     Qt6::Network
-    NetworkManager
+    network
     Styles
 )
 target_include_directories(UserProfileTab PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/styles
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Styles
 )
 
 # ReportsTab模块
 qt_add_library(ReportsTab STATIC
-    reportstab/reportstab.cpp
-    reportstab/reportstab.h
+    src/Reports/reportstab.cpp
+    src/Reports/reportstab.h
     layoutexamplestab.qrc
 )
 target_link_libraries(ReportsTab PRIVATE
@@ -175,40 +175,43 @@ target_link_libraries(ReportsTab PRIVATE
     Qt6::WebEngineWidgets
     Qt6::Network
     Qt6::PrintSupport
-    NetworkManager
+    network
     Styles
 )
 target_include_directories(ReportsTab PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/styles
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Styles
 )
 
-# LoginPage模块
-add_subdirectory(loginpage)
-
-# ChangePasswordPage模块
-add_subdirectory(changepasswordpage)
+# Auth模块（包含 LoginPage 和 ChangePasswordPage）
+add_subdirectory(src/Auth)
 
 # UserInfo模块
-add_subdirectory(userinfo)
+add_subdirectory(src/UserProfile)
 
 # Analytics埋点SDK模块
-add_subdirectory(analytics)
+add_subdirectory(src/Analytics)
 
 # Device模块
 add_subdirectory(src/Device)
 
-# 添加依赖关系，确保 NetworkManager 先于依赖它的模块构建
-add_dependencies(ChangePasswordPage NetworkManager)
-add_dependencies(LoginPage NetworkManager)
-add_dependencies(UserInfo NetworkManager)
-add_dependencies(ECharts NetworkManager)
-add_dependencies(UserProfileTab NetworkManager)
-add_dependencies(ReportsTab NetworkManager)
-add_dependencies(LoginPage Analytics)
-add_dependencies(UserInfo Analytics)
-add_dependencies(ChangePasswordPage Analytics)
-add_dependencies(ECharts Analytics)
+# 创建库别名以保持向后兼容（在所有库创建后）
+add_library(NetworkManager ALIAS network)
+add_library(LoginPage ALIAS auth)
+add_library(ChangePasswordPage ALIAS auth)
+add_library(UserInfo ALIAS userprofile)
+add_library(Analytics ALIAS analytics)
+
+# 添加依赖关系，确保 network 先于依赖它的模块构建
+# 注意：auth 包含 LoginPage 和 ChangePasswordPage，userprofile 包含 UserInfo
+add_dependencies(auth network)
+add_dependencies(userprofile network)
+add_dependencies(ECharts network)
+add_dependencies(UserProfileTab network)
+add_dependencies(ReportsTab network)
+add_dependencies(auth analytics)
+add_dependencies(userprofile analytics)
+add_dependencies(ECharts analytics)
 
 # 添加Styles库依赖关系
 add_dependencies(ECharts Styles)
@@ -217,18 +220,18 @@ add_dependencies(ReportsTab Styles)
 
 # 主应用程序源文件
 set(SOURCES
-    main.cpp
-    mainuiwindow.cpp
+    src/App/main.cpp
+    src/UI/mainuiwindow.cpp
 )
 
 # 主应用程序头文件
 set(HEADERS
-    mainuiwindow.h
+    src/UI/mainuiwindow.h
 )
 
 # UI文件列表
 set(UIS
-    mainuiwindow.ui
+    src/UI/mainuiwindow.ui
 )
 
 # 创建可执行文件
@@ -267,14 +270,13 @@ target_link_libraries(QTExample PRIVATE
     EnterpriseCore
     EnterpriseInterfaces
     EnterpriseLocalization
-    NetworkManager
+    network
     ECharts
     UserProfileTab
     ReportsTab
-    LoginPage
-    ChangePasswordPage
-    UserInfo
-    Analytics
+    auth
+    userprofile
+    analytics
     Styles
     Device
 )
@@ -287,15 +289,16 @@ target_include_directories(QTExample PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Interfaces
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Services
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Localization
-    ${CMAKE_CURRENT_SOURCE_DIR}/echarts
-    ${CMAKE_CURRENT_SOURCE_DIR}/userprofiletab
-    ${CMAKE_CURRENT_SOURCE_DIR}/reportstab
-    ${CMAKE_CURRENT_SOURCE_DIR}/loginpage
-    ${CMAKE_CURRENT_SOURCE_DIR}/changepasswordpage
-    ${CMAKE_CURRENT_SOURCE_DIR}/userinfo
-    ${CMAKE_CURRENT_SOURCE_DIR}/analytics
-    ${CMAKE_CURRENT_SOURCE_DIR}/styles
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Charts
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/UserProfile
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Reports
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Auth
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Analytics
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Styles
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Device
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Network
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/UI
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/App
 )
 
 # 安装规则
@@ -306,7 +309,7 @@ install(TARGETS QTExample
 )
 
 # 安装模块库
-install(TARGETS NetworkManager ECharts UserProfileTab ReportsTab LoginPage ChangePasswordPage UserInfo Analytics Styles
+install(TARGETS network ECharts UserProfileTab ReportsTab auth userprofile analytics Styles Device
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

@@ -2,7 +2,7 @@
 #include "ServiceManager.h"
 #include "DependencyContainer.h"
 #include "../Localization/LocalizationManager.h"
-#include "../../styles/theme_manager.h"
+#include "../Styles/theme_manager.h"
 #include <QDir>
 #include <QStandardPaths>
 #include <QDebug>
