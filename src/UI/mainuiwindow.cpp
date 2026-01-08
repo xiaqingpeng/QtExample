@@ -8,6 +8,7 @@
 #include "../Auth/changepasswordpage.h"
 #include "../UserProfile/userinfopage.h"
 #include "../Styles/theme_manager.h"
+#include "../Localization/LocalizationManager.h"
 #include "../Core/ServiceManager.h"
 #include "../Services/AuthenticationService.h"
 #include <QFont>
@@ -31,10 +32,11 @@
 #include <QDir>
 
 MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
+    , appTitle(nullptr)
     , m_networkService(nullptr)
     , m_authService(nullptr)
 {
-    setWindowTitle("Qt UI控件综合示例");
+    setWindowTitle(tr("Qt UI控件综合示例"));
     resize(1200, 800);
 
     // 初始化企业级服务
@@ -59,6 +61,16 @@ MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
 
     QVBoxLayout *mainVBoxLayout = new QVBoxLayout(this);
     mainVBoxLayout->addWidget(mainStack);
+
+    // 连接语言变化信号，动态更新界面文本
+    LocalizationManager *localizationManager = LocalizationManager::instance();
+    if (localizationManager) {
+        connect(localizationManager, &LocalizationManager::languageChanged,
+                this, &MainUIWindow::retranslateUi);
+    }
+
+    // 按当前语言初始化界面文本
+    retranslateUi();
 }
 
 void MainUIWindow::setupUI(QWidget *parent)
@@ -112,8 +124,11 @@ void MainUIWindow::setupUI(QWidget *parent)
         applyTheme();
         
         // 连接主题变化信号
-        connect(ThemeManager::instance(), &ThemeManager::themeChanged,
-                this, &MainUIWindow::applyTheme);
+        ThemeManager *themeManager = ThemeManager::instance();
+        if (themeManager) {
+            connect(themeManager, &ThemeManager::themeChanged,
+                    this, &MainUIWindow::applyTheme);
+        }
         
         // 初始化菜单
         if (mainMenuList && mainMenuList->count() > 0) {
@@ -137,26 +152,25 @@ void MainUIWindow::setupNavigationBar()
     navigationBar->setFixedHeight(70);
     
     QHBoxLayout *navLayout = new QHBoxLayout(navigationBar);
-    navLayout->setContentsMargins(24, 12, 24, 12);
+    navLayout->setContentsMargins(12, 12, 24, 12);
     navLayout->setSpacing(20);
     
     // 应用标题
-    appTitle = new QLabel("Qt 现代化应用");
-    appTitle->setObjectName("appTitle");
-    appTitle->setStyleSheet(QString(
-        "QLabel { "
-        "    font-family: %1; "
-        "    font-size: %2px; "
-        "    font-weight: 700; "
-        "    color: %3; "
-        "    padding: 0 8px; "
-        "}"
-    ).arg(ThemeManager::Typography::FONT_FAMILY)
-     .arg(ThemeManager::Typography::FONT_SIZE_XL)
-     .arg(ThemeManager::instance()->colors().TEXT_PRIMARY));
+    // appTitle = new QLabel("Qt 现代化应用");
+    // appTitle->setObjectName("appTitle");
+    // appTitle->setStyleSheet(QString(
+    //     "QLabel { "
+    //     "    font-family: %1; "
+    //     "    font-size: %2px; "
+    //     "    font-weight: 700; "
+    //     "    color: %3; "
+    //     "    padding: 0 8px; "
+    //     "}"
+    // ).arg(ThemeManager::Typography::FONT_FAMILY)
+    //  .arg(ThemeManager::Typography::FONT_SIZE_XL)
+    //  .arg(ThemeManager::instance()->colors().TEXT_PRIMARY));
     
-    navLayout->addWidget(appTitle);
-    navLayout->addStretch();
+   
     
     // 用户信息区域容器
     QWidget *userInfoContainer = new QWidget();
@@ -164,23 +178,67 @@ void MainUIWindow::setupNavigationBar()
     userInfoLayout->setContentsMargins(0, 0, 0, 0);
     userInfoLayout->setSpacing(12);
     
+    // 语言切换器（放在主题切换器左侧）
+    languageComboBox = new QComboBox();
+    languageComboBox->setMinimumWidth(120);
+    languageComboBox->setMaximumWidth(160);
+
+    LocalizationManager *lm = LocalizationManager::instance();
+    const QStringList languages = lm->availableLanguages();
+    const QString currentLang = lm->currentLanguage();
+
+    int currentIndex = -1;
+    for (int i = 0; i < languages.size(); ++i) {
+        const QString &code = languages.at(i);
+        const QString displayName = lm->getLanguageDisplayName(code);
+        languageComboBox->addItem(displayName, code);
+        if (code == currentLang && currentIndex == -1) {
+            currentIndex = i;
+        }
+    }
+    if (currentIndex >= 0) {
+        languageComboBox->setCurrentIndex(currentIndex);
+    }
+
+    connect(languageComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [this](int index) {
+                if (!languageComboBox || index < 0) {
+                    return;
+                }
+                const QString code = languageComboBox->itemData(index).toString();
+                if (!code.isEmpty()) {
+                    LocalizationManager *lm = LocalizationManager::instance();
+                    if (lm) {
+                        lm->setLanguage(code);
+                    }
+                }
+            });
+    
     // 主题切换器
     themeComboBox = new QComboBox();
-    themeComboBox->addItem("浅色主题", static_cast<int>(ThemeManager::LIGHT));
-    themeComboBox->addItem("深色主题", static_cast<int>(ThemeManager::DARK));
-    themeComboBox->addItem("蓝色主题", static_cast<int>(ThemeManager::BLUE));
-    themeComboBox->addItem("绿色主题", static_cast<int>(ThemeManager::GREEN));
+    themeComboBox->addItem(tr("浅色主题"), static_cast<int>(ThemeManager::LIGHT));
+    themeComboBox->addItem(tr("深色主题"), static_cast<int>(ThemeManager::DARK));
+    themeComboBox->addItem(tr("蓝色主题"), static_cast<int>(ThemeManager::BLUE));
+    themeComboBox->addItem(tr("绿色主题"), static_cast<int>(ThemeManager::GREEN));
     themeComboBox->setMinimumWidth(120);
     themeComboBox->setMaximumWidth(140);
     
     // 设置当前主题
-    themeComboBox->setCurrentIndex(static_cast<int>(ThemeManager::instance()->getCurrentTheme()));
+    ThemeManager *themeManager = ThemeManager::instance();
+    if (themeManager) {
+        themeComboBox->setCurrentIndex(static_cast<int>(themeManager->getCurrentTheme()));
+    }
     
     connect(themeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             [](int index) {
-                ThemeManager::instance()->setTheme(static_cast<ThemeManager::ThemeType>(index));
+                ThemeManager *tm = ThemeManager::instance();
+                if (tm) {
+                    tm->setTheme(static_cast<ThemeManager::ThemeType>(index));
+                }
             });
     
+    // 语言切换在左，主题切换在右
+    userInfoLayout->addWidget(languageComboBox);
     userInfoLayout->addWidget(themeComboBox);
     
     // 分隔线
@@ -188,13 +246,18 @@ void MainUIWindow::setupNavigationBar()
     separator->setFrameShape(QFrame::VLine);
     separator->setFrameShadow(QFrame::Sunken);
     separator->setFixedHeight(30);
-    separator->setStyleSheet(QString(
-        "QFrame { "
-        "    color: %1; "
-        "    background-color: %2; "
-        "}"
-    ).arg(ThemeManager::instance()->colors().BORDER)
-     .arg(ThemeManager::instance()->colors().BORDER));
+    
+    // 设置分隔线样式（安全检查）
+    ThemeManager *tm = ThemeManager::instance();
+    if (tm) {
+        separator->setStyleSheet(QString(
+            "QFrame { "
+            "    color: %1; "
+            "    background-color: %2; "
+            "}"
+        ).arg(tm->colors().BORDER)
+         .arg(tm->colors().BORDER));
+    }
     
     userInfoLayout->addWidget(separator);
     
@@ -220,11 +283,14 @@ void MainUIWindow::setupNavigationBar()
     usernameLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     
     userLayout->addWidget(usernameLabel);
+
+    navLayout->addWidget(userContainer);
+    navLayout->addStretch();
     
-    userInfoLayout->addWidget(userContainer);
+    // userInfoLayout->addWidget(userContainer);
     
     // 登出按钮
-    logoutButton = new QPushButton("登出");
+    logoutButton = new QPushButton(tr("登出"));
     logoutButton->setMinimumWidth(60);
     logoutButton->setMaximumWidth(80);
     connect(logoutButton, &QPushButton::clicked, this, &MainUIWindow::onLogoutClicked);
@@ -240,19 +306,19 @@ void MainUIWindow::setupMainMenu()
     mainMenuList->setMaximumWidth(220);
 
     // 添加一级菜单项
-    QListWidgetItem *item1 = new QListWidgetItem("图表示例");
+    QListWidgetItem *item1 = new QListWidgetItem(tr("图表示例"));
     item1->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mainMenuList->addItem(item1);
 
-    QListWidgetItem *item2 = new QListWidgetItem("数据分析");
+    QListWidgetItem *item2 = new QListWidgetItem(tr("数据分析"));
     item2->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mainMenuList->addItem(item2);
 
-    QListWidgetItem *item3 = new QListWidgetItem("设备信息");
+    QListWidgetItem *item3 = new QListWidgetItem(tr("设备信息"));
     item3->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mainMenuList->addItem(item3);
 
-    QListWidgetItem *item4 = new QListWidgetItem("个人中心");
+    QListWidgetItem *item4 = new QListWidgetItem(tr("个人中心"));
     item4->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mainMenuList->addItem(item4);
 
@@ -269,22 +335,87 @@ void MainUIWindow::setupSubMenu()
     connect(subMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onSubMenuClicked);
 }
 
+void MainUIWindow::retranslateUi()
+{
+    // 窗口标题
+    setWindowTitle(tr("Qt UI控件综合示例"));
+
+    // 主题切换器文本
+    if (themeComboBox && themeComboBox->count() >= 4) {
+        themeComboBox->blockSignals(true);
+        themeComboBox->setItemText(0, tr("浅色主题"));
+        themeComboBox->setItemText(1, tr("深色主题"));
+        themeComboBox->setItemText(2, tr("蓝色主题"));
+        themeComboBox->setItemText(3, tr("绿色主题"));
+        themeComboBox->blockSignals(false);
+    }
+
+    // 登出按钮
+    if (logoutButton) {
+        logoutButton->setText(tr("登出"));
+    }
+
+    // 状态栏初始文本（当前状态会在登录/认证流程中再次更新）
+    if (statusText) {
+        statusText->setText(tr("离线"));
+    }
+    if (statusMessage) {
+        statusMessage->setText(tr("就绪"));
+    }
+
+    // 一级菜单
+    if (mainMenuList && mainMenuList->count() >= 4) {
+        mainMenuList->item(0)->setText(tr("图表示例"));
+        mainMenuList->item(1)->setText(tr("数据分析"));
+        mainMenuList->item(2)->setText(tr("设备信息"));
+        mainMenuList->item(3)->setText(tr("个人中心"));
+    }
+
+    // 二级菜单：根据当前选中的一级菜单重新生成
+    if (mainMenuList && subMenuList && mainMenuList->currentItem()) {
+        setupSubMenuContent(mainMenuList->currentItem()->text());
+    }
+
+    // 语言下拉框的显示名来自 LocalizationManager，可在其中自定义
+    if (languageComboBox) {
+        languageComboBox->blockSignals(true);
+        languageComboBox->clear();
+
+        LocalizationManager *lm = LocalizationManager::instance();
+        const QStringList languages = lm->availableLanguages();
+        const QString currentLang = lm->currentLanguage();
+        int currentIndex = -1;
+        for (int i = 0; i < languages.size(); ++i) {
+            const QString &code = languages.at(i);
+            const QString displayName = lm->getLanguageDisplayName(code);
+            languageComboBox->addItem(displayName, code);
+            if (code == currentLang && currentIndex == -1) {
+                currentIndex = i;
+            }
+        }
+        if (currentIndex >= 0) {
+            languageComboBox->setCurrentIndex(currentIndex);
+        }
+        languageComboBox->blockSignals(false);
+    }
+}
+
 void MainUIWindow::setupSubMenuContent(const QString &mainMenu)
 {
     subMenuList->clear();
 
-    if (mainMenu.contains("图表示例")) {
-        new QListWidgetItem("ECharts示例", subMenuList);
-        new QListWidgetItem("日志统计", subMenuList);
-    } else if (mainMenu.contains("数据分析")) {
-        new QListWidgetItem("用户画像", subMenuList);
-        new QListWidgetItem("统计报表", subMenuList);
-    } else if (mainMenu.contains("设备信息")) {
-        new QListWidgetItem("服务器配置监控", subMenuList);
-        new QListWidgetItem("电脑本机配置监控", subMenuList);
-    } else if (mainMenu.contains("个人中心")) {
-        new QListWidgetItem("用户信息", subMenuList);
-        new QListWidgetItem("修改密码", subMenuList);
+    if (mainMenu.contains(tr("图表示例"))) {
+        new QListWidgetItem(tr("ECharts示例"), subMenuList);
+        new QListWidgetItem(tr("日志统计"), subMenuList);
+    } else if (mainMenu.contains(tr("数据分析"))) {
+        new QListWidgetItem(tr("用户画像"), subMenuList);
+        new QListWidgetItem(tr("统计报表"), subMenuList);
+    } else if (mainMenu.contains(tr("设备信息"))) {
+        new QListWidgetItem(tr("服务器配置监控"), subMenuList);
+        new QListWidgetItem(tr("电脑本机配置监控"), subMenuList);
+    } else if (mainMenu.contains(tr("个人中心"))) {
+        new QListWidgetItem(tr("用户信息"), subMenuList);
+        new QListWidgetItem(tr("修改密码"), subMenuList);
     }
 
     // 默认选择第一个二级菜单
@@ -310,10 +441,10 @@ void MainUIWindow::setupStatusBar()
     statusIndicator->setFixedSize(8, 8);
     statusIndicator->setStyleSheet("background-color: #10b981; border-radius: 4px;");
     
-    statusText = new QLabel("离线");
+    statusText = new QLabel(tr("离线"));
     statusText->setObjectName("statusText");
     
-    statusMessage = new QLabel("就绪");
+    statusMessage = new QLabel(tr("就绪"));
     statusMessage->setObjectName("statusMessage");
     
     statusLayout->addWidget(statusIndicator);
@@ -325,6 +456,10 @@ void MainUIWindow::setupStatusBar()
 void MainUIWindow::applyTheme()
 {
     ThemeManager *theme = ThemeManager::instance();
+    if (!theme) {
+        qWarning() << "ThemeManager instance is null!";
+        return;
+    }
     
     // 应用整体背景
     this->setStyleSheet(QString(
@@ -342,20 +477,20 @@ void MainUIWindow::applyTheme()
         navigationBar->setStyleSheet(theme->getNavigationStyle());
     }
     
-    // 更新应用标题样式
-    if (appTitle) {
-        appTitle->setStyleSheet(QString(
-            "QLabel { "
-            "    font-family: %1; "
-            "    font-size: %2px; "
-            "    font-weight: 700; "
-            "    color: %3; "
-            "    padding: 0 8px; "
-            "}"
-        ).arg(ThemeManager::Typography::FONT_FAMILY)
-         .arg(ThemeManager::Typography::FONT_SIZE_XL)
-         .arg(theme->colors().TEXT_PRIMARY));
-    }
+    // 更新应用标题样式（已注释掉，因为 appTitle 未使用）
+    // if (appTitle) {
+    //     appTitle->setStyleSheet(QString(
+    //         "QLabel { "
+    //         "    font-family: %1; "
+    //         "    font-size: %2px; "
+    //         "    font-weight: 700; "
+    //         "    color: %3; "
+    //         "    padding: 0 8px; "
+    //         "}"
+    //     ).arg(ThemeManager::Typography::FONT_FAMILY)
+    //      .arg(ThemeManager::Typography::FONT_SIZE_XL)
+    //      .arg(theme->colors().TEXT_PRIMARY));
+    // }
     
     // 应用主题切换器样式并同步当前选择
     if (themeComboBox) {
@@ -373,6 +508,11 @@ void MainUIWindow::applyTheme()
         
         // 重新连接信号
         themeComboBox->blockSignals(false);
+    }
+
+    // 应用语言切换器样式
+    if (languageComboBox) {
+        languageComboBox->setStyleSheet(theme->getThemeSwitcherStyle());
     }
     
     // 应用按钮样式
@@ -673,8 +813,8 @@ void MainUIWindow::onLoginSuccess(const QString &token)
             "    border-radius: 5px; "
             "}"
         );
-        statusText->setText("在线");
-        statusMessage->setText("登录成功");
+        statusText->setText(tr("在线"));
+        statusMessage->setText(tr("登录成功"));
         
         // LOG_DEBUG("Scheduling updateUserInfo");
         
@@ -732,7 +872,7 @@ void MainUIWindow::onLogoutClicked()
         }
         
         // 重置用户信息显示
-        usernameLabel->setText("未登录");
+        usernameLabel->setText(tr("未登录"));
         avatarLabel->clear();
         
         // 更新状态栏
@@ -742,8 +882,8 @@ void MainUIWindow::onLogoutClicked()
             "    border-radius: 5px; "
             "}"
         );
-        statusText->setText("离线");
-        statusMessage->setText("已登出");
+        statusText->setText(tr("离线"));
+        statusMessage->setText(tr("已登出"));
         
         // 返回登录页面
         mainStack->setCurrentIndex(0);
@@ -790,7 +930,7 @@ void MainUIWindow::updateUserInfoSafe()
             usernameLabel->setText(username);
             // LOG_DEBUG("Username updated to:" << username);
         } else {
-            usernameLabel->setText("未知用户");
+            usernameLabel->setText(tr("未知用户"));
             // LOG_DEBUG("Username set to default");
         }
         
@@ -1131,8 +1271,8 @@ void MainUIWindow::onAuthenticationChanged(bool authenticated)
                 "    border-radius: 5px; "
                 "}"
             );
-            statusText->setText("在线");
-            statusMessage->setText("已连接企业服务");
+            statusText->setText(tr("在线"));
+            statusMessage->setText(tr("已连接企业服务"));
         }
         
         // 更新用户信息显示
@@ -1149,13 +1289,13 @@ void MainUIWindow::onAuthenticationChanged(bool authenticated)
                 "    border-radius: 5px; "
                 "}"
             );
-            statusText->setText("离线");
-            statusMessage->setText("未连接");
+            statusText->setText(tr("离线"));
+            statusMessage->setText(tr("未连接"));
         }
         
         // 清除用户信息显示
         if (usernameLabel && avatarLabel) {
-            usernameLabel->setText("未登录");
+            usernameLabel->setText(tr("未登录"));
             avatarLabel->clear();
             setDefaultAvatar();
         }

@@ -6,6 +6,7 @@
 #include "../Services/NetworkService.h"
 #include "../Services/AuthenticationService.h"
 #include "../Services/AnalyticsService.h"
+#include "../Localization/LocalizationManager.h"
 
 void initializeEnterpriseServices(Application* app)
 {
@@ -40,6 +41,9 @@ int main(int argc, char *argv[])
     
     // 初始化企业级应用程序
     app.initialize();
+    
+    // 初始化本地化管理器
+    LocalizationManager::instance()->initialize();
     
     // 初始化企业级服务
     initializeEnterpriseServices(&app);

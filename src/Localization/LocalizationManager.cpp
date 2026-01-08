@@ -46,11 +46,14 @@ void LocalizationManager::initialize()
     QSettings settings;
     QString savedLanguage = settings.value("language", QLocale::system().name()).toString();
     
+    // 规范化语言代码
+    savedLanguage = normalizeLanguageCode(savedLanguage);
+    
     if (isLanguageAvailable(savedLanguage)) {
         setLanguage(savedLanguage);
     } else {
         // 如果保存的语言不可用，使用系统默认语言或英语
-        QString systemLanguage = QLocale::system().name();
+        QString systemLanguage = normalizeLanguageCode(QLocale::system().name());
         if (isLanguageAvailable(systemLanguage)) {
             setLanguage(systemLanguage);
         } else {
@@ -59,7 +62,7 @@ void LocalizationManager::initialize()
     }
 
     m_initialized = true;
-    // qDebug() << "LocalizationManager initialized, current language:" << m_currentLanguage;
+    qDebug() << "LocalizationManager initialized, current language:" << m_currentLanguage;
 }
 
 void LocalizationManager::setLanguage(const QString& languageCode)
@@ -84,18 +87,22 @@ void LocalizationManager::setLanguage(const QString& languageCode)
 
     // 加载新的翻译文件
     QString translationFile = getTranslationFilePath(languageCode);
-    if (QFile::exists(translationFile)) {
+    if (!translationFile.isEmpty() && QFile::exists(translationFile)) {
         m_translator = new QTranslator(this);
         if (m_translator->load(translationFile)) {
             QCoreApplication::installTranslator(m_translator);
-            // qDebug() << "Translation loaded successfully:" << translationFile;
+            qDebug() << "Translation loaded successfully:" << translationFile;
         } else {
-            qWarning() << "Failed to load translation:" << translationFile;
+            qWarning() << "Failed to load translation file:" << translationFile;
             delete m_translator;
             m_translator = nullptr;
         }
     } else {
-        // qDebug() << "Translation file not found:" << translationFile;
+        if (translationFile.isEmpty()) {
+            qWarning() << "Translation file path is empty for language:" << languageCode;
+        } else {
+            qWarning() << "Translation file not found:" << translationFile;
+        }
     }
 
     m_currentLanguage = languageCode;
@@ -182,9 +189,18 @@ void LocalizationManager::loadTranslations()
         }
     }
 
-    // 总是添加英语作为默认语言
-    if (!m_availableLanguages.contains("en_US")) {
-        m_availableLanguages.append("en_US");
+    // 确保常用语言始终可选（即使缺少对应的qm文件，也可以通过代码内字符串实现基础多语言）
+    const QStringList defaultLanguages = {
+        QStringLiteral("zh_CN"),
+        QStringLiteral("en_US"),
+        QStringLiteral("ja_JP"),
+        QStringLiteral("ko_KR")
+    };
+
+    for (const QString &code : defaultLanguages) {
+        if (!m_availableLanguages.contains(code)) {
+            m_availableLanguages.append(code);
+        }
     }
 }
 
@@ -206,18 +222,99 @@ void LocalizationManager::loadLanguageInfo()
 QString LocalizationManager::getTranslationFilePath(const QString& languageCode) const
 {
     QString fileName = QString("app_%1.qm").arg(languageCode);
+    QString appDir = QCoreApplication::applicationDirPath();
     
-    // 首先尝试应用程序目录
-    QString appDirPath = QCoreApplication::applicationDirPath() + "/translations/" + fileName;
+    qDebug() << "Looking for translation file:" << fileName;
+    qDebug() << "Application directory:" << appDir;
+    
+    // 1. 尝试应用程序目录下的 translations 子目录（最常见）
+    QString appDirPath = appDir + "/translations/" + fileName;
+    qDebug() << "Checking path 1:" << appDirPath << "exists:" << QFile::exists(appDirPath);
     if (QFile::exists(appDirPath)) {
+        qDebug() << "Found translation file at:" << appDirPath;
         return appDirPath;
     }
     
-    // 然后尝试资源文件
+    // 2. 尝试构建目录中的 translations 子目录
+    QString buildDirPath = appDir + "/../translations/" + fileName;
+    qDebug() << "Checking path 2:" << buildDirPath << "exists:" << QFile::exists(buildDirPath);
+    if (QFile::exists(buildDirPath)) {
+        qDebug() << "Found translation file at:" << buildDirPath;
+        return buildDirPath;
+    }
+    
+    // 3. 尝试可执行文件同级目录
+    QString sameDirPath = appDir + "/" + fileName;
+    qDebug() << "Checking path 3:" << sameDirPath << "exists:" << QFile::exists(sameDirPath);
+    if (QFile::exists(sameDirPath)) {
+        qDebug() << "Found translation file at:" << sameDirPath;
+        return sameDirPath;
+    }
+    
+    // 4. 尝试资源文件
     QString resourcePath = QString(":/translations/%1").arg(fileName);
+    qDebug() << "Checking path 4:" << resourcePath << "exists:" << QFile::exists(resourcePath);
     if (QFile::exists(resourcePath)) {
+        qDebug() << "Found translation file at:" << resourcePath;
         return resourcePath;
     }
     
+    // 5. 尝试源代码目录（开发时可能用到）
+    QString sourcePath = QCoreApplication::applicationDirPath() + "/../../src/Localization/translations/" + fileName;
+    qDebug() << "Checking path 5:" << sourcePath << "exists:" << QFile::exists(sourcePath);
+    if (QFile::exists(sourcePath)) {
+        qDebug() << "Found translation file at:" << sourcePath;
+        return sourcePath;
+    }
+    
+    qWarning() << "Translation file not found:" << fileName;
     return QString();
+}
+
+QString LocalizationManager::normalizeLanguageCode(const QString& languageCode) const
+{
+    QString code = languageCode.trimmed();
+    
+    // 处理空字符串
+    if (code.isEmpty()) {
+        return "en_US";
+    }
+    
+    // 处理常见的无效语言代码
+    if (code.startsWith("en")) {
+        // 所有英语变体都映射到 en_US（包括 en_CN 这样的错误代码）
+        if (code == "en_US" || code == "en_GB" || code == "en_CA" || code == "en_AU") {
+            return "en_US";
+        }
+        // 处理错误的英语代码如 en_CN
+        return "en_US";
+    }
+    
+    if (code.startsWith("zh")) {
+        // 中文变体处理
+        if (code.contains("TW") || code.contains("HK") || code.contains("MO")) {
+            return "zh_TW"; // 繁体中文
+        } else if (code.contains("CN") || code == "zh") {
+            return "zh_CN"; // 简体中文
+        } else {
+            return "zh_CN"; // 默认简体中文
+        }
+    }
+    
+    if (code.startsWith("ja")) {
+        return "ja_JP";
+    }
+    
+    if (code.startsWith("ko")) {
+        return "ko_KR";
+    }
+    
+    // 如果是已知的完整语言代码，直接返回
+    const QStringList knownCodes = {"zh_CN", "zh_TW", "en_US", "ja_JP", "ko_KR"};
+    if (knownCodes.contains(code)) {
+        return code;
+    }
+    
+    // 默认返回英语
+    return "en_US";
 }

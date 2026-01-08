@@ -9,8 +9,14 @@ const QString ThemeManager::Shadow::MD = "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2
 const QString ThemeManager::Shadow::LG = "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)";
 const QString ThemeManager::Shadow::XL = "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)";
 
-// 字体定义
-const QString ThemeManager::Typography::FONT_FAMILY = "Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+// 字体定义 - 针对不同平台优化
+#ifdef Q_OS_MACOS
+const QString ThemeManager::Typography::FONT_FAMILY = "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif";
+#elif defined(Q_OS_WIN)
+const QString ThemeManager::Typography::FONT_FAMILY = "'Segoe UI', 'Microsoft YaHei', Arial, sans-serif";
+#else
+const QString ThemeManager::Typography::FONT_FAMILY = "'DejaVu Sans', 'Liberation Sans', Arial, sans-serif";
+#endif
 
 ThemeManager::ThemeManager(QObject *parent) : QObject(parent), m_currentTheme(LIGHT)
 {

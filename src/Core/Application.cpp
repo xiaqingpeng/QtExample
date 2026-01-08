@@ -113,11 +113,9 @@ void Application::setupLocalization()
     // 初始化本地化管理器
     LocalizationManager::instance()->initialize();
 
-    // 设置默认语言
-    QString systemLocale = QLocale::system().name();
-    LocalizationManager::instance()->setLanguage(systemLocale);
-
-    // qDebug() << "Localization setup complete, system locale:" << systemLocale;
+    // initialize() 已经处理了语言设置，包括规范化系统语言
+    // 这里不需要再次设置，避免重复设置和可能的错误代码
+    // qDebug() << "Localization setup complete, current language:" << LocalizationManager::instance()->currentLanguage();
 }
 
 void Application::setupTheme()

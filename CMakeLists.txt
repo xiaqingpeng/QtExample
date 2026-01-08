@@ -98,6 +98,59 @@ qt_add_library(EnterpriseLocalization STATIC
     src/Localization/LocalizationManager.cpp
     src/Localization/LocalizationManager.h
 )
+
+# 添加翻译文件处理 - 使用简化的方法
+set(TS_FILES
+    src/Localization/translations/app_zh_CN.ts
+    src/Localization/translations/app_en_US.ts
+    src/Localization/translations/app_ja_JP.ts
+    src/Localization/translations/app_ko_KR.ts
+)
+
+# 查找 Qt 翻译工具
+find_package(Qt6 COMPONENTS LinguistTools QUIET)
+
+if(Qt6LinguistTools_FOUND)
+    # 手动编译翻译文件
+    set(QM_FILES)
+    foreach(TS_FILE ${TS_FILES})
+        get_filename_component(TS_BASENAME ${TS_FILE} NAME_WE)
+        set(QM_FILE "${CMAKE_CURRENT_BINARY_DIR}/${TS_BASENAME}.qm")
+        
+        add_custom_command(
+            OUTPUT ${QM_FILE}
+            COMMAND Qt6::lrelease ${CMAKE_CURRENT_SOURCE_DIR}/${TS_FILE} -qm ${QM_FILE}
+            DEPENDS ${TS_FILE}
+            COMMENT "Compiling ${TS_FILE} to ${QM_FILE}"
+        )
+        
+        list(APPEND QM_FILES ${QM_FILE})
+    endforeach()
+    
+    # 创建自定义目标来编译翻译文件
+    add_custom_target(translations ALL DEPENDS ${QM_FILES})
+    
+    # 将编译后的 .qm 文件复制到输出目录
+    foreach(QM_FILE ${QM_FILES})
+        get_filename_component(QM_FILENAME ${QM_FILE} NAME)
+        add_custom_command(TARGET translations POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${QM_FILE}
+                ${CMAKE_CURRENT_BINARY_DIR}/translations/${QM_FILENAME}
+            COMMENT "Copying ${QM_FILENAME} to translations directory"
+        )
+    endforeach()
+    
+    # 创建 translations 目录
+    add_custom_command(TARGET translations PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/translations
+    )
+    
+    message(STATUS "Translation files will be compiled to: ${CMAKE_CURRENT_BINARY_DIR}/translations/")
+else()
+    message(WARNING "Qt LinguistTools not found - translations will not be compiled")
+endif()
+
 target_link_libraries(EnterpriseLocalization PRIVATE
     Qt6::Core
 )
@@ -311,6 +364,41 @@ target_include_directories(QTExample PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/UI
     ${CMAKE_CURRENT_SOURCE_DIR}/src/App
 )
+
+# 确保翻译文件在 QTExample 构建之前完成
+if(Qt6LinguistTools_FOUND)
+    add_dependencies(QTExample translations)
+    
+    # 在构建后，将翻译文件复制到可执行文件目录（用于运行时加载）
+    foreach(QM_FILE ${QM_FILES})
+        get_filename_component(QM_FILENAME ${QM_FILE} NAME)
+        if(APPLE)
+            # macOS: 使用生成器表达式动态获取应用程序包路径
+            add_custom_command(TARGET QTExample POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_BUNDLE_DIR:QTExample>/Contents/MacOS/translations
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    ${CMAKE_CURRENT_BINARY_DIR}/translations/${QM_FILENAME}
+                    $<TARGET_BUNDLE_DIR:QTExample>/Contents/MacOS/translations/${QM_FILENAME}
+                COMMENT "Copying ${QM_FILENAME} to app translations directory"
+            )
+        else()
+            # 其他平台: 复制到可执行文件目录
+            add_custom_command(TARGET QTExample POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/translations
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    ${CMAKE_CURRENT_BINARY_DIR}/translations/${QM_FILENAME}
+                    ${CMAKE_CURRENT_BINARY_DIR}/translations/${QM_FILENAME}
+                COMMENT "Copying ${QM_FILENAME} to translations directory"
+            )
+        endif()
+    endforeach()
+    
+    if(APPLE)
+        message(STATUS "Translation files will be copied to: $<TARGET_BUNDLE_DIR:QTExample>/Contents/MacOS/translations/")
+    else()
+        message(STATUS "Translation files will be copied to: ${CMAKE_CURRENT_BINARY_DIR}/translations/")
+    endif()
+endif()
 
 # 安装规则
 install(TARGETS QTExample

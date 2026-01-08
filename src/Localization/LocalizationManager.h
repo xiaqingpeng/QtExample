@@ -86,6 +86,7 @@ private:
     void loadTranslations();
     void loadLanguageInfo();
     QString getTranslationFilePath(const QString& languageCode) const;
+    QString normalizeLanguageCode(const QString& languageCode) const;
 
 private:
     static LocalizationManager* s_instance;

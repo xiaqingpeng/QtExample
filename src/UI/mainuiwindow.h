@@ -21,6 +21,7 @@
 #include "../Device/serverconfigtab.h"
 #include "../Device/contenttab.h"
 #include "../Styles/theme_manager.h"
+#include "../Localization/LocalizationManager.h"
 
 // 企业级架构集成
 #include "../Core/Application.h"
@@ -58,6 +59,7 @@ private:
     void setDefaultAvatar();
     void loadNetworkAvatar(const QString &avatarUrl);
     void initializeEnterpriseServices(); // 初始化企业级服务
+    void retranslateUi();                // 根据当前语言刷新界面文案
 
     QGridLayout *mainLayout;
     
@@ -68,6 +70,7 @@ private:
     QLabel *usernameLabel;
     QPushButton *logoutButton;
     QComboBox *themeComboBox;
+    QComboBox *languageComboBox;
     
     // 菜单组件
     QListWidget *mainMenuList;
