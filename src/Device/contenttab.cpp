@@ -7,6 +7,7 @@
 #include <QWebEngineSettings>
 #include <QProcess>
 #include <QRegularExpression>
+#include <QPointer>
 #include "theme_manager.h"
 #include "serverconfigtab.h"
 
@@ -776,6 +777,23 @@ ContentTab::ContentTab(QWidget *parent)
 
 ContentTab::~ContentTab()
 {
+    // 查找并等待所有子线程完成
+    // 因为线程是 this 的子对象，当 ContentTab 被销毁时，线程也会被销毁
+    // 但我们需要确保线程已经完成，避免 "Destroyed while thread is still running" 警告
+    QList<QThread*> childThreads = findChildren<QThread*>();
+    for (QThread *thread : childThreads) {
+        if (thread && thread->isRunning()) {
+            // 请求线程退出
+            thread->quit();
+            // 等待线程完成，最多等待3秒
+            if (!thread->wait(3000)) {
+                // 如果线程仍未完成，强制终止
+                qWarning() << "[ContentTab] Thread did not finish in time, terminating...";
+                thread->terminate();
+                thread->wait(1000);
+            }
+        }
+    }
 }
 
 void ContentTab::onPageLoaded(bool ok){
@@ -884,21 +902,33 @@ void ContentTab::fetchSystemInfo()
     QThread *thread = new QThread(this);
     QObject *worker = new QObject();
     
+    // 使用 QPointer 来安全地访问 this，避免悬空指针
+    QPointer<ContentTab> safeThis = this;
+    
     // 在线程中执行获取系统信息的操作
-    QObject::connect(thread, &QThread::started, worker, [worker, this]() {
+    QObject::connect(thread, &QThread::started, worker, [worker, safeThis]() {
+        // 检查对象是否仍然有效
+        if (!safeThis) {
+            QThread::currentThread()->quit();
+            return;
+        }
         QJsonObject systemInfo;
         
         // 获取CPU使用率
         QProcess cpuProcess;
         cpuProcess.start("sh", QStringList() << "-c" << "top -l 1 | grep 'CPU usage' | awk '{print $3}' | sed 's/%//'");
-        cpuProcess.waitForFinished();
+        if (!cpuProcess.waitForFinished(2000)) {  // 2秒超时
+            cpuProcess.kill();
+        }
         QString cpuUsage = cpuProcess.readAllStandardOutput().trimmed();
         systemInfo["cpu_usage"] = cpuUsage.toDouble();
         
         // 获取内存信息
         QProcess memProcess;
         memProcess.start("sh", QStringList() << "-c" << "top -l 1 | grep 'PhysMem' | awk '{print $2, $4, $6}'");
-        memProcess.waitForFinished();
+        if (!memProcess.waitForFinished(2000)) {  // 2秒超时
+            memProcess.kill();
+        }
         QString memInfo = memProcess.readAllStandardOutput().trimmed();
         QStringList memParts = memInfo.split(" ");
         if (memParts.size() >= 3) {
@@ -913,7 +943,9 @@ void ContentTab::fetchSystemInfo()
         // 获取磁盘信息
         QProcess diskProcess;
         diskProcess.start("sh", QStringList() << "-c" << "df -h / | tail -1 | awk '{print $2, $3, $5}'");
-        diskProcess.waitForFinished();
+        if (!diskProcess.waitForFinished(2000)) {  // 2秒超时
+            diskProcess.kill();
+        }
         QString diskInfo = diskProcess.readAllStandardOutput().trimmed();
         QStringList diskParts = diskInfo.split(" ");
         if (diskParts.size() >= 3) {
@@ -925,7 +957,9 @@ void ContentTab::fetchSystemInfo()
         // 获取负载信息
         QProcess loadProcess;
         loadProcess.start("sh", QStringList() << "-c" << "uptime | awk -F'load averages: ' '{print $2}'");
-        loadProcess.waitForFinished();
+        if (!loadProcess.waitForFinished(2000)) {  // 2秒超时
+            loadProcess.kill();
+        }
         QString loadInfo = loadProcess.readAllStandardOutput().trimmed();
         QStringList loadParts = loadInfo.split(", ");
         if (loadParts.size() >= 3) {
@@ -937,7 +971,9 @@ void ContentTab::fetchSystemInfo()
         // 获取运行时间
         QProcess uptimeProcess;
         uptimeProcess.start("sh", QStringList() << "-c" << "uptime | awk -F'up ' '{print $2}' | awk -F', ' '{print $1}'");
-        uptimeProcess.waitForFinished();
+        if (!uptimeProcess.waitForFinished(2000)) {  // 2秒超时
+            uptimeProcess.kill();
+        }
         QString uptimeInfo = uptimeProcess.readAllStandardOutput().trimmed();
         // 简单处理运行时间（这里只取天数部分）
         QRegularExpression regex("(\\d+) days?");
@@ -951,14 +987,18 @@ void ContentTab::fetchSystemInfo()
         // 获取网络信息
         QProcess ipProcess;
         ipProcess.start("sh", QStringList() << "-c" << "ifconfig en0 | grep 'inet ' | awk '{print $2}'");
-        ipProcess.waitForFinished();
+        if (!ipProcess.waitForFinished(2000)) {  // 2秒超时
+            ipProcess.kill();
+        }
         QString ipAddress = ipProcess.readAllStandardOutput().trimmed();
         systemInfo["ip_address"] = ipAddress;
         
         // 获取操作系统信息
         QProcess osProcess;
         osProcess.start("sh", QStringList() << "-c" << "sw_vers -productName && sw_vers -productVersion");
-        osProcess.waitForFinished();
+        if (!osProcess.waitForFinished(2000)) {  // 2秒超时
+            osProcess.kill();
+        }
         QString osInfo = osProcess.readAllStandardOutput().trimmed();
         QStringList osParts = osInfo.split("\n");
         if (osParts.size() >= 2) {
@@ -974,8 +1014,10 @@ void ContentTab::fetchSystemInfo()
         systemInfo["total_rx_mb"] = 0.0;
         systemInfo["total_tx_mb"] = 0.0;
         
-        // 将结果发送回主线程
-        QMetaObject::invokeMethod(this, "updateCharts", Qt::QueuedConnection, Q_ARG(QJsonObject, systemInfo));
+        // 将结果发送回主线程（只有在对象仍然有效时）
+        if (safeThis) {
+            QMetaObject::invokeMethod(safeThis, "updateCharts", Qt::QueuedConnection, Q_ARG(QJsonObject, systemInfo));
+        }
         
         // 完成后退出线程
         QThread::currentThread()->quit();
