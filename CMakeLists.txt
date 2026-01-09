@@ -14,11 +14,16 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 COMPONENTS Core Gui Widgets Network PrintSupport REQUIRED)
 find_package(Qt6 COMPONENTS WebEngineWidgets QUIET)
 
-# 检查WebEngine是否可用
-if(Qt6WebEngineWidgets_FOUND)
+# 检查WebEngine是否可用，特别处理Windows平台
+set(WEBENGINE_AVAILABLE FALSE)
+if(Qt6WebEngineWidgets_FOUND AND NOT WIN32)
     message(STATUS "Qt WebEngine found - enabling web features")
+    set(WEBENGINE_AVAILABLE TRUE)
     add_definitions(-DWEBENGINE_AVAILABLE)
     set(WEBENGINE_LIBRARIES Qt6::WebEngineWidgets)
+elseif(WIN32)
+    message(STATUS "Windows platform detected - WebEngine features disabled for compatibility")
+    set(WEBENGINE_LIBRARIES "")
 else()
     message(WARNING "Qt WebEngine not found - web features will be disabled")
     set(WEBENGINE_LIBRARIES "")
@@ -189,6 +194,12 @@ qt_add_library(ECharts STATIC
     src/Charts/logstatstab.h
     layoutexamplestab.qrc
 )
+
+# 检查WebEngine是否可用，特别处理Windows平台
+if(WEBENGINE_AVAILABLE)
+    target_compile_definitions(ECharts PRIVATE WEBENGINE_AVAILABLE)
+endif()
+
 target_link_libraries(ECharts PRIVATE
     Qt6::Core
     Qt6::Gui
@@ -212,6 +223,12 @@ qt_add_library(UserProfileTab STATIC
     src/UserProfile/userprofiletab.h
     layoutexamplestab.qrc
 )
+
+# 检查WebEngine是否可用，特别处理Windows平台
+if(WEBENGINE_AVAILABLE)
+    target_compile_definitions(UserProfileTab PRIVATE WEBENGINE_AVAILABLE)
+endif()
+
 target_link_libraries(UserProfileTab PRIVATE
     Qt6::Core
     Qt6::Gui
@@ -232,6 +249,12 @@ qt_add_library(ReportsTab STATIC
     src/Reports/reportstab.h
     layoutexamplestab.qrc
 )
+
+# 检查WebEngine是否可用，特别处理Windows平台
+if(WEBENGINE_AVAILABLE)
+    target_compile_definitions(ReportsTab PRIVATE WEBENGINE_AVAILABLE)
+endif()
+
 target_link_libraries(ReportsTab PRIVATE
     Qt6::Core
     Qt6::Gui

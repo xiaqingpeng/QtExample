@@ -62,11 +62,30 @@ EChartsTab::EChartsTab(QWidget *parent)
     
     m_webView->load(QUrl::fromLocalFile(htmlPath));
 #else
-    // WebEngine不可用时，创建一个简单的标签作为占位符
-    m_webView = new QLabel("WebEngine 不可用 - ECharts功能已禁用", this);
+    // WebEngine不可用时，创建一个更友好的替代界面
+    QWidget* fallbackWidget = new QWidget(this);
+    QVBoxLayout* fallbackLayout = new QVBoxLayout(fallbackWidget);
+    
+    QLabel* titleLabel = new QLabel("图表功能", this);
+    titleLabel->setAlignment(Qt::AlignCenter);
+    titleLabel->setStyleSheet("QLabel { font-size: 18px; font-weight: bold; color: #333; margin: 20px; }");
+    
+    QLabel* messageLabel = new QLabel("当前平台不支持 WebEngine 组件\n图表功能已禁用", this);
+    messageLabel->setAlignment(Qt::AlignCenter);
+    messageLabel->setStyleSheet("QLabel { color: #666; font-size: 14px; line-height: 1.5; }");
+    
+    QLabel* infoLabel = new QLabel("建议使用 macOS 或 Linux 平台获得完整的图表体验", this);
+    infoLabel->setAlignment(Qt::AlignCenter);
+    infoLabel->setStyleSheet("QLabel { color: #999; font-size: 12px; margin-top: 10px; }");
+    
+    fallbackLayout->addStretch();
+    fallbackLayout->addWidget(titleLabel);
+    fallbackLayout->addWidget(messageLabel);
+    fallbackLayout->addWidget(infoLabel);
+    fallbackLayout->addStretch();
+    
+    m_webView = fallbackWidget;
     m_webView->setObjectName("echartsWebView");
-    m_webView->setAlignment(Qt::AlignCenter);
-    m_webView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
     layout->addWidget(m_webView);
 
     // 创建桥接对象但不使用WebChannel

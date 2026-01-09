@@ -5,13 +5,20 @@ qt6_add_library(charts STATIC
     logstatstab.cpp
 )
 
-# 定义WEBENGINE_AVAILABLE宏，因为charts模块使用了WebEngineWidgets
-target_compile_definitions(charts PRIVATE WEBENGINE_AVAILABLE)
+# 检查WebEngine是否可用，特别处理Windows平台
+if(Qt6WebEngineWidgets_FOUND AND NOT WIN32)
+    target_compile_definitions(charts PRIVATE WEBENGINE_AVAILABLE)
+    target_link_libraries(charts PRIVATE Qt6::WebEngineWidgets)
+    message(STATUS "Charts module: WebEngine enabled")
+elseif(WIN32)
+    message(STATUS "Charts module: WebEngine disabled for Windows compatibility")
+else()
+    message(STATUS "Charts module: WebEngine not available")
+endif()
 
-target_link_libraries(charts
+target_link_libraries(charts PRIVATE
     Qt6::Core
     Qt6::Widgets
-    Qt6::WebEngineWidgets
     Qt6::Network
     EnterpriseCore
     EnterpriseServices

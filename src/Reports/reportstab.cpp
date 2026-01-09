@@ -163,17 +163,47 @@ void ReportsTab::setupTrendCharts()
     m_activityChartView->setMinimumHeight(350);
     m_activityChartView->setObjectName("chartView");
 #else
-    m_trendChartView = new QLabel("WebEngine 不可用 - 趋势图表已禁用");
+    // 创建更友好的趋势图表替代界面
+    QWidget* trendFallback = new QWidget();
+    QVBoxLayout* trendLayout = new QVBoxLayout(trendFallback);
+    
+    QLabel* trendTitle = new QLabel("趋势图表");
+    trendTitle->setAlignment(Qt::AlignCenter);
+    trendTitle->setStyleSheet("QLabel { font-size: 16px; font-weight: bold; color: #333; margin: 10px; }");
+    
+    QLabel* trendMessage = new QLabel("当前平台不支持 WebEngine 组件\n趋势图表功能已禁用");
+    trendMessage->setAlignment(Qt::AlignCenter);
+    trendMessage->setStyleSheet("QLabel { color: #666; font-size: 12px; line-height: 1.5; }");
+    
+    trendLayout->addStretch();
+    trendLayout->addWidget(trendTitle);
+    trendLayout->addWidget(trendMessage);
+    trendLayout->addStretch();
+    
+    m_trendChartView = trendFallback;
     m_trendChartView->setMinimumHeight(450);
     m_trendChartView->setObjectName("chartView");
-    m_trendChartView->setAlignment(Qt::AlignCenter);
-    m_trendChartView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
     
-    m_activityChartView = new QLabel("WebEngine 不可用 - 活动图表已禁用");
+    // 创建更友好的活动图表替代界面
+    QWidget* activityFallback = new QWidget();
+    QVBoxLayout* activityLayout = new QVBoxLayout(activityFallback);
+    
+    QLabel* activityTitle = new QLabel("活动图表");
+    activityTitle->setAlignment(Qt::AlignCenter);
+    activityTitle->setStyleSheet("QLabel { font-size: 16px; font-weight: bold; color: #333; margin: 10px; }");
+    
+    QLabel* activityMessage = new QLabel("当前平台不支持 WebEngine 组件\n活动图表功能已禁用");
+    activityMessage->setAlignment(Qt::AlignCenter);
+    activityMessage->setStyleSheet("QLabel { color: #666; font-size: 12px; line-height: 1.5; }");
+    
+    activityLayout->addStretch();
+    activityLayout->addWidget(activityTitle);
+    activityLayout->addWidget(activityMessage);
+    activityLayout->addStretch();
+    
+    m_activityChartView = activityFallback;
     m_activityChartView->setMinimumHeight(350);
     m_activityChartView->setObjectName("chartView");
-    m_activityChartView->setAlignment(Qt::AlignCenter);
-    m_activityChartView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
 #endif
 }
 

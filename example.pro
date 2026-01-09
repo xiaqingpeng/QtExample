@@ -3,13 +3,18 @@ QT       += core gui network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 # WebEngine 模块设为可选
-# 如果系统中没有安装 Qt WebEngine，将禁用相关功能
-qtHaveModule(webenginewidgets) {
-    QT += webenginewidgets
-    DEFINES += WEBENGINE_AVAILABLE
-    message("WebEngine available - enabling web features")
+# Windows平台禁用WebEngine以确保兼容性
+win32 {
+    message("Windows platform detected - WebEngine features disabled for compatibility")
 } else {
-    message("WebEngine not available - web features disabled")
+    # 非Windows平台检查WebEngine可用性
+    qtHaveModule(webenginewidgets) {
+        QT += webenginewidgets
+        DEFINES += WEBENGINE_AVAILABLE
+        message("WebEngine available - enabling web features")
+    } else {
+        message("WebEngine not available - web features disabled")
+    }
 }
 
 CONFIG += c++17 sdk_no_version_check

@@ -37,7 +37,7 @@ void LocalizationManager::initialize()
         return;
     }
 
-    // qDebug() << "Initializing LocalizationManager...";
+    // // qDebug() << "Initializing LocalizationManager...";
 
     loadLanguageInfo();
     loadTranslations();
@@ -62,7 +62,7 @@ void LocalizationManager::initialize()
     }
 
     m_initialized = true;
-    qDebug() << "LocalizationManager initialized, current language:" << m_currentLanguage;
+    // qDebug() << "LocalizationManager initialized, current language:" << m_currentLanguage;
 }
 
 void LocalizationManager::setLanguage(const QString& languageCode)
@@ -76,7 +76,7 @@ void LocalizationManager::setLanguage(const QString& languageCode)
         return;
     }
 
-    // qDebug() << "Changing language from" << m_currentLanguage << "to" << languageCode;
+    // // qDebug() << "Changing language from" << m_currentLanguage << "to" << languageCode;
 
     // 移除旧的翻译器
     if (m_translator) {
@@ -91,7 +91,7 @@ void LocalizationManager::setLanguage(const QString& languageCode)
         m_translator = new QTranslator(this);
         if (m_translator->load(translationFile)) {
             QCoreApplication::installTranslator(m_translator);
-            qDebug() << "Translation loaded successfully:" << translationFile;
+          //  // qDebug() << "Translation loaded successfully:" << translationFile;
         } else {
             qWarning() << "Failed to load translation file:" << translationFile;
             delete m_translator;
@@ -175,7 +175,7 @@ void LocalizationManager::loadTranslations()
         dir.setPath(translationsDir);
     }
 
-    // qDebug() << "Loading translations from:" << translationsDir;
+    // // qDebug() << "Loading translations from:" << translationsDir;
 
     QStringList filters;
     filters << "app_*.qm";
@@ -189,7 +189,7 @@ void LocalizationManager::loadTranslations()
         
         if (!languageCode.isEmpty()) {
             m_availableLanguages.append(languageCode);
-            // qDebug() << "Found translation for language:" << languageCode;
+            // // qDebug() << "Found translation for language:" << languageCode;
         }
     }
 
@@ -228,46 +228,46 @@ QString LocalizationManager::getTranslationFilePath(const QString& languageCode)
     QString fileName = QString("app_%1.qm").arg(languageCode);
     QString appDir = QCoreApplication::applicationDirPath();
     
-    qDebug() << "Looking for translation file:" << fileName;
-    qDebug() << "Application directory:" << appDir;
+    // qDebug() << "Looking for translation file:" << fileName;
+    // qDebug() << "Application directory:" << appDir;
     
     // 1. 尝试应用程序目录下的 translations 子目录（最常见）
     QString appDirPath = appDir + "/translations/" + fileName;
-    qDebug() << "Checking path 1:" << appDirPath << "exists:" << QFile::exists(appDirPath);
+    // qDebug() << "Checking path 1:" << appDirPath << "exists:" << QFile::exists(appDirPath);
     if (QFile::exists(appDirPath)) {
-        qDebug() << "Found translation file at:" << appDirPath;
+        // qDebug() << "Found translation file at:" << appDirPath;
         return appDirPath;
     }
     
     // 2. 尝试构建目录中的 translations 子目录
     QString buildDirPath = appDir + "/../translations/" + fileName;
-    qDebug() << "Checking path 2:" << buildDirPath << "exists:" << QFile::exists(buildDirPath);
+    // qDebug() << "Checking path 2:" << buildDirPath << "exists:" << QFile::exists(buildDirPath);
     if (QFile::exists(buildDirPath)) {
-        qDebug() << "Found translation file at:" << buildDirPath;
+        // qDebug() << "Found translation file at:" << buildDirPath;
         return buildDirPath;
     }
     
     // 3. 尝试可执行文件同级目录
     QString sameDirPath = appDir + "/" + fileName;
-    qDebug() << "Checking path 3:" << sameDirPath << "exists:" << QFile::exists(sameDirPath);
+    // qDebug() << "Checking path 3:" << sameDirPath << "exists:" << QFile::exists(sameDirPath);
     if (QFile::exists(sameDirPath)) {
-        qDebug() << "Found translation file at:" << sameDirPath;
+        // qDebug() << "Found translation file at:" << sameDirPath;
         return sameDirPath;
     }
     
     // 4. 尝试资源文件
     QString resourcePath = QString(":/translations/%1").arg(fileName);
-    qDebug() << "Checking path 4:" << resourcePath << "exists:" << QFile::exists(resourcePath);
+    // qDebug() << "Checking path 4:" << resourcePath << "exists:" << QFile::exists(resourcePath);
     if (QFile::exists(resourcePath)) {
-        qDebug() << "Found translation file at:" << resourcePath;
+        // qDebug() << "Found translation file at:" << resourcePath;
         return resourcePath;
     }
     
     // 5. 尝试源代码目录（开发时可能用到）
     QString sourcePath = QCoreApplication::applicationDirPath() + "/../../src/Localization/translations/" + fileName;
-    qDebug() << "Checking path 5:" << sourcePath << "exists:" << QFile::exists(sourcePath);
+    // qDebug() << "Checking path 5:" << sourcePath << "exists:" << QFile::exists(sourcePath);
     if (QFile::exists(sourcePath)) {
-        qDebug() << "Found translation file at:" << sourcePath;
+        // qDebug() << "Found translation file at:" << sourcePath;
         return sourcePath;
     }
     

@@ -836,70 +836,70 @@ void LoginPage::changeEvent(QEvent *event)
 
 void LoginPage::retranslateUi()
 {
-    qDebug() << "LoginPage::retranslateUi() called";
+    // qDebug() << "LoginPage::retranslateUi() called";
     
     // 更新登录页面文本
     if (m_loginEmail) {
         QString text = tr("邮箱/手机号");
-        qDebug() << "Setting loginEmail placeholder:" << text;
+        // qDebug() << "Setting loginEmail placeholder:" << text;
         m_loginEmail->setPlaceholderText(text);
     }
     if (m_loginPassword) {
         QString text = tr("密码");
-        qDebug() << "Setting loginPassword placeholder:" << text;
+        // qDebug() << "Setting loginPassword placeholder:" << text;
         m_loginPassword->setPlaceholderText(text);
     }
     if (m_rememberPassword) {
         QString text = tr("记住密码");
-        qDebug() << "Setting rememberPassword text:" << text;
+        // qDebug() << "Setting rememberPassword text:" << text;
         m_rememberPassword->setText(text);
     }
     if (m_loginButton) {
         // 只有在按钮可用时才更新文本（避免覆盖"登录中..."等状态文本）
         if (m_loginButton->isEnabled()) {
             QString text = tr("登录");
-            qDebug() << "Setting loginButton text:" << text;
+            // qDebug() << "Setting loginButton text:" << text;
             m_loginButton->setText(text);
         }
     }
     if (m_switchToRegisterButton) {
         QString text = tr("还没有账号？立即注册");
-        qDebug() << "Setting switchToRegisterButton text:" << text;
+        // qDebug() << "Setting switchToRegisterButton text:" << text;
         m_switchToRegisterButton->setText(text);
     }
     
     // 更新注册页面文本
     if (m_registerUsername) {
         QString text = tr("昵称");
-        qDebug() << "Setting registerUsername placeholder:" << text;
+        // qDebug() << "Setting registerUsername placeholder:" << text;
         m_registerUsername->setPlaceholderText(text);
     }
     if (m_registerEmail) {
         QString text = tr("邮箱");
-        qDebug() << "Setting registerEmail placeholder:" << text;
+        // qDebug() << "Setting registerEmail placeholder:" << text;
         m_registerEmail->setPlaceholderText(text);
     }
     if (m_registerPassword) {
         QString text = tr("密码");
-        qDebug() << "Setting registerPassword placeholder:" << text;
+        // qDebug() << "Setting registerPassword placeholder:" << text;
         m_registerPassword->setPlaceholderText(text);
     }
     if (m_registerConfirmPassword) {
         QString text = tr("确认密码");
-        qDebug() << "Setting registerConfirmPassword placeholder:" << text;
+        // qDebug() << "Setting registerConfirmPassword placeholder:" << text;
         m_registerConfirmPassword->setPlaceholderText(text);
     }
     if (m_registerButton) {
         // 只有在按钮可用时才更新文本（避免覆盖"注册中..."等状态文本）
         if (m_registerButton->isEnabled()) {
             QString text = tr("注册");
-            qDebug() << "Setting registerButton text:" << text;
+            // qDebug() << "Setting registerButton text:" << text;
             m_registerButton->setText(text);
         }
     }
     if (m_switchToLoginButton) {
         QString text = tr("已有账号？立即登录");
-        qDebug() << "Setting switchToLoginButton text:" << text;
+        // qDebug() << "Setting switchToLoginButton text:" << text;
         m_switchToLoginButton->setText(text);
     }
     
@@ -907,23 +907,23 @@ void LoginPage::retranslateUi()
     QList<QLabel*> logoLabels = this->findChildren<QLabel*>("logoLabel");
     for (QLabel* label : logoLabels) {
         QString text = tr("Qt 现代化应用");
-        qDebug() << "Setting logoLabel text:" << text;
+        // qDebug() << "Setting logoLabel text:" << text;
         label->setText(text);
     }
     
     QList<QLabel*> loginTitles = this->findChildren<QLabel*>("loginTitle");
     for (QLabel* label : loginTitles) {
         QString text = tr("欢迎登录");
-        qDebug() << "Setting loginTitle text:" << text;
+        // qDebug() << "Setting loginTitle text:" << text;
         label->setText(text);
     }
     
     QList<QLabel*> registerTitles = this->findChildren<QLabel*>("registerTitle");
     for (QLabel* label : registerTitles) {
         QString text = tr("注册账号");
-        qDebug() << "Setting registerTitle text:" << text;
+        // qDebug() << "Setting registerTitle text:" << text;
         label->setText(text);
     }
     
-    qDebug() << "LoginPage::retranslateUi() completed";
+    // qDebug() << "LoginPage::retranslateUi() completed";
 }
