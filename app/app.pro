@@ -51,12 +51,12 @@ LIBS += -L$$OUT_PWD/../advancedcontrols -ladvancedcontrols
 LIBS += -L$$OUT_PWD/../basiccontrols -lbasiccontrols
 LIBS += -L$$OUT_PWD/../datadisplay -ldatadisplay
 LIBS += -L$$OUT_PWD/../dialogs -ldialogs
-LIBS += -L$$OUT_PWD/../echarts -lecharts
 LIBS += -L$$OUT_PWD/../layoutexamples1 -lLayoutExamples1
 LIBS += -L$$OUT_PWD/../layoutexamples2 -llayoutexamplestab2
 LIBS += -L$$OUT_PWD/../layoutexamples3 -llayoutexamplestab3
 LIBS += -L$$OUT_PWD/../reportstab -lreportstab
 LIBS += -L$$OUT_PWD/../userprofiletab -luserprofiletab
+LIBS += -L$$OUT_PWD/../echarts -lecharts
 LIBS += -L$$OUT_PWD/../styles -lstyles
 
 # 包含模块头文件路径
@@ -69,12 +69,12 @@ INCLUDEPATH += ../advancedcontrols
 INCLUDEPATH += ../basiccontrols
 INCLUDEPATH += ../datadisplay
 INCLUDEPATH += ../dialogs
-INCLUDEPATH += ../echarts
 INCLUDEPATH += ../layoutexamples1
 INCLUDEPATH += ../layoutexamples2
 INCLUDEPATH += ../layoutexamples3
 INCLUDEPATH += ../reportstab
 INCLUDEPATH += ../userprofiletab
+INCLUDEPATH += ../echarts
 INCLUDEPATH += ../styles
 
 # 包含资源文件

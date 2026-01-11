@@ -119,29 +119,6 @@ target_include_directories(LayoutExamplesTab3 PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# ECharts模块
-qt_add_library(ECharts STATIC
-    echarts/echartstab.cpp
-    echarts/echartstab.h
-    echarts/logstatstab.cpp
-    echarts/logstatstab.h
-    layoutexamplestab.qrc
-)
-target_link_libraries(ECharts PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-    Qt6::WebEngineWidgets
-    Qt6::Network
-    NetworkManager
-    Analytics
-    Styles
-)
-target_include_directories(ECharts PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/styles
-)
-
 # UserProfileTab模块
 qt_add_library(UserProfileTab STATIC
     userprofiletab/userprofiletab.cpp
@@ -183,6 +160,26 @@ target_include_directories(ReportsTab PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/styles
 )
 
+# LogStatsTab模块
+qt_add_library(LogStatsTab STATIC
+    echarts/logstatstab.cpp
+    echarts/logstatstab.h
+)
+target_link_libraries(LogStatsTab PRIVATE
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::Network
+    NetworkManager
+    Analytics
+    Styles
+)
+target_include_directories(LogStatsTab PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/styles
+    ${CMAKE_CURRENT_SOURCE_DIR}/analytics
+)
+
 # LoginPage模块
 add_subdirectory(loginpage)
 
@@ -214,18 +211,18 @@ add_dependencies(ChangePasswordPage NetworkManager)
 add_dependencies(LoginPage NetworkManager)
 add_dependencies(UserInfo NetworkManager)
 add_dependencies(LayoutExamplesTab3 NetworkManager)
-add_dependencies(ECharts NetworkManager)
 add_dependencies(UserProfileTab NetworkManager)
 add_dependencies(ReportsTab NetworkManager)
+add_dependencies(LogStatsTab NetworkManager)
 add_dependencies(LoginPage Analytics)
 add_dependencies(UserInfo Analytics)
 add_dependencies(ChangePasswordPage Analytics)
-add_dependencies(ECharts Analytics)
+add_dependencies(LogStatsTab Analytics)
 
 # 添加Styles库依赖关系
-add_dependencies(ECharts Styles)
 add_dependencies(UserProfileTab Styles)
 add_dependencies(ReportsTab Styles)
+add_dependencies(LogStatsTab Styles)
 
 # 主应用程序源文件
 set(SOURCES
@@ -283,9 +280,9 @@ target_link_libraries(QTExample PRIVATE
     LayoutExamples1
     LayoutExamplesTab2
     LayoutExamplesTab3
-    ECharts
     UserProfileTab
     ReportsTab
+    LogStatsTab
     LoginPage
     ChangePasswordPage
     UserInfo
@@ -303,9 +300,9 @@ target_include_directories(QTExample PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/LayoutExamples1
     ${CMAKE_CURRENT_SOURCE_DIR}/layoutexamples2
     ${CMAKE_CURRENT_SOURCE_DIR}/layoutexamples3
-    ${CMAKE_CURRENT_SOURCE_DIR}/echarts
     ${CMAKE_CURRENT_SOURCE_DIR}/userprofiletab
     ${CMAKE_CURRENT_SOURCE_DIR}/reportstab
+    ${CMAKE_CURRENT_SOURCE_DIR}/echarts
     ${CMAKE_CURRENT_SOURCE_DIR}/loginpage
     ${CMAKE_CURRENT_SOURCE_DIR}/changepasswordpage
     ${CMAKE_CURRENT_SOURCE_DIR}/userinfo
@@ -321,7 +318,7 @@ install(TARGETS QTExample
 )
 
 # 安装模块库
-install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 ECharts UserProfileTab ReportsTab LoginPage ChangePasswordPage UserInfo Analytics Styles
+install(TARGETS NetworkManager BasicControls DataDisplay AdvancedControls Dialogs LayoutExamples1 LayoutExamplesTab2 LayoutExamplesTab3 UserProfileTab ReportsTab LogStatsTab LoginPage ChangePasswordPage UserInfo Analytics Styles
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

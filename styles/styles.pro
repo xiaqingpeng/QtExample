@@ -2,6 +2,9 @@ QT += core gui widgets
 
 CONFIG += c++17
 
+# 禁用过时的single_module链接器标志
+CONFIG -= single_module
+
 # 定义源文件
 SOURCES += \
     theme_manager.cpp
@@ -19,7 +22,7 @@ TARGET = styles
 
 # macOS 特定设置
 macx {
-    QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.0
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
 }
 
 # 设置输出目录

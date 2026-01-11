@@ -592,141 +592,29 @@ void ReportsTab::updateRealTimeStats(const QJsonArray &stats)
 
 void ReportsTab::renderTrendChart(const QJsonArray &trendData, const QString &title, const QString &chartType)
 {
-    QString xAxisData;
-    QString seriesData;
-    
-    for (const QJsonValue &value : trendData) {
-        QJsonObject item = value.toObject();
-        QString timeBucket = item["time_bucket"].toString();
-        
-        // 检查count字段的类型
-        QJsonValue countValue = item["count"];
-        double count = countValue.toDouble();
-        
-        xAxisData += QString("'%1',").arg(timeBucket.left(10)); // 只取日期部分
-        seriesData += QString("%1,").arg(count);
-    }
-    
-    if (!xAxisData.isEmpty()) xAxisData.chop(1);
-    if (!seriesData.isEmpty()) seriesData.chop(1);
+    Q_UNUSED(trendData);
+    Q_UNUSED(chartType);
     
     QString html = QString(R"(
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
-            <script src="qrc:/echarts/ECharts/echarts.min.js"></script>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; background: #ffffff; }
+                .chart-container { text-align: center; padding: 20px; }
+                .chart-title { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 20px; }
+                .chart-message { font-size: 14px; color: #6c757d; padding: 40px; border: 2px dashed #dee2e6; border-radius: 8px; }
+            </style>
         </head>
-        <body style="margin:0;padding:0;background:#ffffff;">
-            <div id="chart" style="width:100%%;height:450px;"></div>
-            <script>
-                var chart = echarts.init(document.getElementById('chart'));
-                var option = {
-                    title: { 
-                        text: '%1',
-                        left: 'center',
-                        top: 20,
-                        textStyle: {
-                            fontSize: 16,
-                            fontWeight: '600',
-                            color: '#2c3e50'
-                        }
-                    },
-                    tooltip: { 
-                        trigger: 'axis',
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        borderColor: '#e9ecef',
-                        borderWidth: 1,
-                        textStyle: {
-                            color: '#495057'
-                        }
-                    },
-                    legend: { 
-                        data: ['数值'], 
-                        top: 50,
-                        textStyle: {
-                            fontSize: 12,
-                            color: '#495057'
-                        }
-                    },
-                    grid: {
-                        left: '3%%',
-                        right: '4%%',
-                        bottom: '3%%',
-                        top: '15%%',
-                        containLabel: true
-                    },
-                    xAxis: { 
-                        type: 'category', 
-                        data: [%2],
-                        axisLine: {
-                            lineStyle: {
-                                color: '#e9ecef'
-                            }
-                        },
-                        axisLabel: {
-                            color: '#6c757d',
-                            fontSize: 11
-                        }
-                    },
-                    yAxis: { 
-                        type: 'value',
-                        axisLine: {
-                            lineStyle: {
-                                color: '#e9ecef'
-                            }
-                        },
-                        axisLabel: {
-                            color: '#6c757d',
-                            fontSize: 11
-                        },
-                        splitLine: {
-                            lineStyle: {
-                                color: '#f1f3f4',
-                                type: 'dashed'
-                            }
-                        }
-                    },
-                    series: [{
-                        name: '数值',
-                        type: '%3',
-                        data: [%4],
-                        smooth: true,
-                        itemStyle: {
-                            color: '#007bff',
-                            borderRadius: 4
-                        },
-                        areaStyle: { 
-                            opacity: 0.1,
-                            color: {
-                                type: 'linear',
-                                x: 0,
-                                y: 0,
-                                x2: 0,
-                                y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: '#007bff'
-                                }, {
-                                    offset: 1, color: 'rgba(0, 123, 255, 0)'
-                                }]
-                            }
-                        },
-                        lineStyle: {
-                            width: 3,
-                            color: '#007bff'
-                        }
-                    }]
-                };
-                chart.setOption(option);
-                
-                // 响应式调整
-                window.addEventListener('resize', function() {
-                    chart.resize();
-                });
-            </script>
+        <body>
+            <div class="chart-container">
+                <div class="chart-title">%1</div>
+                <div class="chart-message">图表功能已移除<br>数据仍可通过表格查看</div>
+            </div>
         </body>
         </html>
-    )").arg(title).arg(xAxisData).arg(chartType).arg(seriesData);
+    )").arg(title);
     
     m_trendChartView->setHtml(html);
 }

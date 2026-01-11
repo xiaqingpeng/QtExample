@@ -2,8 +2,11 @@ QT += core gui widgets webenginewidgets network
 
 CONFIG += c++17 sdk_no_version_check
 
-# 设置macOS部署目标版本为11.0，与Qt库版本兼容
-QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.0
+# 禁用过时的single_module链接器标志
+CONFIG -= single_module
+
+# 设置macOS部署目标版本为14.0，与Qt库版本兼容
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
 
 # 创建共享库
 TEMPLATE = lib
@@ -18,12 +21,10 @@ LIBS += -L../networkmanager -lnetworkmanager
 LIBS += -L../styles -lstyles
 
 SOURCES += \
-    echartstab.cpp \
     logstatstab.cpp \
     ../analytics/analytics.cpp
 
 HEADERS += \
-    echartstab.h \
     logstatstab.h \
     ../analytics/analytics.h
 

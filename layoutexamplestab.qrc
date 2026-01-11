@@ -7,7 +7,5 @@
         <file>images/pony_holding_envelope.png</file>
         <file>images/pony_gold_ingot.png</file>
         <file>images/pony_dumplings.png</file>
-        <file>echarts/ECharts/echarts.min.js</file>
-        <file>echarts/ECharts/chart.html</file>
     </qresource>
 </RCC>
