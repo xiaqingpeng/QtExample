@@ -10,8 +10,10 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QStandardPaths>
-#include <QPrinter>
 #include <QTextDocument>
+#include <QPrinter>
+#include <QPageSize>
+#include <QPageLayout>
 #include <QPushButton>
 
 UserProfileTab::UserProfileTab(QWidget *parent)
@@ -160,16 +162,20 @@ void UserProfileTab::setupBehaviorStats()
 
 void UserProfileTab::setupInterestAnalysis()
 {
-    m_interestChartView = new QWebEngineView();
+    m_interestChartView = new QLabel("Interest Analysis Chart");
     m_interestChartView->setMinimumHeight(350);
     m_interestChartView->setObjectName("chartView");
+    m_interestChartView->setAlignment(Qt::AlignCenter);
+    m_interestChartView->setStyleSheet("background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 8px;");
 }
 
 void UserProfileTab::setupValueAssessment()
 {
-    m_valueRadarView = new QWebEngineView();
+    m_valueRadarView = new QLabel("Value Assessment Chart");
     m_valueRadarView->setMinimumHeight(350);
     m_valueRadarView->setObjectName("chartView");
+    m_valueRadarView->setAlignment(Qt::AlignCenter);
+    m_valueRadarView->setStyleSheet("background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 8px;");
 }
 
 void UserProfileTab::loadUserList()
@@ -524,7 +530,7 @@ void UserProfileTab::updateInterestAnalysisDisplay(const QJsonArray &interests)
         </html>
     )");
     
-    m_interestChartView->setHtml(html);
+    m_interestChartView->setText("Interest Analysis Chart\n(Chart data would be displayed here)");
 }
 
 void UserProfileTab::updateValueAssessmentDisplay(const QJsonObject &valueAssessment)
@@ -557,7 +563,7 @@ void UserProfileTab::renderValueRadarChart(const QJsonObject &valueData)
         </html>
     )");
     
-    m_valueRadarView->setHtml(html);
+    m_valueRadarView->setText("Value Assessment Chart\n(Chart data would be displayed here)");
 }
 
 void UserProfileTab::exportUserProfile()
@@ -991,7 +997,7 @@ void UserProfileTab::applyTheme()
     
     // 应用图表视图样式
     QString chartViewStyle = QString(R"(
-        QWebEngineView#chartView {
+        QLabel#chartView {
             border: none;
             border-radius: %1px;
             background-color: %2;

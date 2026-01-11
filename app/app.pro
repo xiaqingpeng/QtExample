@@ -1,6 +1,6 @@
 # 主应用程序的qmake项目文件
 
-QT += core gui webenginewidgets network
+QT += core gui  network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 

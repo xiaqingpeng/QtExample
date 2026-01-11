@@ -10,8 +10,10 @@
 #include <QTextStream>
 #include <QDateTime>
 #include <QDebug>
-#include <QPrinter>
 #include <QTextDocument>
+#include <QPrinter>
+#include <QPageSize>
+#include <QPageLayout>
 #include <QPageSetupDialog>
 #include <QHeaderView>
 #include <QTimer>
@@ -153,13 +155,17 @@ void ReportsTab::setupKeyMetrics()
 
 void ReportsTab::setupTrendCharts()
 {
-    m_trendChartView = new QWebEngineView();
+    m_trendChartView = new QLabel("Trend Analysis Chart");
     m_trendChartView->setMinimumHeight(450);
     m_trendChartView->setObjectName("chartView");
+    m_trendChartView->setAlignment(Qt::AlignCenter);
+    m_trendChartView->setStyleSheet("background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 8px;");
     
-    m_activityChartView = new QWebEngineView();
+    m_activityChartView = new QLabel("Activity Analysis Chart");
     m_activityChartView->setMinimumHeight(350);
     m_activityChartView->setObjectName("chartView");
+    m_activityChartView->setAlignment(Qt::AlignCenter);
+    m_activityChartView->setStyleSheet("background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 8px;");
 }
 
 void ReportsTab::setupTopRankings()
@@ -616,7 +622,7 @@ void ReportsTab::renderTrendChart(const QJsonArray &trendData, const QString &ti
         </html>
     )").arg(title);
     
-    m_trendChartView->setHtml(html);
+    m_trendChartView->setText("Trend Analysis Chart\n(Chart data would be displayed here)");
 }
 
 void ReportsTab::onReportTypeChanged(int index)
@@ -1109,7 +1115,7 @@ void ReportsTab::applyTheme()
     
     // 应用图表视图样式
     QString chartViewStyle = QString(R"(
-        QWebEngineView#chartView {
+        QLabel#chartView {
             border: none;
             border-radius: %1px;
             background-color: %2;

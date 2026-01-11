@@ -10,7 +10,7 @@
 #include <QGroupBox>
 #include <QComboBox>
 #include <QProgressBar>
-#include <QWebEngineView>
+
 #include <QTimer>
 #include "../styles/theme_manager.h"
 
@@ -87,8 +87,8 @@ private:
     QLabel *m_topPagesLabel;
     QLabel *m_topFeaturesLabel;
     
-    QWebEngineView *m_interestChartView;
-    QWebEngineView *m_valueRadarView;
+    QLabel *m_interestChartView;
+    QLabel *m_valueRadarView;
     
     QPushButton *m_refreshButton;
     QPushButton *m_exportButton;

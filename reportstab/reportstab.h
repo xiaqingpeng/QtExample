@@ -12,7 +12,7 @@
 #include <QDateEdit>
 #include <QTableWidget>
 #include <QTableWidgetItem>
-#include <QWebEngineView>
+
 #include <QJsonObject>
 #include <QJsonArray>
 #include "../styles/theme_manager.h"
@@ -103,8 +103,8 @@ private:
     QLabel *m_totalEventsLabel;
     
     // 趋势图表组件
-    QWebEngineView *m_trendChartView;
-    QWebEngineView *m_activityChartView;
+    QLabel *m_trendChartView;
+    QLabel *m_activityChartView;
     
     // 排行榜表格组件
     QTableWidget *m_topPagesTable;

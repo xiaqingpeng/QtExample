@@ -9,7 +9,7 @@ target_link_libraries(ECharts PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    Qt6::WebEngineWidgets
+    
     Qt6::Network
     Analytics
 )

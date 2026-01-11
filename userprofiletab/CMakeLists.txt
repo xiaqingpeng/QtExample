@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 查找Qt6组件
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets WebEngineWidgets Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
 # 设置源文件
 set(SOURCES
@@ -25,7 +25,7 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES} ${HEADERS})
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
     Qt6::Widgets
-    Qt6::WebEngineWidgets
+    
     Qt6::Network
     NetworkManager
 )

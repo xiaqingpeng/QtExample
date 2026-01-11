@@ -72,7 +72,7 @@ jobs:
         target: desktop
         arch: ${{ matrix.qt_arch }}
         cache: true
-        modules: 'qtwebengine qtnetworkauth'
+        modules: 'qtnetworkauth'
     
     - name: Configure CMake
       run: |
