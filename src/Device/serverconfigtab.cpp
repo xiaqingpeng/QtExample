@@ -47,18 +47,18 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
     // qDebug()() << "[ServerConfigTab] LocalContentCanAccessFileUrls:" << settings->testAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls);
     
     // 连接所有相关信号，用于调试
-    connect(m_webView->page(), &QWebEnginePage::loadStarted, this, [this]() {
+    connect(m_webView->page(), &QWebEnginePage::loadStarted, this, []() {
         // qDebug()() << "[ServerConfigTab] Page load started:" << m_webView->url().toString();
     });
     
-    connect(m_webView->page(), &QWebEnginePage::loadProgress, this, [](int progress) {
+    connect(m_webView->page(), &QWebEnginePage::loadProgress, this, [](int /*progress*/) {
         // qDebug()() << "[ServerConfigTab] Page load progress:" << progress << "%";
     });
     
     connect(m_webView, &QWebEngineView::loadFinished, this, &ServerConfigTab::onPageLoaded);
     
     // 连接加载完成信号 (Qt 6)
-    connect(m_webView->page(), &QWebEnginePage::loadFinished, this, [this](bool ok) {
+    connect(m_webView->page(), &QWebEnginePage::loadFinished, this, [](bool ok) {
         if (!ok) {
             qWarning() << "[ServerConfigTab] Page load failed";
         } else {
@@ -738,12 +738,12 @@ void ServerConfigTab::onPageLoaded(bool ok){
         });
         
         // 获取页面标题验证
-        m_webView->page()->runJavaScript("document.title", [](const QVariant &result) {
+        m_webView->page()->runJavaScript("document.title", [](const QVariant &/*result*/) {
             // qDebug()() << "[ServerConfigTab] Page title from JS:" << result.toString();
         });
         
         // 简单的测试JavaScript执行
-        m_webView->page()->runJavaScript("'Hello from JavaScript: ' + (new Date()).toLocaleString()", [](const QVariant &result) {
+        m_webView->page()->runJavaScript("'Hello from JavaScript: ' + (new Date()).toLocaleString()", [](const QVariant &/*result*/) {
             // qDebug()() << "[ServerConfigTab] JavaScript execution result:" << result.toString();
         });
         
@@ -759,7 +759,7 @@ void ServerConfigTab::onPageLoaded(bool ok){
         });
         
         // 尝试获取浏览器错误信息
-        m_webView->page()->runJavaScript("window.navigator.userAgent", [](const QVariant &result) {
+        m_webView->page()->runJavaScript("window.navigator.userAgent", [](const QVariant &/*result*/) {
             // qDebug()() << "[ServerConfigTab] User Agent:" << result.toString();
         });
     }

@@ -16,11 +16,11 @@
 
 ContentTab::ContentTab(QWidget *parent)
     : QWidget(parent)
+    , m_networkManager(new NetworkManager(this))
+    , m_titleLabel(nullptr)
     , m_webView(nullptr)
     , m_channel(nullptr)
     , m_bridge(nullptr)
-    , m_networkManager(new NetworkManager(this))
-    , m_titleLabel(nullptr)
     , m_pageLoaded(false)
     , m_refreshTimer(new QTimer(this))
 {
@@ -48,7 +48,7 @@ ContentTab::ContentTab(QWidget *parent)
     // qDebug() << "[ContentTab] LocalContentCanAccessFileUrls:" << settings->testAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls);
     
     // 连接所有相关信号，用于调试
-    connect(m_webView->page(), &QWebEnginePage::loadStarted, this, [this]() {
+    connect(m_webView->page(), &QWebEnginePage::loadStarted, this, []() {
         // qDebug() << "[ContentTab] Page load started:" << m_webView->url().toString();
     });
 #else
@@ -60,14 +60,14 @@ ContentTab::ContentTab(QWidget *parent)
 #endif
     
 #ifdef WEBENGINE_AVAILABLE
-    connect(m_webView->page(), &QWebEnginePage::loadProgress, this, [](int progress) {
+    connect(m_webView->page(), &QWebEnginePage::loadProgress, this, [](int /*progress*/) {
         // qDebug() << "[ContentTab] Page load progress:" << progress << "%";
     });
     
     connect(m_webView, &QWebEngineView::loadFinished, this, &ContentTab::onPageLoaded);
     
     // 连接加载完成信号 (Qt 6)
-    connect(m_webView->page(), &QWebEnginePage::loadFinished, this, [this](bool ok) {
+    connect(m_webView->page(), &QWebEnginePage::loadFinished, this, [](bool ok) {
         if (!ok) {
             qWarning() << "[ContentTab] Page load failed";
         } else {
@@ -865,12 +865,12 @@ void ContentTab::onPageLoaded(bool ok){
         });
         
         // 获取页面标题验证
-        m_webView->page()->runJavaScript("document.title", [](const QVariant &result) {
+        m_webView->page()->runJavaScript("document.title", [](const QVariant &/*result*/) {
             // qDebug() << "[ContentTab] Page title from JS:" << result.toString();
         });
         
         // 简单的测试JavaScript执行
-        m_webView->page()->runJavaScript("'Hello from JavaScript: ' + (new Date()).toLocaleString()", [](const QVariant &result) {
+        m_webView->page()->runJavaScript("'Hello from JavaScript: ' + (new Date()).toLocaleString()", [](const QVariant &/*result*/) {
             // qDebug() << "[ContentTab] JavaScript execution result:" << result.toString();
         });
 #endif
@@ -887,7 +887,7 @@ void ContentTab::onPageLoaded(bool ok){
         });
         
         // 尝试获取浏览器错误信息
-        m_webView->page()->runJavaScript("window.navigator.userAgent", [](const QVariant &result) {
+        m_webView->page()->runJavaScript("window.navigator.userAgent", [](const QVariant &/*result*/) {
             // qDebug() << "[ContentTab] User Agent:" << result.toString();
         });
 #endif
@@ -938,7 +938,7 @@ void ContentTab::fetchSystemInfo()
     QPointer<ContentTab> safeThis = this;
     
     // 在线程中执行获取系统信息的操作
-    QObject::connect(thread, &QThread::started, worker, [worker, safeThis]() {
+    QObject::connect(thread, &QThread::started, worker, [safeThis]() {
         // 检查对象是否仍然有效
         if (!safeThis) {
             QThread::currentThread()->quit();
