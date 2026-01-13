@@ -65,8 +65,15 @@ MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
     // 连接语言变化信号，动态更新界面文本
     LocalizationManager *localizationManager = LocalizationManager::instance();
     if (localizationManager) {
+        // 确保 LocalizationManager 已初始化
+        if (!localizationManager->currentLanguage().isEmpty()) {
+            // 已经初始化
+        } else {
+            localizationManager->initialize();
+        }
+        
         connect(localizationManager, &LocalizationManager::languageChanged,
-                this, &MainUIWindow::retranslateUi);
+                this, &MainUIWindow::retranslateUi, Qt::QueuedConnection);
     }
 
     // 按当前语言初始化界面文本
@@ -209,7 +216,9 @@ void MainUIWindow::setupNavigationBar()
                 if (!code.isEmpty()) {
                     LocalizationManager *lm = LocalizationManager::instance();
                     if (lm) {
+                     //   qDebug() << "Language combo box changed to:" << code;
                         lm->setLanguage(code);
+                        // retranslateUi 会在 languageChanged 信号触发时自动调用
                     }
                 }
             });
@@ -337,6 +346,8 @@ void MainUIWindow::setupSubMenu()
 
 void MainUIWindow::retranslateUi()
 {
+  //  qDebug() << "retranslateUi called, current language:" << LocalizationManager::instance()->currentLanguage();
+    
     // 窗口标题
     setWindowTitle(tr("Qt UI控件综合示例"));
 
@@ -355,28 +366,51 @@ void MainUIWindow::retranslateUi()
         logoutButton->setText(tr("登出"));
     }
 
-    // 状态栏初始文本（当前状态会在登录/认证流程中再次更新）
+    // 状态栏文本（根据当前状态更新）
     if (statusText) {
-        statusText->setText(tr("离线"));
+        // 如果已经登录，保持"在线"，否则显示"离线"
+        QString currentStatus = statusText->text();
+        if (currentStatus.isEmpty() || currentStatus == tr("离线") || currentStatus == "离线") {
+            statusText->setText(tr("离线"));
+        } else if (currentStatus == tr("在线") || currentStatus == "在线") {
+            statusText->setText(tr("在线"));
+        } else {
+            statusText->setText(tr("离线"));
+        }
     }
     if (statusMessage) {
-        statusMessage->setText(tr("就绪"));
+        QString currentMsg = statusMessage->text();
+        if (currentMsg.isEmpty() || currentMsg == tr("就绪") || currentMsg == "就绪") {
+            statusMessage->setText(tr("就绪"));
+        } else {
+            // 保持当前消息，但尝试翻译
+            statusMessage->setText(tr("就绪"));
+        }
     }
 
     // 一级菜单
     if (mainMenuList && mainMenuList->count() >= 4) {
+        mainMenuList->blockSignals(true);
         mainMenuList->item(0)->setText(tr("图表示例"));
         mainMenuList->item(1)->setText(tr("数据分析"));
         mainMenuList->item(2)->setText(tr("设备信息"));
         mainMenuList->item(3)->setText(tr("个人中心"));
+        mainMenuList->blockSignals(false);
     }
 
     // 二级菜单：根据当前选中的一级菜单重新生成
     if (mainMenuList && subMenuList && mainMenuList->currentItem()) {
-        setupSubMenuContent(mainMenuList->currentItem()->text());
+        QString currentMainMenu = mainMenuList->currentItem()->text();
+        // 保存当前选中的二级菜单索引
+        int currentSubIndex = subMenuList->currentRow();
+        setupSubMenuContent(currentMainMenu);
+        // 恢复选中的二级菜单
+        if (currentSubIndex >= 0 && currentSubIndex < subMenuList->count()) {
+            subMenuList->setCurrentRow(currentSubIndex);
+        }
     }
 
-    // 语言下拉框的显示名来自 LocalizationManager，可在其中自定义
+    // 语言下拉框的显示名来自 LocalizationManager
     if (languageComboBox) {
         languageComboBox->blockSignals(true);
         languageComboBox->clear();
@@ -398,6 +432,19 @@ void MainUIWindow::retranslateUi()
         }
         languageComboBox->blockSignals(false);
     }
+    
+    // 用户名标签（如果已登录）
+    if (usernameLabel) {
+        QString currentUsername = usernameLabel->text();
+        if (currentUsername == tr("未登录") || currentUsername == "未登录") {
+            usernameLabel->setText(tr("未登录"));
+        } else if (currentUsername == tr("未知用户") || currentUsername == "未知用户") {
+            usernameLabel->setText(tr("未知用户"));
+        }
+        // 否则保持当前用户名不变
+    }
+    
+   // qDebug() << "retranslateUi completed";
 }
 
 void MainUIWindow::setupSubMenuContent(const QString &mainMenu)
