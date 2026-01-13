@@ -3,6 +3,9 @@ qt6_add_library(auth STATIC
     loginpage.cpp
     changepasswordpage.h
     changepasswordpage.cpp
+    ILoginView.h
+    LoginController.h
+    LoginController.cpp
 )
 
 target_link_libraries(auth

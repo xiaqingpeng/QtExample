@@ -10,10 +10,14 @@
 #include <QCheckBox>
 #include <QEvent>
 #include "networkmanager.h"
+#include "ILoginView.h"
+
 // analytics.h 在 loginpage.cpp 中被大量使用，因此需要在头文件中包含
 #include "analytics.h" // IWYU pragma: export
 
-class LoginPage : public QWidget
+class LoginController;
+
+class LoginPage : public QWidget, public ILoginView
 {
     Q_OBJECT
 
@@ -40,8 +44,8 @@ private:
     void applyThemeToWidget(QWidget* widget); // 应用主题到特定widget
 
 public slots:
-    void showError(const QString &message);
-    void showSuccess(const QString &message);
+    void showError(const QString &message) override;
+    void showSuccess(const QString &message) override;
     void applyTheme(); // 应用主题方法
 
 public:
@@ -52,6 +56,17 @@ public:
     bool checkAutoLogin();
     QString encryptPassword(const QString &password);
     QString decryptPassword(const QString &encrypted);
+
+private:
+    // ILoginView 接口实现
+    QString email() const override;
+    QString password() const override;
+    bool rememberPasswordChecked() const override;
+
+    void setEmail(const QString &value) override;
+    void setPassword(const QString &value) override;
+
+    void setBusy(bool busy) override;
 
 private:
     // 登录界面控件
@@ -76,6 +91,9 @@ private:
 
     // 网络请求
     NetworkManager *m_networkManager;
+
+    // 控制器（MVC 中的 C）
+    LoginController *m_loginController;
 };
 
 #endif // LOGINPAGE_H

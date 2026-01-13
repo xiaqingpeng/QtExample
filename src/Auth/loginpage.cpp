@@ -1,4 +1,5 @@
 #include "loginpage.h"
+#include "LoginController.h"
 #include "../Styles/theme_manager.h"
 #include "../Localization/LocalizationManager.h"
 #include <QVBoxLayout>
@@ -19,6 +20,7 @@
 LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
 {
     m_networkManager = new NetworkManager(this);
+    m_loginController = new LoginController(this, m_networkManager, this);
 
     m_pageStack = new QStackedWidget(this);
 
@@ -66,6 +68,49 @@ LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
 
 LoginPage::~LoginPage()
 {
+}
+
+// ILoginView 接口实现
+QString LoginPage::email() const
+{
+    return m_loginEmail ? m_loginEmail->text() : QString();
+}
+
+QString LoginPage::password() const
+{
+    return m_loginPassword ? m_loginPassword->text() : QString();
+}
+
+bool LoginPage::rememberPasswordChecked() const
+{
+    return m_rememberPassword && m_rememberPassword->isChecked();
+}
+
+void LoginPage::setEmail(const QString &value)
+{
+    if (m_loginEmail) {
+        m_loginEmail->setText(value);
+    }
+}
+
+void LoginPage::setPassword(const QString &value)
+{
+    if (m_loginPassword) {
+        m_loginPassword->setText(value);
+    }
+}
+
+void LoginPage::setBusy(bool busy)
+{
+    if (!m_loginButton) {
+        return;
+    }
+    m_loginButton->setEnabled(!busy);
+    if (busy) {
+        m_loginButton->setText(tr("登录中..."));
+    } else {
+        m_loginButton->setText(tr("登录"));
+    }
 }
 
 void LoginPage::setupLoginUI()

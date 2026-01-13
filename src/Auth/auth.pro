@@ -8,10 +8,12 @@ TARGET = auth
 
 HEADERS += \
     loginpage.h \
+    LoginController.h \
     changepasswordpage.h
 
 SOURCES += \
     loginpage.cpp \
+    LoginController.cpp \
     changepasswordpage.cpp
 
 # 包含路径

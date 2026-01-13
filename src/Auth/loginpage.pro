@@ -12,11 +12,14 @@ TARGET = loginpage
 
 SOURCES += \
     loginpage.cpp \
+    LoginController.cpp \
     ../networkmanager.cpp \
     ../analytics/analytics.cpp
 
 HEADERS += \
     loginpage.h \
+    ILoginView.h \
+    LoginController.h \
     ../networkmanager.h \
     ../analytics/analytics.h
 
