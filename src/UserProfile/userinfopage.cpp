@@ -26,6 +26,7 @@
 #include <QStandardPaths>
 #include <QMessageBox>
 #include <QTimer>
+#include <QDebug>
 // #include <stdexcept>
 
 UserInfoPage::UserInfoPage(QWidget *parent)
@@ -93,11 +94,30 @@ void UserInfoPage::setupUI()
     headerLayout->addStretch();
     mainLayout->addWidget(headerWidget);
     
-    // 内容区域容器
-    QWidget *contentWidget = new QWidget();
-    contentWidget->setObjectName("contentWidget");
+    // 创建堆叠控件用于切换查看和编辑模式
+    m_stackedWidget = new QStackedWidget();
     
-    QVBoxLayout *contentLayout = new QVBoxLayout(contentWidget);
+    // 设置查看模式和编辑模式
+    setupViewMode();
+    setupEditMode();
+    
+    // 添加到堆叠控件
+    m_stackedWidget->addWidget(m_viewWidget);
+    m_stackedWidget->addWidget(m_editWidget);
+    
+    // 默认显示查看模式
+    m_stackedWidget->setCurrentWidget(m_viewWidget);
+    
+    mainLayout->addWidget(m_stackedWidget);
+}
+
+void UserInfoPage::setupViewMode()
+{
+    // 内容区域容器
+    m_viewWidget = new QWidget();
+    m_viewWidget->setObjectName("contentWidget");
+    
+    QVBoxLayout *contentLayout = new QVBoxLayout(m_viewWidget);
     contentLayout->setContentsMargins(24, 20, 24, 24);
     contentLayout->setSpacing(20);
     
@@ -115,7 +135,7 @@ void UserInfoPage::setupUI()
     QVBoxLayout *profileLayout = new QVBoxLayout(profileSection);
     profileLayout->setSpacing(20);
     
-    // 头像容器
+    // 头像容器 - 改用QPushButton以确保点击事件正常工作
     QWidget *avatarContainer = new QWidget();
     avatarContainer->setObjectName("avatarContainer");
     avatarContainer->setFixedSize(160, 160);
@@ -123,10 +143,14 @@ void UserInfoPage::setupUI()
     QVBoxLayout *avatarLayout = new QVBoxLayout(avatarContainer);
     avatarLayout->setContentsMargins(4, 4, 4, 4);
     
-    m_avatarLabel = new QLabel();
-    m_avatarLabel->setObjectName("avatarLabel");
-    m_avatarLabel->setAlignment(Qt::AlignCenter);
-    m_avatarLabel->setFixedSize(152, 152);
+    // 使用QPushButton替代QLabel以确保点击事件
+    m_avatarButton = new QPushButton();
+    m_avatarButton->setObjectName("avatarButton");
+    m_avatarButton->setFixedSize(152, 152);
+    m_avatarButton->setCursor(Qt::PointingHandCursor);
+    
+    // 连接点击事件
+    connect(m_avatarButton, &QPushButton::clicked, this, &UserInfoPage::onUploadAvatarClicked);
     
     // 在线状态指示器
     QLabel *onlineIndicator = new QLabel();
@@ -156,9 +180,35 @@ void UserInfoPage::setupUI()
     painter.drawEllipse(44, 38, 58, 58); // 头部
     painter.drawEllipse(22, 102, 102, 58); // 身体
     
-    m_avatarLabel->setPixmap(defaultAvatar);
+    // 设置按钮图标和样式
+    m_avatarButton->setIcon(QIcon(defaultAvatar));
+    m_avatarButton->setIconSize(QSize(146, 146));
+    m_avatarButton->setStyleSheet(
+        "QPushButton {"
+        "    border: 2px solid #e2e8f0;"
+        "    border-radius: 76px;"
+        "    background-color: transparent;"
+        "}"
+        "QPushButton:hover {"
+        "    border: 2px solid #007aff;"
+        "}"
+        "QPushButton:pressed {"
+        "    border: 2px solid #0056b3;"
+        "}"
+    );
     
-    avatarLayout->addWidget(m_avatarLabel, 0, Qt::AlignCenter);
+    // 为了兼容性，也创建m_avatarLabel
+    m_avatarLabel = new QLabel();
+    m_avatarLabel->setObjectName("avatarLabel");
+    m_avatarLabel->setAlignment(Qt::AlignCenter);
+    m_avatarLabel->setFixedSize(152, 152);
+    m_avatarLabel->setPixmap(defaultAvatar);
+    m_avatarLabel->hide(); // 隐藏，使用按钮替代
+    
+    // 同时设置按钮的默认头像
+    setAvatarPixmap(defaultAvatar);
+    
+    avatarLayout->addWidget(m_avatarButton, 0, Qt::AlignCenter);
     profileLayout->addWidget(avatarContainer, 0, Qt::AlignCenter);
     
     // 用户名（现代简约风格）
@@ -167,11 +217,11 @@ void UserInfoPage::setupUI()
     m_usernameLabel->setObjectName("usernameLabel");
     profileLayout->addWidget(m_usernameLabel);
     
-    // 上传头像按钮
-    m_uploadAvatarButton = new QPushButton("更换头像");
-    m_uploadAvatarButton->setObjectName("uploadAvatarButton");
-    connect(m_uploadAvatarButton, &QPushButton::clicked, this, &UserInfoPage::onUploadAvatarClicked);
-    profileLayout->addWidget(m_uploadAvatarButton, 0, Qt::AlignCenter);
+    // 修改用户信息按钮
+    m_editProfileButton = new QPushButton("修改用户信息");
+    m_editProfileButton->setObjectName("editProfileButton");
+    connect(m_editProfileButton, &QPushButton::clicked, this, &UserInfoPage::onEditProfileClicked);
+    profileLayout->addWidget(m_editProfileButton, 0, Qt::AlignCenter);
     
     mainCardLayout->addWidget(profileSection);
     
@@ -227,7 +277,120 @@ void UserInfoPage::setupUI()
     
     contentLayout->addWidget(mainInfoCard);
     contentLayout->addStretch();
-    mainLayout->addWidget(contentWidget);
+}
+
+void UserInfoPage::setupEditMode()
+{
+    m_editWidget = new QWidget();
+    m_editWidget->setObjectName("editWidget");
+    
+    QVBoxLayout *editLayout = new QVBoxLayout(m_editWidget);
+    editLayout->setContentsMargins(24, 20, 24, 24);
+    editLayout->setSpacing(20);
+    
+    // 编辑模式卡片
+    QWidget *editCard = new QWidget();
+    editCard->setObjectName("userInfoCard");
+    
+    QVBoxLayout *editCardLayout = new QVBoxLayout(editCard);
+    editCardLayout->setContentsMargins(40, 40, 40, 40);
+    editCardLayout->setSpacing(32);
+    
+    // 顶部按钮栏：取消 + 标题 + 完成
+    QHBoxLayout *topLayout = new QHBoxLayout;
+    m_cancelButton = new QPushButton("取消");
+    QLabel *titleLabel = new QLabel("编辑个人资料");
+    titleLabel->setAlignment(Qt::AlignCenter);
+    titleLabel->setObjectName("editTitleLabel");
+    m_saveButton = new QPushButton("完成");
+    m_saveButton->setObjectName("saveBtn");
+
+    topLayout->addWidget(m_cancelButton);
+    topLayout->addWidget(titleLabel, 1); // 占满中间空间
+    topLayout->addWidget(m_saveButton);
+    
+    editCardLayout->addLayout(topLayout);
+    
+    // 头像区域：圆形头像 + 相机图标
+    QWidget *avatarWidget = new QWidget;
+    QHBoxLayout *avatarLayout = new QHBoxLayout(avatarWidget);
+    m_editAvatarLabel = new QLabel;
+    
+    // 设置默认头像
+    QPixmap avatarPixmap(":/images/avatar.jpg");
+    if (avatarPixmap.isNull()) {
+        // Create a simple placeholder avatar
+        avatarPixmap = QPixmap(100, 100);
+        avatarPixmap.fill(QColor(200, 200, 200));
+        QPainter painter(&avatarPixmap);
+        painter.setPen(QPen(QColor(150, 150, 150), 2));
+        painter.drawEllipse(2, 2, 96, 96);
+        painter.drawText(avatarPixmap.rect(), Qt::AlignCenter, "头像");
+    }
+    QPixmap avatarPix = roundAvatar(avatarPixmap, 100);
+    m_editAvatarLabel->setPixmap(avatarPix);
+    m_editAvatarLabel->setFixedSize(100, 100);
+
+    QPushButton *cameraBtn = new QPushButton;
+    QIcon cameraIcon(":/icons/camera.png");
+    if (cameraIcon.isNull()) {
+        // Create a simple camera placeholder
+        QPixmap cameraPixmap(30, 30);
+        cameraPixmap.fill(Qt::transparent);
+        QPainter painter(&cameraPixmap);
+        painter.setPen(QPen(Qt::white, 2));
+        painter.setBrush(QBrush(Qt::white));
+        painter.drawRect(5, 8, 20, 14);
+        painter.drawRect(10, 5, 10, 6);
+        cameraIcon = QIcon(cameraPixmap);
+    }
+    cameraBtn->setIcon(cameraIcon);
+    cameraBtn->setIconSize(QSize(30, 30));
+    cameraBtn->setFixedSize(30, 30);
+    cameraBtn->setStyleSheet("border-radius:15px; background-color:#007aff;");
+    cameraBtn->move(70, 70);
+    cameraBtn->setParent(avatarWidget);
+
+    avatarLayout->addStretch();
+    avatarLayout->addWidget(m_editAvatarLabel);
+    avatarLayout->addStretch();
+    
+    editCardLayout->addWidget(avatarWidget);
+
+    // 昵称输入框
+    QWidget *nicknameWidget = new QWidget;
+    QVBoxLayout *nicknameLayout = new QVBoxLayout(nicknameWidget);
+    QLabel *nicknameLabel = new QLabel("昵称");
+    m_nicknameEdit = new QLineEdit("tony");
+    m_nicknameEdit->setFixedHeight(40);
+    nicknameLayout->addWidget(nicknameLabel);
+    nicknameLayout->addWidget(m_nicknameEdit);
+    
+    editCardLayout->addWidget(nicknameWidget);
+
+    // 豆包号输入框（正则校验：字母、数字、下划线，4-16位）
+    QWidget *douBaoIdWidget = new QWidget;
+    QVBoxLayout *douBaoIdLayout = new QVBoxLayout(douBaoIdWidget);
+    QLabel *douBaoIdLabel = new QLabel("用户ID");
+    m_douBaoIdEdit = new QLineEdit("user_4947505154");
+    m_douBaoIdEdit->setFixedHeight(40);
+    QRegularExpression regExp("^[a-zA-Z0-9_]{4,16}$");
+    m_douBaoIdEdit->setValidator(new QRegularExpressionValidator(regExp, this));
+    QLabel *tipsLabel = new QLabel("豆包号只能使用字母、数字以及下划线，长度为4-16个字符");
+    tipsLabel->setStyleSheet("color:#999999; font-size:12px;");
+    douBaoIdLayout->addWidget(douBaoIdLabel);
+    douBaoIdLayout->addWidget(m_douBaoIdEdit);
+    douBaoIdLayout->addWidget(tipsLabel);
+    
+    editCardLayout->addWidget(douBaoIdWidget);
+    
+    editLayout->addWidget(editCard);
+    editLayout->addStretch();
+    
+    // 连接信号槽
+    connect(m_cancelButton, &QPushButton::clicked, this, &UserInfoPage::onCancelEditClicked);
+    connect(m_saveButton, &QPushButton::clicked, this, &UserInfoPage::onSaveProfileClicked);
+    connect(cameraBtn, &QPushButton::clicked, this, &UserInfoPage::onUploadAvatarClicked);
 }
 
 void UserInfoPage::loadUserInfo()
@@ -274,7 +437,7 @@ void UserInfoPage::loadUserInfo()
         QPixmap localPixmap(localAvatarPath);
         if (!localPixmap.isNull()) {
             QPixmap circularAvatar = createCircularPixmap(localPixmap, 152);
-            m_avatarLabel->setPixmap(circularAvatar);
+            setAvatarPixmap(circularAvatar);
             qDebug() << "Loaded local avatar from:" << localAvatarPath;
             return; // 使用本地头像，不需要网络加载
         }
@@ -293,7 +456,7 @@ void UserInfoPage::loadUserInfo()
                 if (pixmap.loadFromData(imageData)) {
                     // 创建圆形头像（152px大小以匹配头像标签尺寸）
                     QPixmap circularAvatar = createCircularPixmap(pixmap, 152);
-                    m_avatarLabel->setPixmap(circularAvatar);
+                    setAvatarPixmap(circularAvatar);
                  //   qDebug() << "Loaded network avatar";
                 }
             } else {
@@ -347,6 +510,18 @@ QPixmap UserInfoPage::createCircularPixmap(const QPixmap &pixmap, int size)
     painter.end();
     
     return result;
+}
+
+void UserInfoPage::setAvatarPixmap(const QPixmap &pixmap)
+{
+    // 同时更新标签和按钮的头像
+    if (m_avatarLabel) {
+        m_avatarLabel->setPixmap(pixmap);
+    }
+    if (m_avatarButton) {
+        m_avatarButton->setIcon(QIcon(pixmap));
+        m_avatarButton->setIconSize(QSize(146, 146));
+    }
 }
 
 QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value)
@@ -451,6 +626,116 @@ QWidget* UserInfoPage::createInfoItem(const QString &label, const QString &value
     layout->addStretch();
     
     return widget;
+}
+
+void UserInfoPage::onEditProfileClicked()
+{
+    // 追踪点击事件
+    try {
+        Analytics::SDK::instance()->trackClick("edit_profile_button", {
+            {"page", "user_info"},
+            {"button_text", "修改用户信息"}
+        });
+    } catch (...) {
+        // Analytics tracking failed, continuing...
+    }
+    
+    // 从设置中获取当前用户信息并填充到编辑框
+    QSettings settings("YourCompany", "QtApp");
+    QString username = settings.value("user/username", "").toString();
+    QString userId = settings.value("user/id", "").toString();
+    
+    // 填充编辑框
+    m_nicknameEdit->setText(username.isEmpty() ? "tony" : username);
+    m_douBaoIdEdit->setText(userId.isEmpty() ? "user_4947505154" : userId);
+    
+    // 同步头像到编辑模式
+    if (m_avatarButton && m_editAvatarLabel) {
+        QIcon currentIcon = m_avatarButton->icon();
+        if (!currentIcon.isNull()) {
+            QPixmap currentPixmap = currentIcon.pixmap(100, 100);
+            QPixmap editAvatar = roundAvatar(currentPixmap, 100);
+            m_editAvatarLabel->setPixmap(editAvatar);
+        }
+    }
+    
+    // 切换到编辑模式
+    m_stackedWidget->setCurrentWidget(m_editWidget);
+}
+
+void UserInfoPage::onSaveProfileClicked()
+{
+    // 验证豆包号格式
+    if (!m_douBaoIdEdit->hasAcceptableInput()) {
+        QMessageBox::warning(this, "输入错误", "豆包号格式不正确，请检查输入");
+        return;
+    }
+    
+    QString nickname = m_nicknameEdit->text().trimmed();
+    QString douBaoId = m_douBaoIdEdit->text().trimmed();
+    
+    if (nickname.isEmpty()) {
+        QMessageBox::warning(this, "输入错误", "昵称不能为空");
+        return;
+    }
+    
+    // 保存到设置
+    QSettings settings("YourCompany", "QtApp");
+    settings.setValue("user/username", nickname);
+    settings.setValue("user/id", douBaoId);
+    settings.sync();
+    
+    // 同步头像从编辑模式到查看模式
+    if (m_editAvatarLabel && m_avatarButton) {
+        QPixmap editPixmap = m_editAvatarLabel->pixmap();
+        if (!editPixmap.isNull()) {
+            // 将编辑模式的100px头像缩放到查看模式的152px
+            QPixmap viewAvatar = createCircularPixmap(editPixmap, 152);
+            setAvatarPixmap(viewAvatar);
+        }
+    }
+    
+    // 更新查看模式的显示
+    m_usernameLabel->setText(nickname);
+    m_idLabel->setText(douBaoId);
+    
+    // 切换回查看模式
+    m_stackedWidget->setCurrentWidget(m_viewWidget);
+    
+    // 显示保存成功消息
+    QMessageBox::information(this, "保存成功", QString("用户信息已更新\n昵称: %1\n豆包号: %2").arg(nickname, douBaoId));
+    
+    // 重新加载用户信息以确保数据同步
+    loadUserInfo();
+}
+
+void UserInfoPage::onCancelEditClicked()
+{
+    // 切换回查看模式，不保存任何更改
+    m_stackedWidget->setCurrentWidget(m_viewWidget);
+}
+
+bool UserInfoPage::eventFilter(QObject *obj, QEvent *event)
+{
+    if (obj == m_avatarLabel) {
+        if (event->type() == QEvent::MouseButtonPress) {
+            QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+            if (mouseEvent->button() == Qt::LeftButton) {
+                // 点击头像时触发更换头像功能
+                qDebug() << "Avatar clicked! Calling onUploadAvatarClicked()";
+                onUploadAvatarClicked();
+                return true;
+            }
+        }
+        // 添加调试信息查看其他事件
+        else if (event->type() == QEvent::Enter) {
+            qDebug() << "Mouse entered avatar";
+        }
+        else if (event->type() == QEvent::Leave) {
+            qDebug() << "Mouse left avatar";
+        }
+    }
+    return QWidget::eventFilter(obj, event);
 }
 
 void UserInfoPage::onUploadAvatarClicked()
@@ -583,7 +868,7 @@ void UserInfoPage::onUploadAvatarClicked()
         // 先本地预览头像
         QPixmap circularAvatar = createCircularPixmap(testPixmap, 152);
         if (!circularAvatar.isNull()) {
-            m_avatarLabel->setPixmap(circularAvatar);
+            setAvatarPixmap(circularAvatar);
          //   qDebug() << "Avatar preview updated successfully";
             
             // 立即发射信号，避免定时器
@@ -611,7 +896,7 @@ void UserInfoPage::uploadAvatar(const QString &filePath)
     QPixmap localPixmap(filePath);
     if (!localPixmap.isNull()) {
         QPixmap circularAvatar = createCircularPixmap(localPixmap, 152);
-        m_avatarLabel->setPixmap(circularAvatar);
+        setAvatarPixmap(circularAvatar);
         
         // 保存到本地设置（临时方案）
         QSettings settings("YourCompany", "QtApp");
@@ -799,6 +1084,28 @@ void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
     reply->deleteLater();
 }
 
+QPixmap UserInfoPage::roundAvatar(const QPixmap &pixmap, int size)
+{
+    QPixmap result(size, size);
+    result.fill(Qt::transparent);
+    
+    QPainter painter(&result);
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    // 创建圆形裁剪路径
+    QPainterPath path;
+    path.addEllipse(0, 0, size, size);
+    painter.setClipPath(path);
+    
+    // 缩放并绘制原图像
+    QPixmap scaledPixmap = pixmap.scaled(size, size, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+    int x = (size - scaledPixmap.width()) / 2;
+    int y = (size - scaledPixmap.height()) / 2;
+    painter.drawPixmap(x, y, scaledPixmap);
+    
+    return result;
+}
+
 void UserInfoPage::onThemeChanged()
 {
     applyTheme();
@@ -858,7 +1165,7 @@ void UserInfoPage::applyTheme()
         "    font-weight: 400; "
         "    padding: 0 0 24px 0; "
         "} "
-        "QWidget#contentWidget { "
+        "QWidget#contentWidget, QWidget#editWidget { "
         "    background-color: transparent; "
         "} "
         "QWidget#userInfoCard { "
@@ -890,6 +1197,23 @@ void UserInfoPage::applyTheme()
         "    font-size: 14px; "
         "    color: %16; "
         "    font-weight: 600; "
+        "} "
+        "QLabel#editTitleLabel { "
+        "    font-size: 20px; "
+        "    font-weight: 600; "
+        "    color: %17; "
+        "    padding: 8px; "
+        "} "
+        "QLineEdit { "
+        "    border: 1px solid %18; "
+        "    border-radius: 8px; "
+        "    padding: 8px 12px; "
+        "    font-size: 14px; "
+        "    background-color: %19; "
+        "    color: %20; "
+        "} "
+        "QLineEdit:focus { "
+        "    border: 2px solid %21; "
         "}"
     ).arg(colors.BACKGROUND)
      .arg(colors.PRIMARY)
@@ -906,7 +1230,12 @@ void UserInfoPage::applyTheme()
      .arg(colors.PRIMARY)
      .arg(colors.SURFACE)
      .arg(colors.TEXT_PRIMARY)
-     .arg(colors.SUCCESS);
+     .arg(colors.SUCCESS)
+     .arg(colors.TEXT_PRIMARY)
+     .arg(colors.BORDER)
+     .arg(colors.SURFACE)
+     .arg(colors.TEXT_PRIMARY)
+     .arg(colors.PRIMARY);
     
     // 应用按钮样式 - 使用主题管理器的样式而不是内联样式
     QString buttonStyle = themeManager->getButtonStyle("primary");

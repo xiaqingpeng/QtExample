@@ -18,11 +18,13 @@ TARGET = userprofile
 
 HEADERS += \
     userinfopage.h \
-    userprofiletab.h
+    userprofiletab.h \
+    editprofilewidget.h
 
 SOURCES += \
     userinfopage.cpp \
-    userprofiletab.cpp
+    userprofiletab.cpp \
+    editprofilewidget.cpp
 
 # 包含路径
 INCLUDEPATH += ../..
