@@ -5,21 +5,20 @@ qt6_add_library(userprofile STATIC
     userprofiletab.cpp
 )
 
-# 检查WebEngine是否可用，特别处理Windows平台
-if(Qt6WebEngineWidgets_FOUND AND NOT WIN32)
+# 检查WebEngine是否可用（使用主 CMakeLists.txt 中的 WEBENGINE_AVAILABLE）
+if(WEBENGINE_AVAILABLE)
     target_compile_definitions(userprofile PRIVATE WEBENGINE_AVAILABLE)
     target_link_libraries(userprofile PRIVATE Qt6::WebEngineWidgets)
     message(STATUS "UserProfile module: WebEngine enabled")
-elseif(WIN32)
-    message(STATUS "UserProfile module: WebEngine disabled for Windows compatibility")
 else()
-    message(STATUS "UserProfile module: WebEngine not available")
+    message(STATUS "UserProfile module: WebEngine disabled")
 endif()
 
 target_link_libraries(userprofile PRIVATE
     Qt6::Core
     Qt6::Widgets
     Qt6::Network
+    Qt6::PrintSupport
     EnterpriseCore
     EnterpriseServices
     network

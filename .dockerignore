@@ -1,0 +1,36 @@
+# Docker 忽略文件
+# 排除不需要复制到镜像中的文件和目录
+
+# 构建目录
+build/
+build-*/
+cmake-build-*/
+
+# Git 相关
+.git/
+.gitignore
+
+# IDE 相关
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS 特定
+.DS_Store
+*.app/
+
+# 文档和模板
+*.md
+*.template
+
+# Docker 相关
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# 其他
+*.log
+*.tmp
+

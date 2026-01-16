@@ -9,6 +9,7 @@ TARGET = auth
 HEADERS += \
     loginpage.h \
     LoginController.h \
+    ILoginView.h\
     changepasswordpage.h
 
 SOURCES += \

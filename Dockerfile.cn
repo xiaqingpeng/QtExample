@@ -1,0 +1,84 @@
+# Qt Linux 桌面开发环境（使用国内镜像源）
+# 基于 Ubuntu 22.04，包含 Qt6 开发环境
+# 如果遇到网络问题，可以使用此文件：docker build -f Dockerfile.cn -t qt-example-dev .
+
+FROM ubuntu:22.04
+
+# 避免交互式提示
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Shanghai
+
+# 配置使用国内镜像源（清华大学镜像）
+RUN sed -i 's|http://ports.ubuntu.com/ubuntu-ports|https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports|g' /etc/apt/sources.list && \
+    sed -i 's|http://archive.ubuntu.com/ubuntu|https://mirrors.tuna.tsinghua.edu.cn/ubuntu|g' /etc/apt/sources.list && \
+    sed -i 's|http://security.ubuntu.com/ubuntu|https://mirrors.tuna.tsinghua.edu.cn/ubuntu|g' /etc/apt/sources.list
+
+# 配置 apt 重试机制（增强版）
+RUN echo 'Acquire::Retries "10";' > /etc/apt/apt.conf.d/80-retries && \
+    echo 'Acquire::http::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries && \
+    echo 'Acquire::ftp::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries && \
+    echo 'Acquire::https::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries
+
+# 安装基础开发工具（带重试）
+RUN for retry in 1 2 3 4 5; do \
+        apt-get update && \
+        apt-get install -y --fix-missing \
+            ca-certificates \
+            build-essential \
+            cmake \
+            git \
+            ninja-build \
+            pkg-config \
+            wget \
+            curl && \
+        rm -rf /var/lib/apt/lists/* && \
+        break || sleep 10; \
+    done
+
+# 安装 Qt 6 开发环境（带重试，注意：WebEngine 在 ARM64 上可能不完整）
+RUN for retry in 1 2 3 4 5; do \
+        apt-get update && \
+        apt-get install -y --fix-missing \
+            libgles-dev \
+            libglvnd-dev \
+            qt6-base-dev \
+            qt6-tools-dev \
+            qt6-tools-dev-tools \
+            qt6-l10n-tools \
+            libqt6core6 \
+            libqt6gui6 \
+            libqt6widgets6 \
+            libqt6network6 \
+            libqt6printsupport6 \
+            libgl1-mesa-dev \
+            libglu1-mesa-dev \
+            libxkbcommon-x11-0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-randr0 \
+            libxcb-render-util0 \
+            libxcb-xinerama0 \
+            libxcb-xfixes0 \
+            libxcb-shape0 \
+            libfontconfig1 \
+            libdbus-1-3 \
+            fonts-noto-cjk \
+            fonts-wqy-microhei \
+            fonts-wqy-zenhei && \
+        (apt-get install -y --fix-missing fonts-noto-cjk-extra || echo "Warning: fonts-noto-cjk-extra installation failed, continuing...") && \
+        rm -rf /var/lib/apt/lists/* && \
+        apt-get clean && \
+        break || sleep 10; \
+    done
+
+# 工作目录
+WORKDIR /workspace
+
+# Qt 默认平台和显示
+ENV QT_QPA_PLATFORM=xcb
+ENV DISPLAY=host.docker.internal:0
+
+# 默认命令
+CMD ["/bin/bash"]
+

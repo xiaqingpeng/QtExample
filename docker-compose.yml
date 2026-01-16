@@ -1,0 +1,26 @@
+# Docker Compose 配置 - Qt Example 项目
+
+services:
+  # Qt Linux 桌面开发环境
+  qt-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # 如果遇到 ports.ubuntu.com 502/超时（特别是 ARM64），使用国内镜像源：
+        UBUNTU_MIRROR: "https://mirrors.tuna.tsinghua.edu.cn"
+    container_name: qt-example-linux-dev
+    volumes:
+      - .:/workspace                           # 挂载当前项目目录（包含 build 目录）
+    environment:
+      - DISPLAY=host.docker.internal:0         # macOS 上通过 XQuartz 显示
+      - QT_QPA_PLATFORM=xcb
+    working_dir: /workspace
+    # 默认构建命令：CMake 风格
+    command: >
+      /bin/bash -c "mkdir -p build &&
+                    cd build &&
+                    cmake .. &&
+                    make -j\$(nproc)"
+    network_mode: bridge
+

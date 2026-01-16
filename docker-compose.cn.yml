@@ -1,0 +1,23 @@
+# Docker Compose 配置（使用国内镜像源版本）
+# 如果遇到网络问题（502 Bad Gateway），使用此文件：
+# docker-compose -f docker-compose.cn.yml build qt-dev
+
+services:
+  qt-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.cn
+    container_name: qt-example-linux-dev
+    volumes:
+      - .:/workspace                           # 挂载当前项目目录（包含 build 目录）
+    environment:
+      - DISPLAY=host.docker.internal:0         # macOS 上通过 XQuartz 显示
+      - QT_QPA_PLATFORM=xcb
+    working_dir: /workspace
+    command: >
+      /bin/bash -c "mkdir -p build &&
+                    cd build &&
+                    cmake .. &&
+                    make -j$(nproc)"
+    network_mode: bridge
+

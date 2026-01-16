@@ -1,0 +1,53 @@
+#!/bin/bash
+# Docker Qt Linux 桌面版本构建脚本（通用模板）
+# 使用前请将 {{EXECUTABLE_NAME}} 替换为你的实际可执行文件名
+
+set -e
+
+echo "🐳 Docker Qt Linux 构建..."
+
+# 检查 Docker
+if ! command -v docker &> /dev/null; then
+    echo "❌ 未找到 Docker，请先安装 Docker Desktop"
+    echo "   macOS: https://www.docker.com/products/docker-desktop/"
+    echo "   Linux: https://docs.docker.com/engine/install/"
+    exit 1
+fi
+
+# 检查 Docker 是否运行
+if ! docker info &> /dev/null; then
+    echo "❌ Docker 未运行，请启动 Docker Desktop"
+    exit 1
+fi
+
+echo "✅ Docker 已就绪"
+
+# 构建镜像
+echo "🔨 构建 Docker 镜像..."
+docker-compose build qt-dev
+
+# 编译项目（在容器里执行 CMake 构建）
+echo "⚙️  编译 Linux 版本..."
+docker-compose run --rm qt-dev bash -c "
+    mkdir -p build && cd build
+    cmake ..
+    make -j\$(nproc)
+    echo ''
+    echo '✅ Linux 版本构建完成！'
+    echo '编译产物目录: build/'
+"
+
+echo ""
+echo "📦 构建完成！"
+echo ""
+echo "运行 Qt 程序（需要 X11）："
+echo "  1. 安装 XQuartz: brew install --cask xquartz"
+echo "  2. 启动 XQuartz 并运行: xhost +localhost"
+echo "  3. 运行容器并执行程序："
+echo "     docker-compose run --rm qt-dev bash"
+echo "     cd /workspace/build && ./{{EXECUTABLE_NAME}}"
+echo ""
+echo "无界面运行（offscreen 模式）："
+echo "     docker-compose run --rm qt-dev bash"
+echo "     cd /workspace/build && QT_QPA_PLATFORM=offscreen ./{{EXECUTABLE_NAME}}"
+

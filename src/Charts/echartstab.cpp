@@ -63,45 +63,17 @@ EChartsTab::EChartsTab(QWidget *parent)
     m_webView->load(QUrl::fromLocalFile(htmlPath));
 #else
     // WebEngine不可用时，创建一个更友好的替代界面
-    QWidget* fallbackWidget = new QWidget(this);
-    QVBoxLayout* fallbackLayout = new QVBoxLayout(fallbackWidget);
-    
-    QLabel* titleLabel = new QLabel("图表功能", this);
-    titleLabel->setAlignment(Qt::AlignCenter);
-    titleLabel->setStyleSheet("QLabel { font-size: 18px; font-weight: bold; color: #333; margin: 20px; }");
-    
-    QLabel* messageLabel = new QLabel("当前平台不支持 WebEngine 组件\n图表功能已禁用", this);
-    messageLabel->setAlignment(Qt::AlignCenter);
-    messageLabel->setStyleSheet("QLabel { color: #666; font-size: 14px; line-height: 1.5; }");
-    
-    QLabel* infoLabel = new QLabel("建议使用 macOS 或 Linux 平台获得完整的图表体验", this);
-    infoLabel->setAlignment(Qt::AlignCenter);
-    infoLabel->setStyleSheet("QLabel { color: #999; font-size: 12px; margin-top: 10px; }");
-    
-    fallbackLayout->addStretch();
-    fallbackLayout->addWidget(titleLabel);
-    fallbackLayout->addWidget(messageLabel);
-    fallbackLayout->addWidget(infoLabel);
-    fallbackLayout->addStretch();
-    
-    m_webView = fallbackWidget;
+    m_webView = new QLabel("当前平台不支持 WebEngine 组件\n图表功能已禁用", this);
+    m_webView->setAlignment(Qt::AlignCenter);
+    m_webView->setStyleSheet("QLabel { color: #666; font-size: 14px; line-height: 1.5; font-size: 18px; font-weight: bold; color: #333; margin: 20px; }");
     m_webView->setObjectName("echartsWebView");
+    m_webView->setMinimumHeight(400);
     layout->addWidget(m_webView);
 
     // 创建桥接对象但不使用WebChannel
     m_bridge = new ChartBridge(this);
     m_channel = nullptr;
 #endif
-    QFile file(htmlPath);
-    if (!file.exists()) {
-        // HTML文件不存在
-        return;
-    }
-    
-    // 连接WebView加载完成信号
-    connect(m_webView, &QWebEngineView::loadFinished, this, &EChartsTab::onPageLoaded);
-    
-    m_webView->load(QUrl::fromLocalFile(htmlPath));
 
     // 6. 创建筛选控件
     QHBoxLayout *filterLayout = new QHBoxLayout();
@@ -640,7 +612,15 @@ void EChartsTab::fetchApiData()
             "    console.log('showNetworkErrorMessage函数未找到');"
             "}"
         );
+#ifdef WEBENGINE_AVAILABLE
         m_webView->page()->runJavaScript(jsCode);
+#else
+        // WebEngine不可用时，更新QLabel显示信息
+        QLabel* chartLabel = qobject_cast<QLabel*>(m_webView);
+        if (chartLabel) {
+            chartLabel->setText("WebEngine 不可用\n网络错误");
+        }
+#endif
     }, queryParams);
 }
 

@@ -2,6 +2,7 @@
 #define ECHARTSTAB_H
 
 #include <QMainWindow>
+#include <QLabel>
 #ifdef WEBENGINE_AVAILABLE
 #include <QWebEngineView>
 #include <QWebChannel>

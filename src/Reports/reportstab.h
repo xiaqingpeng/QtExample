@@ -13,7 +13,9 @@
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #ifdef WEBENGINE_AVAILABLE
+#ifdef WEBENGINE_AVAILABLE
 #include <QWebEngineView>
+#endif
 #endif
 #include <QJsonObject>
 #include <QJsonArray>

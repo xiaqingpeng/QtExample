@@ -168,23 +168,9 @@ void UserProfileTab::setupInterestAnalysis()
     m_interestChartView->setObjectName("chartView");
 #else
     // 创建更友好的兴趣分析替代界面
-    QWidget* interestFallback = new QWidget();
-    QVBoxLayout* interestLayout = new QVBoxLayout(interestFallback);
-    
-    QLabel* interestTitle = new QLabel("兴趣分析图表");
-    interestTitle->setAlignment(Qt::AlignCenter);
-    interestTitle->setStyleSheet("QLabel { font-size: 16px; font-weight: bold; color: #333; margin: 10px; }");
-    
-    QLabel* interestMessage = new QLabel("当前平台不支持 WebEngine 组件\n兴趣分析图表功能已禁用");
-    interestMessage->setAlignment(Qt::AlignCenter);
-    interestMessage->setStyleSheet("QLabel { color: #666; font-size: 12px; line-height: 1.5; }");
-    
-    interestLayout->addStretch();
-    interestLayout->addWidget(interestTitle);
-    interestLayout->addWidget(interestMessage);
-    interestLayout->addStretch();
-    
-    m_interestChartView = interestFallback;
+    m_interestChartView = new QLabel("当前平台不支持 WebEngine 组件\n兴趣分析图表功能已禁用");
+    m_interestChartView->setAlignment(Qt::AlignCenter);
+    m_interestChartView->setStyleSheet("QLabel { color: #666; font-size: 12px; line-height: 1.5; font-size: 16px; font-weight: bold; color: #333; margin: 10px; }");
     m_interestChartView->setMinimumHeight(350);
     m_interestChartView->setObjectName("chartView");
 #endif
@@ -198,23 +184,9 @@ void UserProfileTab::setupValueAssessment()
     m_valueRadarView->setObjectName("chartView");
 #else
     // 创建更友好的价值评估替代界面
-    QWidget* valueFallback = new QWidget();
-    QVBoxLayout* valueLayout = new QVBoxLayout(valueFallback);
-    
-    QLabel* valueTitle = new QLabel("价值评估图表");
-    valueTitle->setAlignment(Qt::AlignCenter);
-    valueTitle->setStyleSheet("QLabel { font-size: 16px; font-weight: bold; color: #333; margin: 10px; }");
-    
-    QLabel* valueMessage = new QLabel("当前平台不支持 WebEngine 组件\n价值评估图表功能已禁用");
-    valueMessage->setAlignment(Qt::AlignCenter);
-    valueMessage->setStyleSheet("QLabel { color: #666; font-size: 12px; line-height: 1.5; }");
-    
-    valueLayout->addStretch();
-    valueLayout->addWidget(valueTitle);
-    valueLayout->addWidget(valueMessage);
-    valueLayout->addStretch();
-    
-    m_valueRadarView = valueFallback;
+    m_valueRadarView = new QLabel("当前平台不支持 WebEngine 组件\n价值评估图表功能已禁用");
+    m_valueRadarView->setAlignment(Qt::AlignCenter);
+    m_valueRadarView->setStyleSheet("QLabel { color: #666; font-size: 12px; line-height: 1.5; font-size: 16px; font-weight: bold; color: #333; margin: 10px; }");
     m_valueRadarView->setMinimumHeight(350);
     m_valueRadarView->setObjectName("chartView");
 #endif

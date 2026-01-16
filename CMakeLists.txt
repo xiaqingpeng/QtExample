@@ -32,16 +32,23 @@ endif()
 # 企业级架构作为标准（移除条件编译）
 # add_definitions(-DENTERPRISE_EDITION) # 不再需要条件编译
 
-# 设置MacOS特定选项
+# 设置平台特定选项
 if(APPLE)
-    # 设置部署目标为14.0以匹配Qt库版本
+    # macOS 特定配置
     set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Minimum macOS version" FORCE)
-    # 设置应用程序包类型
     set(MACOSX_BUNDLE_BUNDLE_NAME "QT Example")
     set(MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION})
     set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR})
     set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.example.qtexample")
     set(MACOSX_BUNDLE_ICON_FILE "icon")
+elseif(WIN32)
+    # Windows 特定配置
+    # 设置 Windows 应用程序版本信息
+    set_target_properties(QTExample PROPERTIES
+        WIN32_EXECUTABLE TRUE
+    )
+    # Windows 上禁用 WebEngine（兼容性考虑）
+    message(STATUS "Windows platform: WebEngine disabled for compatibility")
 endif()
 
 # 定义模块库
@@ -204,7 +211,6 @@ target_link_libraries(ECharts PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    ${WEBENGINE_LIBRARIES}
     Qt6::Network
     network
     analytics
@@ -212,36 +218,18 @@ target_link_libraries(ECharts PRIVATE
     Device
 )
 
+# 只在 WebEngine 可用时链接
+if(WEBENGINE_AVAILABLE)
+    target_link_libraries(ECharts PRIVATE Qt6::WebEngineWidgets)
+endif()
+
 target_include_directories(ECharts PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Styles
 )
 
-# UserProfileTab模块
-qt_add_library(UserProfileTab STATIC
-    src/UserProfile/userprofiletab.cpp
-    src/UserProfile/userprofiletab.h
-    layoutexamplestab.qrc
-)
-
-# 检查WebEngine是否可用，特别处理Windows平台
-if(WEBENGINE_AVAILABLE)
-    target_compile_definitions(UserProfileTab PRIVATE WEBENGINE_AVAILABLE)
-endif()
-
-target_link_libraries(UserProfileTab PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-    ${WEBENGINE_LIBRARIES}
-    Qt6::Network
-    network
-    Styles
-)
-target_include_directories(UserProfileTab PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Styles
-)
+# UserProfileTab模块已移至 src/UserProfile/CMakeLists.txt 作为 userprofile 库的一部分
+# 这里不再重复定义，避免链接时的重复定义错误
 
 # ReportsTab模块
 qt_add_library(ReportsTab STATIC
@@ -259,12 +247,16 @@ target_link_libraries(ReportsTab PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    ${WEBENGINE_LIBRARIES}
     Qt6::Network
     Qt6::PrintSupport
     network
     Styles
 )
+
+# 只在 WebEngine 可用时链接
+if(WEBENGINE_AVAILABLE)
+    target_link_libraries(ReportsTab PRIVATE Qt6::WebEngineWidgets)
+endif()
 target_include_directories(ReportsTab PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Styles
@@ -287,6 +279,7 @@ add_library(NetworkManager ALIAS network)
 add_library(LoginPage ALIAS auth)
 add_library(ChangePasswordPage ALIAS auth)
 add_library(UserInfo ALIAS userprofile)
+add_library(UserProfileTab ALIAS userprofile)  # UserProfileTab 是 userprofile 的别名
 add_library(Analytics ALIAS analytics)
 
 # 添加依赖关系，确保 network 先于依赖它的模块构建
@@ -294,7 +287,6 @@ add_library(Analytics ALIAS analytics)
 add_dependencies(auth network)
 add_dependencies(userprofile network)
 add_dependencies(ECharts network)
-add_dependencies(UserProfileTab network)
 add_dependencies(ReportsTab network)
 add_dependencies(auth analytics)
 add_dependencies(userprofile analytics)
@@ -302,7 +294,7 @@ add_dependencies(ECharts analytics)
 
 # 添加Styles库依赖关系
 add_dependencies(ECharts Styles)
-add_dependencies(UserProfileTab Styles)
+add_dependencies(userprofile Styles)
 add_dependencies(ReportsTab Styles)
 
 # 主应用程序源文件
@@ -350,7 +342,6 @@ target_link_libraries(QTExample PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    ${WEBENGINE_LIBRARIES}
     Qt6::Network
     Qt6::PrintSupport
     EnterpriseServices
@@ -359,7 +350,6 @@ target_link_libraries(QTExample PRIVATE
     EnterpriseLocalization
     network
     ECharts
-    UserProfileTab
     ReportsTab
     auth
     userprofile
@@ -367,6 +357,11 @@ target_link_libraries(QTExample PRIVATE
     Styles
     Device
 )
+
+# 只在 WebEngine 可用时链接
+if(WEBENGINE_AVAILABLE)
+    target_link_libraries(QTExample PRIVATE Qt6::WebEngineWidgets)
+endif()
 
 # 包含模块头文件目录
 target_include_directories(QTExample PRIVATE
@@ -431,7 +426,7 @@ install(TARGETS QTExample
 )
 
 # 安装模块库
-install(TARGETS network ECharts UserProfileTab ReportsTab auth userprofile analytics Styles Device
+install(TARGETS network ECharts ReportsTab auth userprofile analytics Styles Device
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

@@ -50,9 +50,34 @@ int main(int argc, char *argv[])
     
     // 设置安全的UI配置，避免emoji渲染崩溃
     QFont defaultFont = QApplication::font();
-    // 使用macOS上确实存在的系统字体，避免字体警告
-    defaultFont.setFamily("Helvetica"); // 使用可靠的系统字体
+    
+    // 配置字体以支持多语言（中、日、韩）
+    // 优先使用系统默认字体，但配置字体回退以支持 CJK 字符
+    QStringList fontFamilies;
+    
+    // 检测平台并设置合适的字体
+    #ifdef Q_OS_MACOS
+        defaultFont.setFamily("Helvetica"); // macOS 系统字体
+        fontFamilies << "Helvetica" << "PingFang SC" << "Hiragino Sans GB" << "STHeiti";
+    #elif defined(Q_OS_LINUX)
+        // Linux 上使用 Noto Sans CJK 或文泉驿字体
+        defaultFont.setFamily("Noto Sans CJK SC"); // 优先使用 Noto Sans CJK
+        fontFamilies << "Noto Sans CJK SC" << "Noto Sans CJK JP" << "Noto Sans CJK KR"
+                     << "WenQuanYi Micro Hei" << "WenQuanYi Zen Hei" 
+                     << "DejaVu Sans" << "Liberation Sans" << "sans-serif";
+    #elif defined(Q_OS_WIN)
+        defaultFont.setFamily("Microsoft YaHei"); // Windows 中文字体
+        fontFamilies << "Microsoft YaHei" << "SimSun" << "Malgun Gothic" << "Meiryo";
+    #else
+        // 其他平台使用通用字体
+        fontFamilies << "sans-serif" << "Arial" << "Helvetica";
+    #endif
+    
     defaultFont.setPixelSize(13);
+    
+    // 设置字体回退列表，确保 CJK 字符能正确显示
+    defaultFont.setFamilies(fontFamilies);
+    
     QApplication::setFont(defaultFont);
     
     // 设置应用程序属性

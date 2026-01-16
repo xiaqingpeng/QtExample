@@ -8,18 +8,27 @@ qt_add_library(Device STATIC
     serverconfigtab.h
 )
 
-# 定义WEBENGINE_AVAILABLE宏，因为Device模块使用了WebEngineWidgets
-target_compile_definitions(Device PRIVATE WEBENGINE_AVAILABLE)
+# 检查WebEngine是否可用
+if(WEBENGINE_AVAILABLE)
+    target_compile_definitions(Device PRIVATE WEBENGINE_AVAILABLE)
+    message(STATUS "Device module: WebEngine enabled")
+else()
+    message(STATUS "Device module: WebEngine disabled")
+endif()
 
 target_link_libraries(Device PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    Qt6::WebEngineWidgets
     Qt6::Network
     network
     Styles
 )
+
+# 只在 WebEngine 可用时链接
+if(WEBENGINE_AVAILABLE)
+    target_link_libraries(Device PRIVATE Qt6::WebEngineWidgets)
+endif()
 
 target_include_directories(Device PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../Core
