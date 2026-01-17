@@ -50,7 +50,7 @@ xhost +
 运行测试脚本：
 
 ```bash
-./test-x11-connection.sh
+../../scripts/docker/test-x11-connection.sh
 ```
 
 ## 常见警告

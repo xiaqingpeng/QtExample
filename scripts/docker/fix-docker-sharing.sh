@@ -65,7 +65,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "💡 提示："
 echo "   • 配置完成后，再次运行此脚本验证："
-echo "     ./fix-docker-sharing.sh"
+echo "     ./scripts/docker/fix-docker-sharing.sh"
 echo ""
 echo "   • 或者直接测试："
 echo "     docker-compose run --rm qt-dev echo '配置成功！'"

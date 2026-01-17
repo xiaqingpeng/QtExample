@@ -34,7 +34,7 @@ if ! docker run --rm -v "$CURRENT_PATH:/test" alpine ls /test &> /dev/null 2>&1;
     echo "   3. 添加路径: $CURRENT_PATH"
     echo "   4. 点击 Apply & Restart"
     echo ""
-    echo "详细步骤: ./fix-docker-sharing.sh"
+    echo "详细步骤: ./scripts/docker/fix-docker-sharing.sh"
     exit 1
 fi
 

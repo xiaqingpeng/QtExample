@@ -47,6 +47,22 @@ docker-compose up -d  # 默认配置已经是 offscreen 模式
 ./run-app-offscreen.sh
 ```
 
+#### 方式三：使用 Docker 工具脚本
+
+```bash
+# Docker 构建并运行
+./scripts/docker/docker-build-and-run.sh
+
+# 检查 Docker 配置
+./scripts/docker/check-docker-setup.sh
+
+# 测试 X11 连接
+./scripts/docker/test-x11-connection.sh
+
+# 修复 Docker 文件共享
+./scripts/docker/fix-docker-sharing.sh
+```
+
 ---
 
 ## 环境准备
@@ -71,7 +87,7 @@ brew install --cask docker
 
 **快速检查配置**：
 ```bash
-./check-docker-setup.sh
+./scripts/docker/check-docker-setup.sh
 ```
 
 #### 3. 配置 X11（可选，仅图形界面需要）
@@ -95,7 +111,7 @@ xhost +localhost
 
 **验证连接**：
 ```bash
-./test-x11-connection.sh
+./scripts/docker/test-x11-connection.sh
 ```
 
 ### Linux 用户
@@ -171,7 +187,7 @@ docker-compose -f docker-compose.x11.yml up -d
 
 **快速修复**：
 ```bash
-./fix-docker-sharing.sh
+./scripts/docker/fix-docker-sharing.sh
 ```
 
 ### 问题 3: 程序崩溃（Segmentation fault）
@@ -242,7 +258,7 @@ docker-compose down
 
 ```bash
 # 构建 Docker 镜像并编译项目
-./docker-build-and-run.sh
+./scripts/docker/docker-build-and-run.sh
 ```
 
 ### 仅构建镜像
@@ -264,30 +280,41 @@ docker-compose run --rm qt-dev bash -c "cd /workspace/build && cmake .. && make 
 如果遇到 CMake 缓存路径问题：
 
 ```bash
-./fix-build-cache.sh
+./scripts/docker/fix-build-cache.sh
 ```
 
 ---
 
 ## 相关文档
 
-- [X11/XQuartz 设置详细说明](../X11-SETUP.md) - X11 配置的详细步骤
-- [Windows 构建说明](../WINDOWS-构建说明.md) - Windows 平台构建指南
-- [跨平台兼容性说明](../跨平台兼容性说明.md) - 跨平台开发注意事项
-- [Docker 镜像加速配置](../Docker-镜像加速配置.md) - 配置国内镜像源
+- [X11/XQuartz 设置详细说明](docker/X11-SETUP.md) - X11 配置的详细步骤
+- [Windows 构建说明](../build/WINDOWS-构建说明.md) - Windows 平台构建指南
+- [跨平台兼容性说明](../development/跨平台兼容性说明.md) - 跨平台开发注意事项
+- [Docker 镜像加速配置](docker/Docker-镜像加速配置.md) - 配置国内镜像源
 
 ---
 
 ## 脚本说明
 
+### 根目录脚本（常用）
+
 | 脚本 | 说明 |
 |------|------|
-| `quick-run.sh` | 快速运行（自动检测模式） |
+| `quick-run.sh` | 快速运行（自动检测模式）⭐ |
 | `run-app-x11.sh` | X11 图形界面模式 |
 | `run-app-offscreen.sh` | Offscreen 模式 |
-| `test-x11-connection.sh` | 测试 X11 连接 |
-| `check-docker-setup.sh` | 检查 Docker 配置 |
-| `fix-docker-sharing.sh` | 修复 Docker 文件共享 |
+
+### Docker 工具脚本（scripts/docker/）
+
+| 脚本 | 说明 |
+|------|------|
+| `scripts/docker/docker-build-and-run.sh` | Docker 构建并运行 |
+| `scripts/docker/check-docker-setup.sh` | 检查 Docker 配置 |
+| `scripts/docker/test-x11-connection.sh` | 测试 X11 连接 |
+| `scripts/docker/fix-docker-sharing.sh` | 修复 Docker 文件共享 |
+| `scripts/docker/verify-docker-sharing.sh` | 验证 Docker 文件共享 |
+| `scripts/docker/fix-build-cache.sh` | 修复构建缓存问题 |
+| `scripts/docker/open-docker.sh` | 打开 Docker Desktop |
 
 ---
 

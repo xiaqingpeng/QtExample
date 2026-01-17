@@ -29,7 +29,7 @@ if [ -d "$BUILD_DIR" ]; then
     echo "   cd /workspace/build && cmake .. && make -j\$(nproc)"
     echo ""
     echo "或者直接运行构建脚本："
-    echo "   ./docker-build-and-run.sh"
+    echo "   ./scripts/docker/docker-build-and-run.sh"
 else
     echo "✅ build 目录不存在，无需清理"
 fi
