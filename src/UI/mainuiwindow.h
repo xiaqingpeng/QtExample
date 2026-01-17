@@ -50,7 +50,7 @@ private:
     void setupNavigationBar();
     void setupMainMenu();
     void setupSubMenu();
-    void setupMainMenuContent(const QString &mainMenu);  // Docker Desktop风格的主菜单内容
+    void setupMainMenuContent(const QString &mainMenuId, const QString &menuDisplayText);  // Docker Desktop风格的主菜单内容
     void setupContent();
     void setupStatusBar();
     QPushButton* createSubPageCard(const QString &icon, const QString &title, const QString &description);  // 创建子页面卡片

@@ -200,6 +200,12 @@
         <translation>Qt UI控件综合示例</translation>
     </message>
     <message>
+        <location filename="../../UI/mainuiwindow.cpp" line="185"/>
+        <location filename="../../UI/mainuiwindow.cpp" line="345"/>
+        <source>Qt Enterprise App</source>
+        <translation>Qt 企业级应用</translation>
+    </message>
+    <message>
         <location filename="../../UI/mainuiwindow.cpp" line="219"/>
         <location filename="../../UI/mainuiwindow.cpp" line="346"/>
         <source>浅色主题</source>
@@ -298,6 +304,38 @@
         <translation>修改密码</translation>
     </message>
     <message>
+        <source>交互式图表展示</source>
+        <translation>交互式图表展示</translation>
+    </message>
+    <message>
+        <source>系统日志分析</source>
+        <translation>系统日志分析</translation>
+    </message>
+    <message>
+        <source>用户行为分析</source>
+        <translation>用户行为分析</translation>
+    </message>
+    <message>
+        <source>数据统计报告</source>
+        <translation>数据统计报告</translation>
+    </message>
+    <message>
+        <source>服务器状态监控</source>
+        <translation>服务器状态监控</translation>
+    </message>
+    <message>
+        <source>本地设备信息</source>
+        <translation>本地设备信息</translation>
+    </message>
+    <message>
+        <source>个人资料管理</source>
+        <translation>个人资料管理</translation>
+    </message>
+    <message>
+        <source>账户安全设置</source>
+        <translation>账户安全设置</translation>
+    </message>
+    <message>
         <location filename="../../UI/mainuiwindow.cpp" line="360"/>
         <location filename="../../UI/mainuiwindow.cpp" line="444"/>
         <location filename="../../UI/mainuiwindow.cpp" line="885"/>
@@ -353,7 +391,7 @@
     <name>MainWindow</name>
     <message>
         <source>Qt Enterprise App</source>
-        <translation type="vanished">Qt 企业级应用</translation>
+        <translation>Qt 企业级应用</translation>
     </message>
     <message>
         <source>User Info</source>

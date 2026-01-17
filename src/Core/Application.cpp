@@ -23,7 +23,9 @@ Application::Application(int &argc, char **argv)
     s_instance = this;
     
     // 设置应用程序信息
-    setApplicationName("Qt Enterprise App");
+    // 注意：setApplicationName 使用内部标识符，不需要翻译
+    // 用户可见的显示名称在 UI 中使用 tr("Qt Enterprise App")
+    setApplicationName("QtEnterpriseApp");
     setApplicationVersion("2.0.0");
     setOrganizationName("YourCompany");
     setOrganizationDomain("yourcompany.com");

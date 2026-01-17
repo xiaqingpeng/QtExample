@@ -174,8 +174,8 @@ void MainUIWindow::setupNavigationBar()
     appIcon->setText("Q");
     appIcon->setAlignment(Qt::AlignCenter);
     
-    // 应用标题
-    appTitle = new QLabel("Qt Enterprise App");
+    // 应用标题 - 使用翻译
+    appTitle = new QLabel(tr("Qt Enterprise App"));
     appTitle->setObjectName("appTitle");
     
     titleLayout->addWidget(appIcon);
@@ -277,8 +277,8 @@ void MainUIWindow::setupNavigationBar()
     
     // 登出按钮
     logoutButton = new QPushButton(tr("登出"));
-    logoutButton->setMinimumWidth(50);
-    logoutButton->setMaximumWidth(70);
+    logoutButton->setMinimumWidth(60);
+    logoutButton->setMaximumWidth(80);
     connect(logoutButton, &QPushButton::clicked, this, &MainUIWindow::onLogoutClicked);
     
     userLayout->addWidget(avatarLabel);
@@ -300,22 +300,27 @@ void MainUIWindow::setupMainMenu()
     mainMenuList->setFixedWidth(200); // Docker Desktop风格的固定宽度侧边栏
 
     // 添加主菜单项 - 使用安全的文本图标替代emoji
+    // 使用 setData 存储菜单标识符，避免依赖翻译文本匹配
     QListWidgetItem *item1 = new QListWidgetItem("■ " + tr("图表示例"));
+    item1->setData(Qt::UserRole, "charts");  // 使用标识符而不是文本
     item1->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     item1->setSizeHint(QSize(200, 48)); // Docker Desktop风格的项目高度
     mainMenuList->addItem(item1);
 
     QListWidgetItem *item2 = new QListWidgetItem("▲ " + tr("数据分析"));
+    item2->setData(Qt::UserRole, "data_analysis");  // 使用标识符而不是文本
     item2->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     item2->setSizeHint(QSize(200, 48));
     mainMenuList->addItem(item2);
 
     QListWidgetItem *item3 = new QListWidgetItem("● " + tr("设备信息"));
+    item3->setData(Qt::UserRole, "device_info");  // 使用标识符而不是文本
     item3->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     item3->setSizeHint(QSize(200, 48));
     mainMenuList->addItem(item3);
 
     QListWidgetItem *item4 = new QListWidgetItem("◆ " + tr("个人中心"));
+    item4->setData(Qt::UserRole, "personal_center");  // 使用标识符而不是文本
     item4->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     item4->setSizeHint(QSize(200, 48));
     mainMenuList->addItem(item4);
@@ -338,6 +343,16 @@ void MainUIWindow::retranslateUi()
     
     // 窗口标题
     setWindowTitle(tr("Qt UI控件综合示例"));
+    
+    // 应用标题（导航栏中的标题）
+    if (appTitle) {
+        appTitle->setText(tr("Qt Enterprise App"));
+    }
+    
+    // 应用标题（导航栏中的标题）
+    if (appTitle) {
+        appTitle->setText(tr("Qt Enterprise App"));
+    }
 
     // 主题切换器文本
     if (themeComboBox && themeComboBox->count() >= 4) {
@@ -375,12 +390,25 @@ void MainUIWindow::retranslateUi()
     }
 
     // 主菜单 - Docker Desktop风格，使用安全的文本图标
+    // 更新文本时保持标识符不变，确保多语言下都能正确匹配
     if (mainMenuList && mainMenuList->count() >= 4) {
         mainMenuList->blockSignals(true);
         mainMenuList->item(0)->setText("■ " + tr("图表示例"));
+        if (mainMenuList->item(0)->data(Qt::UserRole).toString().isEmpty()) {
+            mainMenuList->item(0)->setData(Qt::UserRole, "charts");
+        }
         mainMenuList->item(1)->setText("▲ " + tr("数据分析"));
+        if (mainMenuList->item(1)->data(Qt::UserRole).toString().isEmpty()) {
+            mainMenuList->item(1)->setData(Qt::UserRole, "data_analysis");
+        }
         mainMenuList->item(2)->setText("● " + tr("设备信息"));
+        if (mainMenuList->item(2)->data(Qt::UserRole).toString().isEmpty()) {
+            mainMenuList->item(2)->setData(Qt::UserRole, "device_info");
+        }
         mainMenuList->item(3)->setText("◆ " + tr("个人中心"));
+        if (mainMenuList->item(3)->data(Qt::UserRole).toString().isEmpty()) {
+            mainMenuList->item(3)->setData(Qt::UserRole, "personal_center");
+        }
         mainMenuList->blockSignals(false);
     }
 
@@ -418,6 +446,18 @@ void MainUIWindow::retranslateUi()
     }
     
    // qDebug() << "retranslateUi completed";
+   
+   // 如果当前有显示的内容页面，需要刷新它以应用新的翻译
+   // 获取当前选中的菜单项，重新创建内容页面
+   if (mainMenuList && mainMenuList->currentItem()) {
+       QListWidgetItem *currentItem = mainMenuList->currentItem();
+       // 延迟刷新，确保翻译已加载
+       QTimer::singleShot(100, this, [this, currentItem]() {
+           if (currentItem) {
+               onMainMenuClicked(currentItem);
+           }
+       });
+   }
 }
 
 void MainUIWindow::setupStatusBar()
@@ -647,25 +687,44 @@ void MainUIWindow::setupContent()
 
 void MainUIWindow::onMainMenuClicked(QListWidgetItem *item)
 {
-    QString mainMenu = item->text();
+    if (!item) {
+        return;
+    }
     
-    // 移除图标前缀，获取纯文本
-    QString menuText = mainMenu;
-    if (mainMenu.contains(" ")) {
-        menuText = mainMenu.split(" ", Qt::SkipEmptyParts).last();
+    // 从 item 的 data 中获取菜单标识符（不依赖翻译文本）
+    QString menuId = item->data(Qt::UserRole).toString();
+    
+    // 如果没有标识符，尝试从文本中提取（向后兼容）
+    QString menuText;
+    if (menuId.isEmpty()) {
+        QString mainMenu = item->text();
+        // 移除图标前缀，获取纯文本
+        if (mainMenu.contains(" ")) {
+            menuText = mainMenu.split(" ", Qt::SkipEmptyParts).last();
+        } else {
+            menuText = mainMenu;
+        }
+    } else {
+        // 使用标识符，但为了显示标题，仍然需要获取翻译后的文本
+        menuText = item->text();
+        if (menuText.contains(" ")) {
+            menuText = menuText.split(" ", Qt::SkipEmptyParts).last();
+        }
     }
     
     // 追踪一级菜单切换事件
     Analytics::SDK::instance()->track("main_menu_changed", {
         {"event_type", "click"},
-        {"menu_name", menuText}
+        {"menu_name", menuText},
+        {"menu_id", menuId}
     });
     
     // Docker Desktop风格：直接显示对应的内容页面，创建子页面选择界面
-    setupMainMenuContent(menuText);
+    // 传递标识符而不是翻译文本，确保多语言下都能正确匹配
+    setupMainMenuContent(menuId.isEmpty() ? menuText : menuId, menuText);
 }
 
-void MainUIWindow::setupMainMenuContent(const QString &mainMenu)
+void MainUIWindow::setupMainMenuContent(const QString &mainMenuId, const QString &menuDisplayText)
 {
     // 安全检查：确保contentStack已初始化
     if (!contentStack) {
@@ -686,8 +745,8 @@ void MainUIWindow::setupMainMenuContent(const QString &mainMenu)
     menuLayout->setContentsMargins(32, 32, 32, 32);
     menuLayout->setSpacing(24);
     
-    // 页面标题
-    QLabel *titleLabel = new QLabel(mainMenu);
+    // 页面标题 - 使用传入的显示文本
+    QLabel *titleLabel = new QLabel(menuDisplayText);
     titleLabel->setObjectName("pageTitle");
     titleLabel->setStyleSheet(
         "QLabel#pageTitle { "
@@ -704,24 +763,24 @@ void MainUIWindow::setupMainMenuContent(const QString &mainMenu)
     QGridLayout *gridLayout = new QGridLayout(gridContainer);
     gridLayout->setSpacing(20);
     
-    // 根据主菜单创建子页面卡片
+    // 根据主菜单标识符创建子页面卡片（只使用标识符匹配，不依赖翻译文本）
     QStringList subPages;
     QStringList subPageIcons;
     QStringList subPageDescriptions;
     
-    if (mainMenu.contains(tr("图表示例"))) {
+    if (mainMenuId == "charts") {
         subPages << tr("ECharts示例") << tr("日志统计");
         subPageIcons << "■" << "▣";
         subPageDescriptions << tr("交互式图表展示") << tr("系统日志分析");
-    } else if (mainMenu.contains(tr("数据分析"))) {
+    } else if (mainMenuId == "data_analysis") {
         subPages << tr("用户画像") << tr("统计报表");
         subPageIcons << "◉" << "▲";
         subPageDescriptions << tr("用户行为分析") << tr("数据统计报告");
-    } else if (mainMenu.contains(tr("设备信息"))) {
+    } else if (mainMenuId == "device_info") {
         subPages << tr("服务器配置监控") << tr("电脑本机配置监控");
         subPageIcons << "●" << "○";
         subPageDescriptions << tr("服务器状态监控") << tr("本地设备信息");
-    } else if (mainMenu.contains(tr("个人中心"))) {
+    } else if (mainMenuId == "personal_center") {
         subPages << tr("用户信息") << tr("修改密码");
         subPageIcons << "◆" << "◇";
         subPageDescriptions << tr("个人资料管理") << tr("账户安全设置");

@@ -198,6 +198,38 @@
         <translation>Change Password</translation>
     </message>
     <message>
+        <source>交互式图表展示</source>
+        <translation>Interactive Chart Display</translation>
+    </message>
+    <message>
+        <source>系统日志分析</source>
+        <translation>System Log Analysis</translation>
+    </message>
+    <message>
+        <source>用户行为分析</source>
+        <translation>User Behavior Analysis</translation>
+    </message>
+    <message>
+        <source>数据统计报告</source>
+        <translation>Statistical Data Report</translation>
+    </message>
+    <message>
+        <source>服务器状态监控</source>
+        <translation>Server Status Monitoring</translation>
+    </message>
+    <message>
+        <source>本地设备信息</source>
+        <translation>Local Device Information</translation>
+    </message>
+    <message>
+        <source>个人资料管理</source>
+        <translation>Personal Profile Management</translation>
+    </message>
+    <message>
+        <source>账户安全设置</source>
+        <translation>Account Security Settings</translation>
+    </message>
+    <message>
         <source>离线</source>
         <translation>Offline</translation>
     </message>

@@ -198,6 +198,38 @@
         <translation>비밀번호 변경</translation>
     </message>
     <message>
+        <source>交互式图表展示</source>
+        <translation>대화형 차트 표시</translation>
+    </message>
+    <message>
+        <source>系统日志分析</source>
+        <translation>시스템 로그 분석</translation>
+    </message>
+    <message>
+        <source>用户行为分析</source>
+        <translation>사용자 행동 분석</translation>
+    </message>
+    <message>
+        <source>数据统计报告</source>
+        <translation>데이터 통계 보고서</translation>
+    </message>
+    <message>
+        <source>服务器状态监控</source>
+        <translation>서버 상태 모니터링</translation>
+    </message>
+    <message>
+        <source>本地设备信息</source>
+        <translation>로컬 장치 정보</translation>
+    </message>
+    <message>
+        <source>个人资料管理</source>
+        <translation>개인 프로필 관리</translation>
+    </message>
+    <message>
+        <source>账户安全设置</source>
+        <translation>계정 보안 설정</translation>
+    </message>
+    <message>
         <source>离线</source>
         <translation>오프라인</translation>
     </message>
