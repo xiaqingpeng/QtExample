@@ -30,6 +30,7 @@
 #include <QFileInfo>
 #include <QStandardPaths>
 #include <QDir>
+#include <functional>
 
 MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
     , appTitle(nullptr)
@@ -191,64 +192,39 @@ void MainUIWindow::setupNavigationBar()
     controlsLayout->setContentsMargins(0, 0, 0, 0);
     controlsLayout->setSpacing(12);
     
-    // 语言切换器
-    languageComboBox = new QComboBox();
-    languageComboBox->setMinimumWidth(100);
-    languageComboBox->setMaximumWidth(120);
+    // 语言切换按钮
+    languageButton = new QPushButton();
+    languageButton->setMinimumWidth(100);
+    languageButton->setMaximumWidth(120);
+    languageButton->setCursor(Qt::PointingHandCursor);
 
     LocalizationManager *lm = LocalizationManager::instance();
-    const QStringList languages = lm->availableLanguages();
     const QString currentLang = lm->currentLanguage();
+    const QString displayName = lm->getLanguageDisplayName(currentLang);
+    languageButton->setText(displayName + " ▼");
 
-    int currentIndex = -1;
-    for (int i = 0; i < languages.size(); ++i) {
-        const QString &code = languages.at(i);
-        const QString displayName = lm->getLanguageDisplayName(code);
-        languageComboBox->addItem(displayName, code);
-        if (code == currentLang && currentIndex == -1) {
-            currentIndex = i;
-        }
-    }
-    if (currentIndex >= 0) {
-        languageComboBox->setCurrentIndex(currentIndex);
-    }
-
-    connect(languageComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, [this](int index) {
-                if (!languageComboBox || index < 0) {
-                    return;
-                }
-                const QString code = languageComboBox->itemData(index).toString();
-                if (!code.isEmpty()) {
-                    LocalizationManager *lm = LocalizationManager::instance();
-                    if (lm) {
-                        lm->setLanguage(code);
-                    }
-                }
-            });
+    connect(languageButton, &QPushButton::clicked, this, &MainUIWindow::showLanguagePopover);
     
-    // 主题切换器
-    themeComboBox = new QComboBox();
-    themeComboBox->addItem(tr("浅色主题"), static_cast<int>(ThemeManager::LIGHT));
-    themeComboBox->addItem(tr("深色主题"), static_cast<int>(ThemeManager::DARK));
-    themeComboBox->addItem(tr("蓝色主题"), static_cast<int>(ThemeManager::BLUE));
-    themeComboBox->addItem(tr("绿色主题"), static_cast<int>(ThemeManager::GREEN));
-    themeComboBox->setMinimumWidth(100);
-    themeComboBox->setMaximumWidth(120);
+    // 主题切换按钮
+    themeButton = new QPushButton();
+    themeButton->setMinimumWidth(100);
+    themeButton->setMaximumWidth(120);
+    themeButton->setCursor(Qt::PointingHandCursor);
     
-    // 设置当前主题
+    // 设置当前主题显示
     ThemeManager *themeManager = ThemeManager::instance();
     if (themeManager) {
-        themeComboBox->setCurrentIndex(static_cast<int>(themeManager->getCurrentTheme()));
+        QString themeText;
+        switch (themeManager->getCurrentTheme()) {
+            case ThemeManager::LIGHT: themeText = tr("浅色主题"); break;
+            case ThemeManager::DARK: themeText = tr("深色主题"); break;
+            case ThemeManager::BLUE: themeText = tr("蓝色主题"); break;
+            case ThemeManager::GREEN: themeText = tr("绿色主题"); break;
+        }
+        themeButton->setText(themeText + " ▼");
     }
     
-    connect(themeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            [](int index) {
-                ThemeManager *tm = ThemeManager::instance();
-                if (tm) {
-                    tm->setTheme(static_cast<ThemeManager::ThemeType>(index));
-                }
-            });
+    connect(themeButton, &QPushButton::clicked, this, &MainUIWindow::showThemePopover);
     
     // 分隔线
     QFrame *separator = new QFrame();
@@ -285,8 +261,8 @@ void MainUIWindow::setupNavigationBar()
     userLayout->addWidget(usernameLabel);
     userLayout->addWidget(logoutButton);
     
-    controlsLayout->addWidget(languageComboBox);
-    controlsLayout->addWidget(themeComboBox);
+    controlsLayout->addWidget(languageButton);
+    controlsLayout->addWidget(themeButton);
     controlsLayout->addWidget(separator);
     controlsLayout->addWidget(userContainer);
     
@@ -354,14 +330,19 @@ void MainUIWindow::retranslateUi()
         appTitle->setText(tr("Qt Enterprise App"));
     }
 
-    // 主题切换器文本
-    if (themeComboBox && themeComboBox->count() >= 4) {
-        themeComboBox->blockSignals(true);
-        themeComboBox->setItemText(0, tr("浅色主题"));
-        themeComboBox->setItemText(1, tr("深色主题"));
-        themeComboBox->setItemText(2, tr("蓝色主题"));
-        themeComboBox->setItemText(3, tr("绿色主题"));
-        themeComboBox->blockSignals(false);
+    // 主题切换按钮文本
+    if (themeButton) {
+        ThemeManager *themeManager = ThemeManager::instance();
+        if (themeManager) {
+            QString themeText;
+            switch (themeManager->getCurrentTheme()) {
+                case ThemeManager::LIGHT: themeText = tr("浅色主题"); break;
+                case ThemeManager::DARK: themeText = tr("深色主题"); break;
+                case ThemeManager::BLUE: themeText = tr("蓝色主题"); break;
+                case ThemeManager::GREEN: themeText = tr("绿色主题"); break;
+            }
+            themeButton->setText(themeText + " ▼");
+        }
     }
 
     // 登出按钮
@@ -412,27 +393,12 @@ void MainUIWindow::retranslateUi()
         mainMenuList->blockSignals(false);
     }
 
-    // 语言下拉框的显示名来自 LocalizationManager
-    if (languageComboBox) {
-        languageComboBox->blockSignals(true);
-        languageComboBox->clear();
-
+    // 语言切换按钮显示名来自 LocalizationManager
+    if (languageButton) {
         LocalizationManager *lm = LocalizationManager::instance();
-        const QStringList languages = lm->availableLanguages();
         const QString currentLang = lm->currentLanguage();
-        int currentIndex = -1;
-        for (int i = 0; i < languages.size(); ++i) {
-            const QString &code = languages.at(i);
-            const QString displayName = lm->getLanguageDisplayName(code);
-            languageComboBox->addItem(displayName, code);
-            if (code == currentLang && currentIndex == -1) {
-                currentIndex = i;
-            }
-        }
-        if (currentIndex >= 0) {
-            languageComboBox->setCurrentIndex(currentIndex);
-        }
-        languageComboBox->blockSignals(false);
+        const QString displayName = lm->getLanguageDisplayName(currentLang);
+        languageButton->setText(displayName + " ▼");
     }
     
     // 用户名标签（如果已登录）
@@ -565,20 +531,14 @@ void MainUIWindow::applyTheme()
          .arg(theme->colors().GRAY_100));
     }
     
-    // 应用主题切换器样式并同步当前选择
-    if (themeComboBox) {
-        themeComboBox->blockSignals(true);
-        int currentThemeIndex = static_cast<int>(theme->getCurrentTheme());
-        if (themeComboBox->currentIndex() != currentThemeIndex) {
-            themeComboBox->setCurrentIndex(currentThemeIndex);
-        }
-        themeComboBox->setStyleSheet(theme->getThemeSwitcherStyle());
-        themeComboBox->blockSignals(false);
+    // 应用主题切换按钮样式
+    if (themeButton) {
+        themeButton->setStyleSheet(theme->getButtonStyle("secondary"));
     }
 
-    // 应用语言切换器样式
-    if (languageComboBox) {
-        languageComboBox->setStyleSheet(theme->getThemeSwitcherStyle());
+    // 应用语言切换按钮样式
+    if (languageButton) {
+        languageButton->setStyleSheet(theme->getButtonStyle("secondary"));
     }
     
     // 应用按钮样式
@@ -1528,4 +1488,155 @@ void MainUIWindow::onAuthenticationChanged(bool authenticated)
             setDefaultAvatar();
         }
     }
+}
+
+void MainUIWindow::showLanguagePopover()
+{
+    hidePopovers(); // 先隐藏其他弹窗
+    
+    LocalizationManager *lm = LocalizationManager::instance();
+    const QStringList languages = lm->availableLanguages();
+    const QString currentLang = lm->currentLanguage();
+    
+    QStringList displayNames;
+    QStringList codes;
+    
+    for (const QString &code : languages) {
+        displayNames << lm->getLanguageDisplayName(code);
+        codes << code;
+    }
+    
+    languagePopover = createPopover(displayNames, codes, currentLang, 
+        [this, lm](const QString &code) {
+            if (lm) {
+                lm->setLanguage(code);
+                const QString displayName = lm->getLanguageDisplayName(code);
+                languageButton->setText(displayName + " ▼");
+            }
+            hidePopovers();
+        });
+    
+    // 定位弹窗到按钮下方
+    QPoint buttonPos = languageButton->mapToGlobal(QPoint(0, languageButton->height()));
+    languagePopover->move(buttonPos);
+    languagePopover->show();
+}
+
+void MainUIWindow::showThemePopover()
+{
+    hidePopovers(); // 先隐藏其他弹窗
+    
+    QStringList themeNames = {tr("浅色主题"), tr("深色主题"), tr("蓝色主题"), tr("绿色主题")};
+    QStringList themeValues = {"0", "1", "2", "3"};
+    
+    ThemeManager *themeManager = ThemeManager::instance();
+    QString currentTheme = QString::number(static_cast<int>(themeManager->getCurrentTheme()));
+    
+    themePopover = createPopover(themeNames, themeValues, currentTheme,
+        [this](const QString &themeIndex) {
+            ThemeManager *tm = ThemeManager::instance();
+            if (tm) {
+                int index = themeIndex.toInt();
+                tm->setTheme(static_cast<ThemeManager::ThemeType>(index));
+                
+                QString themeText;
+                switch (index) {
+                    case 0: themeText = tr("浅色主题"); break;
+                    case 1: themeText = tr("深色主题"); break;
+                    case 2: themeText = tr("蓝色主题"); break;
+                    case 3: themeText = tr("绿色主题"); break;
+                }
+                themeButton->setText(themeText + " ▼");
+            }
+            hidePopovers();
+        });
+    
+    // 定位弹窗到按钮下方
+    QPoint buttonPos = themeButton->mapToGlobal(QPoint(0, themeButton->height()));
+    themePopover->move(buttonPos);
+    themePopover->show();
+}
+
+void MainUIWindow::hidePopovers()
+{
+    if (languagePopover) {
+        languagePopover->hide();
+        languagePopover->deleteLater();
+        languagePopover = nullptr;
+    }
+    
+    if (themePopover) {
+        themePopover->hide();
+        themePopover->deleteLater();
+        themePopover = nullptr;
+    }
+}
+
+QWidget* MainUIWindow::createPopover(const QStringList &items, const QStringList &values, 
+                                   const QString &currentValue, std::function<void(const QString&)> onSelect)
+{
+    QWidget *popover = new QWidget(this);
+    popover->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
+    popover->setAttribute(Qt::WA_DeleteOnClose);
+    
+    // 设置弹窗样式
+    ThemeManager *theme = ThemeManager::instance();
+    popover->setStyleSheet(QString(
+        "QWidget { "
+        "    background-color: %1; "
+        "    border: 1px solid %2; "
+        "    border-radius: 8px; "
+        "    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); "
+        "} "
+        "QPushButton { "
+        "    background-color: transparent; "
+        "    border: none; "
+        "    padding: 8px 16px; "
+        "    text-align: left; "
+        "    color: %3; "
+        "    font-size: 14px; "
+        "} "
+        "QPushButton:hover { "
+        "    background-color: %4; "
+        "} "
+        "QPushButton:pressed { "
+        "    background-color: %5; "
+        "} "
+    ).arg(theme->colors().SURFACE)
+     .arg(theme->colors().BORDER)
+     .arg(theme->colors().TEXT_PRIMARY)
+     .arg(theme->colors().GRAY_100)
+     .arg(theme->colors().PRIMARY_LIGHT));
+    
+    QVBoxLayout *layout = new QVBoxLayout(popover);
+    layout->setContentsMargins(4, 4, 4, 4);
+    layout->setSpacing(0);
+    
+    for (int i = 0; i < items.size(); ++i) {
+        QPushButton *item = new QPushButton(items[i]);
+        item->setCursor(Qt::PointingHandCursor);
+        item->setMinimumWidth(120);
+        
+        // 高亮当前选中项
+        if (values[i] == currentValue) {
+            item->setStyleSheet(item->styleSheet() + QString(
+                "QPushButton { background-color: %1; color: %2; }"
+            ).arg(theme->colors().PRIMARY_LIGHT).arg(theme->colors().PRIMARY));
+        }
+        
+        connect(item, &QPushButton::clicked, [onSelect, values, i]() {
+            onSelect(values[i]);
+        });
+        
+        layout->addWidget(item);
+    }
+    
+    // 添加阴影效果
+    QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect();
+    shadow->setBlurRadius(12);
+    shadow->setColor(QColor(0, 0, 0, 40));
+    shadow->setOffset(0, 4);
+    popover->setGraphicsEffect(shadow);
+    
+    return popover;
 }

@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QComboBox>
 #include <QGraphicsDropShadowEffect>
+#include <functional>
 #include "../Charts/echartstab.h"
 #include "../Charts/logstatstab.h"
 #include "../UserProfile/userprofiletab.h"
@@ -55,6 +56,10 @@ private:
     void setupStatusBar();
     QPushButton* createSubPageCard(const QString &icon, const QString &title, const QString &description);  // 创建子页面卡片
     void showSubPageContent(const QString &subPage);  // 显示子页面内容
+    void showLanguagePopover();  // 显示语言选择弹窗
+    void showThemePopover();     // 显示主题选择弹窗
+    void hidePopovers();         // 隐藏所有弹窗
+    QWidget* createPopover(const QStringList &items, const QStringList &values, const QString &currentValue, std::function<void(const QString&)> onSelect);  // 创建通用弹窗
     QPixmap createCircularPixmap(const QPixmap &pixmap, int size);
     void setDefaultAvatar();
     void loadNetworkAvatar(const QString &avatarUrl);
@@ -70,8 +75,10 @@ private:
     QLabel *avatarLabel;
     QLabel *usernameLabel;
     QPushButton *logoutButton;
-    QComboBox *themeComboBox;
-    QComboBox *languageComboBox;
+    QPushButton *themeButton;
+    QPushButton *languageButton;
+    QWidget *themePopover;
+    QWidget *languagePopover;
     
     // 菜单组件
     QListWidget *mainMenuList;
