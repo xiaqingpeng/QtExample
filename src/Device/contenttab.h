@@ -33,11 +33,11 @@ private slots:
 private:
     NetworkManager *m_networkManager;
     QLabel *m_titleLabel;
+    // 使用 QWidget* 作为基类指针，支持运行时类型检查
+    QWidget *m_webView;
 #ifdef WEBENGINE_AVAILABLE
-    QWebEngineView *m_webView;
     QWebChannel *m_channel;
 #else
-    QLabel *m_webView;  // 使用QLabel作为占位符
     QObject *m_channel; // 占位符
 #endif
     ServerConfigBridge *m_bridge;

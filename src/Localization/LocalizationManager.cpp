@@ -278,7 +278,7 @@ QString LocalizationManager::getTranslationFilePath(const QString& languageCode)
     }
     
     // 4. 尝试可执行文件同级目录
-    QString sameDirPath = appDir + "/" + fileName;
+    QString sameDirPath = appDir + QDir::separator() + fileName;
     // qDebug() << "Checking path 3:" << sameDirPath << "exists:" << QFile::exists(sameDirPath);
     if (QFile::exists(sameDirPath)) {
         // qDebug() << "Found translation file at:" << sameDirPath;
@@ -317,7 +317,7 @@ QString LocalizationManager::getTranslationFilePath(const QString& languageCode)
         }
         
         // (c) 构建目录根目录下的 .qm 文件（某些构建系统可能直接放在这里）
-        QString candidateRoot = basePath + "/" + fileName;
+        QString candidateRoot = basePath + QDir::separator() + fileName;
         if (QFile::exists(candidateRoot)) {
             // qDebug() << "Found translation file at:" << candidateRoot;
             return candidateRoot;

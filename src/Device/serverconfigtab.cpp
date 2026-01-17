@@ -767,59 +767,65 @@ void ServerConfigTab::onPageLoaded(bool ok){
     // qDebug()() << "[ServerConfigTab] 加载状态:" << ok;
     
 #ifdef WEBENGINE_AVAILABLE
-    // qDebug()() << "[ServerConfigTab] 页面标题:" << m_webView->title();
-    // qDebug()() << "[ServerConfigTab] 页面URL:" << m_webView->url().toString();
-    // qDebug()() << "[ServerConfigTab] WebView是否可见:" << m_webView->isVisible();
-    // qDebug()() << "[ServerConfigTab] WebView尺寸:" << m_webView->size();
-    
-    // 检查WebChannel状态
-    if (m_webView->page()->webChannel()) {
-        // qDebug()() << "[ServerConfigTab] WebChannel is set up after page load";
-    } else {
-        qWarning() << "[ServerConfigTab] WebChannel is NOT set up after page load";
-        // 再次尝试设置WebChannel
-        m_webView->page()->setWebChannel(m_channel);
-        if (m_webView->page()->webChannel()) {
-            // qDebug()() << "[ServerConfigTab] WebChannel set up successfully after retry";
+    QWebEngineView *webEngineView = qobject_cast<QWebEngineView*>(m_webView);
+    if (webEngineView) {
+        // qDebug()() << "[ServerConfigTab] 页面标题:" << webEngineView->title();
+        // qDebug()() << "[ServerConfigTab] 页面URL:" << webEngineView->url().toString();
+        // qDebug()() << "[ServerConfigTab] WebView是否可见:" << webEngineView->isVisible();
+        // qDebug()() << "[ServerConfigTab] WebView尺寸:" << webEngineView->size();
+        
+        // 检查WebChannel状态
+        if (webEngineView->page()->webChannel()) {
+            // qDebug()() << "[ServerConfigTab] WebChannel is set up after page load";
         } else {
-            qCritical() << "[ServerConfigTab] Failed to set up WebChannel after retry";
+            qWarning() << "[ServerConfigTab] WebChannel is NOT set up after page load";
+            // 再次尝试设置WebChannel
+            webEngineView->page()->setWebChannel(m_channel);
+            if (webEngineView->page()->webChannel()) {
+                // qDebug()() << "[ServerConfigTab] WebChannel set up successfully after retry";
+            } else {
+                qCritical() << "[ServerConfigTab] Failed to set up WebChannel after retry";
+            }
         }
-    }
-    
-    if (ok) {
-        // qDebug()() << "[ServerConfigTab] Server config page loaded successfully";
         
-        // 获取页面内容验证
-        m_webView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
-            QString content = result.toString();
-            // qDebug()() << "[ServerConfigTab] Page content loaded:" << content;
-        });
-        
-        // 获取页面标题验证
-        m_webView->page()->runJavaScript("document.title", [](const QVariant &/*result*/) {
-            // qDebug()() << "[ServerConfigTab] Page title from JS:" << result.toString();
-        });
-        
-        // 简单的测试JavaScript执行
-        m_webView->page()->runJavaScript("'Hello from JavaScript: ' + (new Date()).toLocaleString()", [](const QVariant &/*result*/) {
-            // qDebug()() << "[ServerConfigTab] JavaScript execution result:" << result.toString();
-        });
-        
-        // 页面加载完成后获取系统信息
-        // qDebug()() << "[ServerConfigTab] Fetching system info...";
-        fetchSystemInfo();
+        if (ok) {
+            // qDebug()() << "[ServerConfigTab] Server config page loaded successfully";
+            
+            // 获取页面内容验证
+            webEngineView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
+                QString content = result.toString();
+                // qDebug()() << "[ServerConfigTab] Page content loaded:" << content;
+            });
+            
+            // 获取页面标题验证
+            webEngineView->page()->runJavaScript("document.title", [](const QVariant &/*result*/) {
+                // qDebug()() << "[ServerConfigTab] Page title from JS:" << result.toString();
+            });
+            
+            // 简单的测试JavaScript执行
+            webEngineView->page()->runJavaScript("'Hello from JavaScript: ' + (new Date()).toLocaleString()", [](const QVariant &/*result*/) {
+                // qDebug()() << "[ServerConfigTab] JavaScript execution result:" << result.toString();
+            });
+            
+            // 页面加载完成后获取系统信息
+            // qDebug()() << "[ServerConfigTab] Fetching system info...";
+            fetchSystemInfo();
+        } else {
+            qWarning() << "[ServerConfigTab] Failed to load server config page";
+            
+            // 尝试获取页面内容，查看是否有错误信息
+            webEngineView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
+                qWarning() << "[ServerConfigTab] Page content on error:" << result.toString();
+            });
+            
+            // 尝试获取浏览器错误信息
+            webEngineView->page()->runJavaScript("window.navigator.userAgent", [](const QVariant &/*result*/) {
+                // qDebug()() << "[ServerConfigTab] User Agent:" << result.toString();
+            });
+        }
     } else {
-        qWarning() << "[ServerConfigTab] Failed to load server config page";
-        
-        // 尝试获取页面内容，查看是否有错误信息
-        m_webView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
-            qWarning() << "[ServerConfigTab] Page content on error:" << result.toString();
-        });
-        
-        // 尝试获取浏览器错误信息
-        m_webView->page()->runJavaScript("window.navigator.userAgent", [](const QVariant &/*result*/) {
-            // qDebug()() << "[ServerConfigTab] User Agent:" << result.toString();
-        });
+        // m_webView 不是 QWebEngineView，可能是 QLabel
+        Q_UNUSED(ok);
     }
 #else
     // WebEngine不可用时的简化处理

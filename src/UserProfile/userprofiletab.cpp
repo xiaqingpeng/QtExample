@@ -1,4 +1,5 @@
 #include "userprofiletab.h"
+#include <QDir>
 #include "../Network/networkmanager.h"
 #include "common.h"
 #include <QJsonDocument>
@@ -779,7 +780,7 @@ void UserProfileTab::exportUserProfileToCSV()
     
     // 设置默认文件名和路径
     QString defaultFileName = QString("user_profile_%1.csv").arg(m_currentUserId);
-    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/" + defaultFileName;
+    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + QDir::separator() + defaultFileName;
     
     QString fileName = QFileDialog::getSaveFileName(
         this, 
@@ -863,7 +864,7 @@ void UserProfileTab::exportUserProfileToExcel()
     
     // 设置默认文件名和路径
     QString defaultFileName = QString("user_profile_%1.xlsx").arg(m_currentUserId);
-    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/" + defaultFileName;
+    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + QDir::separator() + defaultFileName;
     
     QString fileName = QFileDialog::getSaveFileName(
         this, 
@@ -948,7 +949,7 @@ void UserProfileTab::exportUserProfileToPDF()
     
     // 设置默认文件名和路径
     QString defaultFileName = QString("user_profile_%1.pdf").arg(m_currentUserId);
-    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/" + defaultFileName;
+    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + QDir::separator() + defaultFileName;
     
     QString fileName = QFileDialog::getSaveFileName(
         this, 

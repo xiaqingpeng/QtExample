@@ -40,6 +40,18 @@ fi
 # 获取运行中的容器
 CONTAINER=$(docker ps --format "{{.Names}}" | grep -E "qt|example" | head -1)
 
+# 如果没有运行中的容器，检查是否有已退出的容器
+if [ -z "$CONTAINER" ]; then
+    STOPPED_CONTAINER=$(docker ps -a --format "{{.Names}}" | grep -E "qt|example" | head -1)
+    if [ -n "$STOPPED_CONTAINER" ]; then
+        echo "发现已停止的容器: $STOPPED_CONTAINER，正在重新启动..."
+        docker start "$STOPPED_CONTAINER"
+        sleep 2
+        CONTAINER=$(docker ps --format "{{.Names}}" | grep -E "qt|example" | head -1)
+    fi
+fi
+
+# 如果还是没有运行中的容器，启动新容器
 if [ -z "$CONTAINER" ]; then
     echo "没有运行中的容器，使用 X11 配置启动新容器..."
     docker-compose -f docker-compose.x11.yml up -d
@@ -49,6 +61,7 @@ fi
 
 if [ -z "$CONTAINER" ]; then
     echo "错误: 无法启动容器"
+    echo "提示: 请检查 docker-compose.x11.yml 配置和 Docker 服务状态"
     exit 1
 fi
 

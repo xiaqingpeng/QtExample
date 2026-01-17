@@ -17,6 +17,7 @@
 #include <QTimer>
 #include <QStandardPaths>
 #include <QCoreApplication>
+#include <QDir>
 
 ReportsTab::ReportsTab(QWidget *parent)
     : QWidget(parent)
@@ -786,7 +787,7 @@ void ReportsTab::exportToCSV()
     
     // 设置默认文件名和路径
     QString defaultFileName = QString("report_%1.csv").arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
-    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/" + defaultFileName;
+    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + QDir::separator() + defaultFileName;
     
    // qDebug() << "默认文件路径:" << defaultPath;
     
@@ -890,7 +891,7 @@ void ReportsTab::exportToExcel()
     
     // 设置默认文件名和路径
     QString defaultFileName = QString("report_%1.xlsx").arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss"));
-    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + "/" + defaultFileName;
+    QString defaultPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation) + QDir::separator() + defaultFileName;
     
     QString fileName = QFileDialog::getSaveFileName(
         this, 

@@ -21,11 +21,12 @@ services:
       - QT_QPA_PLATFORM=xcb                    # 使用 XCB 平台插件
       - XDG_RUNTIME_DIR=/tmp/runtime-root      # 设置运行时目录，避免警告
     working_dir: /workspace
-    # 默认构建命令：CMake 风格
+    # 默认构建命令：CMake 风格，构建完成后保持容器运行
     command: >
       /bin/bash -c "mkdir -p build &&
                     cd build &&
                     cmake .. &&
-                    make -j\$(nproc)"
+                    make -j\$(nproc) &&
+                    tail -f /dev/null"
     network_mode: bridge
 

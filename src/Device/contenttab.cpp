@@ -12,6 +12,11 @@
 #include <QProcess>
 #include <QRegularExpression>
 #include <QPointer>
+#include <QSysInfo>
+#include <QStorageInfo>
+#include <QNetworkInterface>
+#include <QHostInfo>
+#include <QDir>
 #include "theme_manager.h"
 #include "serverconfigtab.h"
 
@@ -60,11 +65,12 @@ ContentTab::ContentTab(QWidget *parent)
     if (useWebEngine) {
         // 创建WebView用于显示图表
         // qDebug() << "[ContentTab] Creating WebView";
-        m_webView = new QWebEngineView(this);
-        m_webView->setObjectName("webView");
+        QWebEngineView *webEngineView = new QWebEngineView(this);
+        webEngineView->setObjectName("webView");
+        m_webView = webEngineView;  // 赋值给基类指针
         
         // 配置WebEngineView设置
-        QWebEngineSettings *settings = m_webView->settings();
+        QWebEngineSettings *settings = webEngineView->settings();
         // qDebug() << "[ContentTab] Setting up WebEngine settings";
         settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
         settings->setAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls, true);
@@ -72,18 +78,19 @@ ContentTab::ContentTab(QWidget *parent)
         settings->setAttribute(QWebEngineSettings::ErrorPageEnabled, true);
         
         // 连接所有相关信号，用于调试
-        connect(m_webView->page(), &QWebEnginePage::loadStarted, this, []() {
-            // qDebug() << "[ContentTab] Page load started:" << m_webView->url().toString();
+        connect(webEngineView->page(), &QWebEnginePage::loadStarted, this, [webEngineView]() {
+            // qDebug() << "[ContentTab] Page load started:" << webEngineView->url().toString();
         });
     }
 #endif
     
     // 如果WebEngine不可用，使用QLabel
     if (!useWebEngine || !m_webView) {
-        m_webView = new QLabel("WebEngine 不可用 - 图表功能已禁用\n系统信息将通过其他方式显示", this);
-        m_webView->setObjectName("webView");
-        m_webView->setAlignment(Qt::AlignCenter);
-        m_webView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
+        QLabel *label = new QLabel("WebEngine 不可用 - 图表功能已禁用\n系统信息将通过其他方式显示", this);
+        label->setObjectName("webView");
+        label->setAlignment(Qt::AlignCenter);
+        label->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
+        m_webView = label;  // 赋值给基类指针
     }
     
 #ifdef WEBENGINE_AVAILABLE
@@ -873,28 +880,30 @@ ContentTab::~ContentTab()
 void ContentTab::onPageLoaded(bool ok){
     // qDebug() << "[ContentTab] ********************页面加载完成回调********************";
     // qDebug() << "[ContentTab] 加载状态:" << ok;
-    // qDebug() << "[ContentTab] 页面标题:" << m_webView->title();
-    // qDebug() << "[ContentTab] 页面URL:" << m_webView->url().toString();
-    // qDebug() << "[ContentTab] WebView是否可见:" << m_webView->isVisible();
-    // qDebug() << "[ContentTab] WebView尺寸:" << m_webView->size();
     
-    // 检查WebChannel状态
 #ifdef WEBENGINE_AVAILABLE
-    if (m_webView->page()->webChannel()) {
-        // qDebug() << "[ContentTab] WebChannel is set up after page load";
-    } else {
-        qWarning() << "[ContentTab] WebChannel is NOT set up after page load";
-        // 再次尝试设置WebChannel
-        m_webView->page()->setWebChannel(m_channel);
-        if (m_webView->page()->webChannel()) {
-            // qDebug() << "[ContentTab] WebChannel set up successfully after retry";
+    QWebEngineView *webEngineView = qobject_cast<QWebEngineView*>(m_webView);
+    if (webEngineView) {
+        // qDebug() << "[ContentTab] 页面标题:" << webEngineView->title();
+        // qDebug() << "[ContentTab] 页面URL:" << webEngineView->url().toString();
+        // qDebug() << "[ContentTab] WebView是否可见:" << webEngineView->isVisible();
+        // qDebug() << "[ContentTab] WebView尺寸:" << webEngineView->size();
+        
+        // 检查WebChannel状态
+        if (webEngineView->page()->webChannel()) {
+            // qDebug() << "[ContentTab] WebChannel is set up after page load";
         } else {
-            qCritical() << "[ContentTab] Failed to set up WebChannel after retry";
+            qWarning() << "[ContentTab] WebChannel is NOT set up after page load";
+            // 再次尝试设置WebChannel
+            webEngineView->page()->setWebChannel(m_channel);
+            if (webEngineView->page()->webChannel()) {
+                // qDebug() << "[ContentTab] WebChannel set up successfully after retry";
+            } else {
+                qCritical() << "[ContentTab] Failed to set up WebChannel after retry";
+            }
         }
-    }
-#endif
-    
-    if (ok) {
+        
+        if (ok) {
             m_pageLoaded = true;
             // qDebug() << "[ContentTab] Server config page loaded successfully";
             
@@ -904,42 +913,43 @@ void ContentTab::onPageLoaded(bool ok){
                 updateCharts(m_pendingData);
                 m_pendingData = QJsonObject(); // 清空缓存
             }
-        
-#ifdef WEBENGINE_AVAILABLE
-        // 获取页面内容验证
-        m_webView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
-            QString content = result.toString();
-            // qDebug() << "[ContentTab] Page content loaded:" << content;
-        });
-        
-        // 获取页面标题验证
-        m_webView->page()->runJavaScript("document.title", [](const QVariant &/*result*/) {
-            // qDebug() << "[ContentTab] Page title from JS:" << result.toString();
-        });
-        
-        // 简单的测试JavaScript执行
-        m_webView->page()->runJavaScript("'Hello from JavaScript: ' + (new Date()).toLocaleString()", [](const QVariant &/*result*/) {
-            // qDebug() << "[ContentTab] JavaScript execution result:" << result.toString();
-        });
-#endif
-        
-        // 如果系统信息已经获取完成，直接更新图表
-        // 否则，等待fetchSystemInfo完成后自动更新
+            
+            // 获取页面内容验证
+            webEngineView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
+                QString content = result.toString();
+                // qDebug() << "[ContentTab] Page content loaded:" << content;
+            });
+            
+            // 获取页面标题验证
+            webEngineView->page()->runJavaScript("document.title", [](const QVariant &/*result*/) {
+                // qDebug() << "[ContentTab] Page title from JS:" << result.toString();
+            });
+            
+            // 简单的测试JavaScript执行
+            webEngineView->page()->runJavaScript("'Hello from JavaScript: ' + (new Date()).toLocaleString()", [](const QVariant &/*result*/) {
+                // qDebug() << "[ContentTab] JavaScript execution result:" << result.toString();
+            });
+        } else {
+            qWarning() << "[ContentTab] Failed to load server config page";
+            
+            // 尝试获取页面内容，查看是否有错误信息
+            webEngineView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
+                qWarning() << "[ContentTab] Page content on error:" << result.toString();
+            });
+            
+            // 尝试获取浏览器错误信息
+            webEngineView->page()->runJavaScript("window.navigator.userAgent", [](const QVariant &/*result*/) {
+                // qDebug() << "[ContentTab] User Agent:" << result.toString();
+            });
+        }
     } else {
-        qWarning() << "[ContentTab] Failed to load server config page";
-        
-#ifdef WEBENGINE_AVAILABLE
-        // 尝试获取页面内容，查看是否有错误信息
-        m_webView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
-            qWarning() << "[ContentTab] Page content on error:" << result.toString();
-        });
-        
-        // 尝试获取浏览器错误信息
-        m_webView->page()->runJavaScript("window.navigator.userAgent", [](const QVariant &/*result*/) {
-            // qDebug() << "[ContentTab] User Agent:" << result.toString();
-        });
-#endif
+        // m_webView 不是 QWebEngineView，可能是 QLabel
+        Q_UNUSED(ok);
     }
+#else
+    Q_UNUSED(ok);
+    // WebEngine不可用时的处理
+#endif
 }
 
 void ContentTab::refreshSystemInfo()
@@ -965,7 +975,16 @@ void ContentTab::fetchSystemInfo()
     defaultInfo["ip_address"] = "获取中...";
     defaultInfo["os_info"] = "获取中...";
     defaultInfo["uptime_days"] = 0.0;
+    // 根据平台设置默认值
+#ifdef Q_OS_WIN
+    defaultInfo["platform"] = "windows";
+#elif defined(Q_OS_LINUX)
+    defaultInfo["platform"] = "linux";
+#elif defined(Q_OS_MACOS)
     defaultInfo["platform"] = "darwin";
+#else
+    defaultInfo["platform"] = "unknown";
+#endif
     // 添加系统负载和网络流量的默认值
     defaultInfo["load_1"] = 0.0;
     defaultInfo["load_5"] = 0.0;
@@ -994,99 +1013,364 @@ void ContentTab::fetchSystemInfo()
         }
         QJsonObject systemInfo;
         
-        // 获取CPU使用率
-        QProcess cpuProcess;
-        cpuProcess.start("sh", QStringList() << "-c" << "top -l 1 | grep 'CPU usage' | awk '{print $3}' | sed 's/%//'");
-        if (!cpuProcess.waitForFinished(2000)) {  // 2秒超时
-            cpuProcess.kill();
-        }
-        QString cpuUsage = cpuProcess.readAllStandardOutput().trimmed();
-        systemInfo["cpu_usage"] = cpuUsage.toDouble();
+        // 使用 Qt 跨平台 API 获取操作系统信息
+        systemInfo["os_info"] = QSysInfo::productType() + " " + QSysInfo::productVersion();
         
-        // 获取内存信息
-        QProcess memProcess;
-        memProcess.start("sh", QStringList() << "-c" << "top -l 1 | grep 'PhysMem' | awk '{print $2, $4, $6}'");
-        if (!memProcess.waitForFinished(2000)) {  // 2秒超时
-            memProcess.kill();
+        // 设置平台信息
+#ifdef Q_OS_WIN
+        systemInfo["platform"] = "windows";
+#elif defined(Q_OS_LINUX)
+        systemInfo["platform"] = "linux";
+#elif defined(Q_OS_MACOS)
+        systemInfo["platform"] = "darwin";
+#else
+        systemInfo["platform"] = "unknown";
+#endif
+        
+        // 获取网络接口信息（跨平台）
+        QString ipAddress = "未知";
+        QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
+        for (const QNetworkInterface &interface : interfaces) {
+            if (interface.flags().testFlag(QNetworkInterface::IsUp) &&
+                interface.flags().testFlag(QNetworkInterface::IsRunning) &&
+                !interface.flags().testFlag(QNetworkInterface::IsLoopBack)) {
+                QList<QNetworkAddressEntry> entries = interface.addressEntries();
+                for (const QNetworkAddressEntry &entry : entries) {
+                    QHostAddress addr = entry.ip();
+                    if (addr.protocol() == QAbstractSocket::IPv4Protocol) {
+                        ipAddress = addr.toString();
+                        break;
+                    }
+                }
+                if (ipAddress != "未知") break;
+            }
         }
-        QString memInfo = memProcess.readAllStandardOutput().trimmed();
-        QStringList memParts = memInfo.split(" ");
-        if (memParts.size() >= 3) {
-            double memUsed = memParts[0].replace("M", "").toDouble();
-            double memFree = memParts[2].replace("M", "").toDouble();
-            double memTotal = memUsed + memFree;
-            systemInfo["mem_total"] = memTotal;
-            systemInfo["mem_used"] = memUsed;
-            systemInfo["mem_usage"] = (memUsed / memTotal) * 100;
+        systemInfo["ip_address"] = ipAddress;
+        
+        // 获取磁盘信息（跨平台，使用 Qt API）
+        try {
+            QStorageInfo storage = QStorageInfo::root();
+            if (storage.isValid() && storage.isReady()) {
+                qint64 totalBytes = storage.bytesTotal();
+                qint64 availableBytes = storage.bytesAvailable();
+                qint64 usedBytes = totalBytes - availableBytes;
+                
+                systemInfo["disk_total"] = totalBytes / (1024.0 * 1024.0 * 1024.0); // GB
+                systemInfo["disk_used"] = usedBytes / (1024.0 * 1024.0 * 1024.0); // GB
+                if (totalBytes > 0) {
+                    systemInfo["disk_usage"] = (usedBytes * 100.0) / totalBytes;
+                } else {
+                    systemInfo["disk_usage"] = 0.0;
+                }
+            } else {
+                systemInfo["disk_total"] = 0.0;
+                systemInfo["disk_used"] = 0.0;
+                systemInfo["disk_usage"] = 0.0;
+            }
+        } catch (...) {
+            systemInfo["disk_total"] = 0.0;
+            systemInfo["disk_used"] = 0.0;
+            systemInfo["disk_usage"] = 0.0;
         }
         
-        // 获取磁盘信息
-        QProcess diskProcess;
-        diskProcess.start("sh", QStringList() << "-c" << "df -h / | tail -1 | awk '{print $2, $3, $5}'");
-        if (!diskProcess.waitForFinished(2000)) {  // 2秒超时
-            diskProcess.kill();
-        }
-        QString diskInfo = diskProcess.readAllStandardOutput().trimmed();
-        QStringList diskParts = diskInfo.split(" ");
-        if (diskParts.size() >= 3) {
-            systemInfo["disk_total"] = diskParts[0].replace("G", "").toDouble();
-            systemInfo["disk_used"] = diskParts[1].replace("G", "").toDouble();
-            systemInfo["disk_usage"] = diskParts[2].replace("%", "").toDouble();
-        }
-        
-        // 获取负载信息
-        QProcess loadProcess;
-        loadProcess.start("sh", QStringList() << "-c" << "uptime | awk -F'load averages: ' '{print $2}'");
-        if (!loadProcess.waitForFinished(2000)) {  // 2秒超时
-            loadProcess.kill();
-        }
-        QString loadInfo = loadProcess.readAllStandardOutput().trimmed();
-        QStringList loadParts = loadInfo.split(", ");
-        if (loadParts.size() >= 3) {
-            systemInfo["load_1"] = loadParts[0].toDouble();
-            systemInfo["load_5"] = loadParts[1].toDouble();
-            systemInfo["load_15"] = loadParts[2].toDouble();
-        }
-        
-        // 获取运行时间
-        QProcess uptimeProcess;
-        uptimeProcess.start("sh", QStringList() << "-c" << "uptime | awk -F'up ' '{print $2}' | awk -F', ' '{print $1}'");
-        if (!uptimeProcess.waitForFinished(2000)) {  // 2秒超时
-            uptimeProcess.kill();
-        }
-        QString uptimeInfo = uptimeProcess.readAllStandardOutput().trimmed();
-        // 简单处理运行时间（这里只取天数部分）
-        QRegularExpression regex("(\\d+) days?");
-        QRegularExpressionMatch match = regex.match(uptimeInfo);
-        if (match.hasMatch()) {
-            systemInfo["uptime_days"] = match.captured(1).toDouble();
-        } else {
+        // 平台特定的系统信息获取
+#ifdef Q_OS_WIN
+        // Windows 平台
+        try {
+            // CPU 使用率 - 使用 wmic
+            QProcess cpuProcess;
+            cpuProcess.start("wmic", QStringList() << "cpu" << "get" << "loadpercentage" << "/value");
+            if (cpuProcess.waitForFinished(2000)) {
+                QString output = cpuProcess.readAllStandardOutput();
+                QRegularExpression regex("LoadPercentage=(\\d+)");
+                QRegularExpressionMatch match = regex.match(output);
+                if (match.hasMatch()) {
+                    systemInfo["cpu_usage"] = match.captured(1).toDouble();
+                } else {
+                    systemInfo["cpu_usage"] = 0.0;
+                }
+            } else {
+                systemInfo["cpu_usage"] = 0.0;
+            }
+            
+            // 内存信息 - 使用 wmic
+            QProcess memProcess;
+            memProcess.start("wmic", QStringList() << "OS" << "get" << "TotalVisibleMemorySize,FreePhysicalMemory" << "/value");
+            if (memProcess.waitForFinished(2000)) {
+                QString output = memProcess.readAllStandardOutput();
+                QRegularExpression totalRegex("TotalVisibleMemorySize=(\\d+)");
+                QRegularExpression freeRegex("FreePhysicalMemory=(\\d+)");
+                QRegularExpressionMatch totalMatch = totalRegex.match(output);
+                QRegularExpressionMatch freeMatch = freeRegex.match(output);
+                if (totalMatch.hasMatch() && freeMatch.hasMatch()) {
+                    double totalKB = totalMatch.captured(1).toDouble();
+                    double freeKB = freeMatch.captured(1).toDouble();
+                    double usedKB = totalKB - freeKB;
+                    systemInfo["mem_total"] = totalKB / 1024.0; // MB
+                    systemInfo["mem_used"] = usedKB / 1024.0; // MB
+                    systemInfo["mem_usage"] = (usedKB / totalKB) * 100.0;
+                } else {
+                    systemInfo["mem_total"] = 0.0;
+                    systemInfo["mem_used"] = 0.0;
+                    systemInfo["mem_usage"] = 0.0;
+                }
+            } else {
+                systemInfo["mem_total"] = 0.0;
+                systemInfo["mem_used"] = 0.0;
+                systemInfo["mem_usage"] = 0.0;
+            }
+            
+            // 系统负载（Windows 没有 load average，使用 CPU 使用率作为替代）
+            systemInfo["load_1"] = systemInfo["cpu_usage"].toDouble() / 100.0;
+            systemInfo["load_5"] = systemInfo["cpu_usage"].toDouble() / 100.0;
+            systemInfo["load_15"] = systemInfo["cpu_usage"].toDouble() / 100.0;
+            
+            // 运行时间 - 使用 wmic
+            QProcess uptimeProcess;
+            uptimeProcess.start("wmic", QStringList() << "OS" << "get" << "LastBootUpTime" << "/value");
+            if (uptimeProcess.waitForFinished(2000)) {
+                QString output = uptimeProcess.readAllStandardOutput();
+                QRegularExpression regex("LastBootUpTime=([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})");
+                QRegularExpressionMatch match = regex.match(output);
+                if (match.hasMatch()) {
+                    QDateTime bootTime = QDateTime::fromString(
+                        match.captured(1) + match.captured(2) + match.captured(3) + "T" +
+                        match.captured(4) + match.captured(5) + match.captured(6),
+                        "yyyyMMddThhmmss"
+                    );
+                    qint64 seconds = bootTime.secsTo(QDateTime::currentDateTime());
+                    systemInfo["uptime_days"] = seconds / 86400.0;
+                } else {
+                    systemInfo["uptime_days"] = 0.0;
+                }
+            } else {
+                systemInfo["uptime_days"] = 0.0;
+            }
+        } catch (...) {
+            systemInfo["cpu_usage"] = 0.0;
+            systemInfo["mem_total"] = 0.0;
+            systemInfo["mem_used"] = 0.0;
+            systemInfo["mem_usage"] = 0.0;
+            systemInfo["load_1"] = 0.0;
+            systemInfo["load_5"] = 0.0;
+            systemInfo["load_15"] = 0.0;
             systemInfo["uptime_days"] = 0.0;
         }
         
-        // 获取网络信息
-        QProcess ipProcess;
-        ipProcess.start("sh", QStringList() << "-c" << "ifconfig en0 | grep 'inet ' | awk '{print $2}'");
-        if (!ipProcess.waitForFinished(2000)) {  // 2秒超时
-            ipProcess.kill();
+#elif defined(Q_OS_LINUX)
+        // Linux 平台 - 使用 /proc 文件系统
+        try {
+            // CPU 使用率 - 读取 /proc/stat
+            QFile statFile("/proc/stat");
+            if (statFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                QTextStream in(&statFile);
+                QString line = in.readLine();
+                if (line.startsWith("cpu ")) {
+                    QStringList parts = line.split(QRegularExpression("\\s+"));
+                    if (parts.size() >= 8) {
+                        qint64 user = parts[1].toLongLong();
+                        qint64 nice = parts[2].toLongLong();
+                        qint64 system = parts[3].toLongLong();
+                        qint64 idle = parts[4].toLongLong();
+                        qint64 iowait = parts[5].toLongLong();
+                        qint64 total = user + nice + system + idle + iowait;
+                        if (total > 0) {
+                            qint64 used = total - idle;
+                            systemInfo["cpu_usage"] = (used * 100.0) / total;
+                        } else {
+                            systemInfo["cpu_usage"] = 0.0;
+                        }
+                    } else {
+                        systemInfo["cpu_usage"] = 0.0;
+                    }
+                } else {
+                    systemInfo["cpu_usage"] = 0.0;
+                }
+                statFile.close();
+            } else {
+                systemInfo["cpu_usage"] = 0.0;
+            }
+            
+            // 内存信息 - 读取 /proc/meminfo
+            QFile memFile("/proc/meminfo");
+            if (memFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                QTextStream in(&memFile);
+                qint64 memTotal = 0, memFree = 0, memAvailable = 0;
+                while (!in.atEnd()) {
+                    QString line = in.readLine();
+                    if (line.startsWith("MemTotal:")) {
+                        memTotal = line.split(QRegularExpression("\\s+"))[1].toLongLong();
+                    } else if (line.startsWith("MemFree:")) {
+                        memFree = line.split(QRegularExpression("\\s+"))[1].toLongLong();
+                    } else if (line.startsWith("MemAvailable:")) {
+                        memAvailable = line.split(QRegularExpression("\\s+"))[1].toLongLong();
+                    }
+                }
+                memFile.close();
+                
+                if (memTotal > 0) {
+                    systemInfo["mem_total"] = memTotal / 1024.0; // MB
+                    if (memAvailable > 0) {
+                        systemInfo["mem_used"] = (memTotal - memAvailable) / 1024.0; // MB
+                        systemInfo["mem_usage"] = ((memTotal - memAvailable) * 100.0) / memTotal;
+                    } else {
+                        systemInfo["mem_used"] = (memTotal - memFree) / 1024.0; // MB
+                        systemInfo["mem_usage"] = ((memTotal - memFree) * 100.0) / memTotal;
+                    }
+                } else {
+                    systemInfo["mem_total"] = 0.0;
+                    systemInfo["mem_used"] = 0.0;
+                    systemInfo["mem_usage"] = 0.0;
+                }
+            } else {
+                systemInfo["mem_total"] = 0.0;
+                systemInfo["mem_used"] = 0.0;
+                systemInfo["mem_usage"] = 0.0;
+            }
+            
+            // 系统负载 - 读取 /proc/loadavg
+            QFile loadFile("/proc/loadavg");
+            if (loadFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                QTextStream in(&loadFile);
+                QString line = in.readLine();
+                QStringList parts = line.split(QRegularExpression("\\s+"));
+                if (parts.size() >= 3) {
+                    systemInfo["load_1"] = parts[0].toDouble();
+                    systemInfo["load_5"] = parts[1].toDouble();
+                    systemInfo["load_15"] = parts[2].toDouble();
+                } else {
+                    systemInfo["load_1"] = 0.0;
+                    systemInfo["load_5"] = 0.0;
+                    systemInfo["load_15"] = 0.0;
+                }
+                loadFile.close();
+            } else {
+                systemInfo["load_1"] = 0.0;
+                systemInfo["load_5"] = 0.0;
+                systemInfo["load_15"] = 0.0;
+            }
+            
+            // 运行时间 - 读取 /proc/uptime
+            QFile uptimeFile("/proc/uptime");
+            if (uptimeFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                QTextStream in(&uptimeFile);
+                QString line = in.readLine();
+                QStringList parts = line.split(" ");
+                if (parts.size() >= 1) {
+                    qint64 seconds = parts[0].toLongLong();
+                    systemInfo["uptime_days"] = seconds / 86400.0;
+                } else {
+                    systemInfo["uptime_days"] = 0.0;
+                }
+                uptimeFile.close();
+            } else {
+                systemInfo["uptime_days"] = 0.0;
+            }
+        } catch (...) {
+            systemInfo["cpu_usage"] = 0.0;
+            systemInfo["mem_total"] = 0.0;
+            systemInfo["mem_used"] = 0.0;
+            systemInfo["mem_usage"] = 0.0;
+            systemInfo["load_1"] = 0.0;
+            systemInfo["load_5"] = 0.0;
+            systemInfo["load_15"] = 0.0;
+            systemInfo["uptime_days"] = 0.0;
         }
-        QString ipAddress = ipProcess.readAllStandardOutput().trimmed();
-        systemInfo["ip_address"] = ipAddress;
         
-        // 获取操作系统信息
-        QProcess osProcess;
-        osProcess.start("sh", QStringList() << "-c" << "sw_vers -productName && sw_vers -productVersion");
-        if (!osProcess.waitForFinished(2000)) {  // 2秒超时
-            osProcess.kill();
+#elif defined(Q_OS_MACOS)
+        // macOS 平台 - 使用原有命令
+        try {
+            // CPU 使用率
+            QProcess cpuProcess;
+            cpuProcess.start("sh", QStringList() << "-c" << "top -l 1 | grep 'CPU usage' | awk '{print $3}' | sed 's/%//'");
+            if (cpuProcess.waitForFinished(2000)) {
+                QString cpuUsage = cpuProcess.readAllStandardOutput().trimmed();
+                systemInfo["cpu_usage"] = cpuUsage.toDouble();
+            } else {
+                systemInfo["cpu_usage"] = 0.0;
+            }
+            
+            // 内存信息
+            QProcess memProcess;
+            memProcess.start("sh", QStringList() << "-c" << "top -l 1 | grep 'PhysMem' | awk '{print $2, $4, $6}'");
+            if (memProcess.waitForFinished(2000)) {
+                QString memInfo = memProcess.readAllStandardOutput().trimmed();
+                QStringList memParts = memInfo.split(" ");
+                if (memParts.size() >= 3) {
+                    double memUsed = memParts[0].replace("M", "").toDouble();
+                    double memFree = memParts[2].replace("M", "").toDouble();
+                    double memTotal = memUsed + memFree;
+                    systemInfo["mem_total"] = memTotal;
+                    systemInfo["mem_used"] = memUsed;
+                    systemInfo["mem_usage"] = (memUsed / memTotal) * 100;
+                } else {
+                    systemInfo["mem_total"] = 0.0;
+                    systemInfo["mem_used"] = 0.0;
+                    systemInfo["mem_usage"] = 0.0;
+                }
+            } else {
+                systemInfo["mem_total"] = 0.0;
+                systemInfo["mem_used"] = 0.0;
+                systemInfo["mem_usage"] = 0.0;
+            }
+            
+            // 系统负载
+            QProcess loadProcess;
+            loadProcess.start("sh", QStringList() << "-c" << "uptime | awk -F'load averages: ' '{print $2}'");
+            if (loadProcess.waitForFinished(2000)) {
+                QString loadInfo = loadProcess.readAllStandardOutput().trimmed();
+                QStringList loadParts = loadInfo.split(", ");
+                if (loadParts.size() >= 3) {
+                    systemInfo["load_1"] = loadParts[0].toDouble();
+                    systemInfo["load_5"] = loadParts[1].toDouble();
+                    systemInfo["load_15"] = loadParts[2].toDouble();
+                } else {
+                    systemInfo["load_1"] = 0.0;
+                    systemInfo["load_5"] = 0.0;
+                    systemInfo["load_15"] = 0.0;
+                }
+            } else {
+                systemInfo["load_1"] = 0.0;
+                systemInfo["load_5"] = 0.0;
+                systemInfo["load_15"] = 0.0;
+            }
+            
+            // 运行时间
+            QProcess uptimeProcess;
+            uptimeProcess.start("sh", QStringList() << "-c" << "uptime | awk -F'up ' '{print $2}' | awk -F', ' '{print $1}'");
+            if (uptimeProcess.waitForFinished(2000)) {
+                QString uptimeInfo = uptimeProcess.readAllStandardOutput().trimmed();
+                QRegularExpression regex("(\\d+) days?");
+                QRegularExpressionMatch match = regex.match(uptimeInfo);
+                if (match.hasMatch()) {
+                    systemInfo["uptime_days"] = match.captured(1).toDouble();
+                } else {
+                    systemInfo["uptime_days"] = 0.0;
+                }
+            } else {
+                systemInfo["uptime_days"] = 0.0;
+            }
+        } catch (...) {
+            systemInfo["cpu_usage"] = 0.0;
+            systemInfo["mem_total"] = 0.0;
+            systemInfo["mem_used"] = 0.0;
+            systemInfo["mem_usage"] = 0.0;
+            systemInfo["load_1"] = 0.0;
+            systemInfo["load_5"] = 0.0;
+            systemInfo["load_15"] = 0.0;
+            systemInfo["uptime_days"] = 0.0;
         }
-        QString osInfo = osProcess.readAllStandardOutput().trimmed();
-        QStringList osParts = osInfo.split("\n");
-        if (osParts.size() >= 2) {
-            systemInfo["os_info"] = osParts[0] + " " + osParts[1];
-        }
-        
-        // 平台信息
-        systemInfo["platform"] = "darwin";
+#else
+        // 其他平台 - 使用默认值
+        systemInfo["cpu_usage"] = 0.0;
+        systemInfo["mem_total"] = 0.0;
+        systemInfo["mem_used"] = 0.0;
+        systemInfo["mem_usage"] = 0.0;
+        systemInfo["load_1"] = 0.0;
+        systemInfo["load_5"] = 0.0;
+        systemInfo["load_15"] = 0.0;
+        systemInfo["uptime_days"] = 0.0;
+#endif
         
         // 设置网络流量默认值
         systemInfo["network_rx_mb"] = 0.0;
@@ -1215,7 +1499,8 @@ void ContentTab::updateCharts(const QJsonObject &data)
     }
     
 #ifdef WEBENGINE_AVAILABLE
-    if (!m_webView || !m_webView->page()) {
+    QWebEngineView *webEngineView = qobject_cast<QWebEngineView*>(m_webView);
+    if (!webEngineView || !webEngineView->page()) {
         qWarning() << "[ContentTab] WebView not available for updating charts";
         return;
     }
@@ -1225,7 +1510,7 @@ void ContentTab::updateCharts(const QJsonObject &data)
     
     // qDebug() << "[ContentTab] Running JavaScript to update charts:" << script.left(100) << "...";
     
-    m_webView->page()->runJavaScript(script);
+    webEngineView->page()->runJavaScript(script);
 #else
     // WebEngine不可用时，更新QLabel显示系统信息
     QLabel* webViewLabel = qobject_cast<QLabel*>(m_webView);
