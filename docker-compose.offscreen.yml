@@ -1,7 +1,8 @@
-# Docker Compose 配置 - Qt Example 项目
+# Docker Compose 配置 - Qt Example 项目（Offscreen 模式）
+# 用于在无图形界面环境下运行程序
 
 services:
-  # Qt Linux 桌面开发环境
+  # Qt Linux 桌面开发环境（Offscreen 模式）
   qt-dev:
     build:
       context: .
@@ -9,12 +10,12 @@ services:
       args:
         # 如果遇到 ports.ubuntu.com 502/超时（特别是 ARM64），使用国内镜像源：
         UBUNTU_MIRROR: "https://mirrors.tuna.tsinghua.edu.cn"
-    container_name: qt-example-linux-dev
+    container_name: qt-example-linux-dev-offscreen
     volumes:
       - .:/workspace                           # 挂载当前项目目录（包含 build 目录）
     environment:
-      - DISPLAY=host.docker.internal:0         # macOS 上通过 XQuartz 显示（如果未设置 X11，将使用 offscreen）
-      - QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-offscreen}  # 默认使用 offscreen 模式，避免 X11 连接问题
+      - QT_QPA_PLATFORM=offscreen              # 使用 offscreen 模式，无需 X11
+      - XDG_RUNTIME_DIR=/tmp/runtime-root      # 设置运行时目录
     working_dir: /workspace
     # 默认构建命令：CMake 风格
     command: >

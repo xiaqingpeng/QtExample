@@ -1,7 +1,8 @@
-# Docker Compose 配置 - Qt Example 项目
+# Docker Compose 配置 - Qt Example 项目（X11 图形界面模式）
+# 需要先安装和配置 XQuartz
 
 services:
-  # Qt Linux 桌面开发环境
+  # Qt Linux 桌面开发环境（X11 模式）
   qt-dev:
     build:
       context: .
@@ -9,12 +10,16 @@ services:
       args:
         # 如果遇到 ports.ubuntu.com 502/超时（特别是 ARM64），使用国内镜像源：
         UBUNTU_MIRROR: "https://mirrors.tuna.tsinghua.edu.cn"
-    container_name: qt-example-linux-dev
+    container_name: qt-example-linux-dev-x11
     volumes:
       - .:/workspace                           # 挂载当前项目目录（包含 build 目录）
+    # 注意: macOS 上不能直接挂载 /tmp/.X11-unix，需要使用网络连接
+    # volumes:
+    #   - /tmp/.X11-unix:/tmp/.X11-unix:rw     # Linux 上可以这样，但 macOS 不行
     environment:
-      - DISPLAY=host.docker.internal:0         # macOS 上通过 XQuartz 显示（如果未设置 X11，将使用 offscreen）
-      - QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-offscreen}  # 默认使用 offscreen 模式，避免 X11 连接问题
+      - DISPLAY=host.docker.internal:0         # macOS 上通过 XQuartz 显示
+      - QT_QPA_PLATFORM=xcb                    # 使用 XCB 平台插件
+      - XDG_RUNTIME_DIR=/tmp/runtime-root      # 设置运行时目录，避免警告
     working_dir: /workspace
     # 默认构建命令：CMake 风格
     command: >

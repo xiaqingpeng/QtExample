@@ -118,8 +118,17 @@ void SDK::track(const QString& eventType, const QString& eventName, const QVaria
     event.userId = m_userId;
     event.sessionId = m_sessionId;
     
-    // 添加设备信息
-    event.properties["device_info"] = getDeviceInfo();
+    // 添加设备信息 - 使用异常处理保护，避免崩溃
+    try {
+        event.properties["device_info"] = getDeviceInfo();
+    } catch (const std::exception& e) {
+        qWarning() << "[Analytics] Exception getting device info in track:" << e.what();
+        // 提供空的设备信息，避免崩溃
+        event.properties["device_info"] = QVariantMap();
+    } catch (...) {
+        qWarning() << "[Analytics] Unknown exception getting device info in track.";
+        event.properties["device_info"] = QVariantMap();
+    }
     
     addToQueue(event);
     
@@ -365,17 +374,54 @@ QVariantMap SDK::getDeviceInfo() {
     deviceInfo["machine_name"] = QSysInfo::machineHostName();
     deviceInfo["cpu_architecture"] = QSysInfo::currentCpuArchitecture();
     
-    // 屏幕信息
-    QScreen* screen = QGuiApplication::primaryScreen();
-    if (screen) {
-        QSize screenSize = screen->availableSize();
-        deviceInfo["screen_width"] = screenSize.width();
-        deviceInfo["screen_height"] = screenSize.height();
-        deviceInfo["screen_dpr"] = screen->devicePixelRatio();
+    // 屏幕信息 - 安全获取，避免在无头环境崩溃
+    try {
+        if (QGuiApplication::instance()) {
+            QScreen* screen = QGuiApplication::primaryScreen();
+            if (screen) {
+                QSize screenSize = screen->availableSize();
+                deviceInfo["screen_width"] = screenSize.width();
+                deviceInfo["screen_height"] = screenSize.height();
+                deviceInfo["screen_dpr"] = screen->devicePixelRatio();
+            } else {
+                qWarning() << "[Analytics] Primary screen not available, providing default screen info.";
+                deviceInfo["screen_width"] = 0;
+                deviceInfo["screen_height"] = 0;
+                deviceInfo["screen_dpr"] = 1.0;
+            }
+        } else {
+            qWarning() << "[Analytics] QGuiApplication instance not available, providing default screen info.";
+            deviceInfo["screen_width"] = 0;
+            deviceInfo["screen_height"] = 0;
+            deviceInfo["screen_dpr"] = 1.0;
+        }
+    } catch (const std::exception& e) {
+        qWarning() << "[Analytics] Exception getting screen info:" << e.what();
+        deviceInfo["screen_width"] = 0;
+        deviceInfo["screen_height"] = 0;
+        deviceInfo["screen_dpr"] = 1.0;
+    } catch (...) {
+        qWarning() << "[Analytics] Unknown exception getting screen info.";
+        deviceInfo["screen_width"] = 0;
+        deviceInfo["screen_height"] = 0;
+        deviceInfo["screen_dpr"] = 1.0;
     }
     
-    // 应用信息
-    deviceInfo["app_version"] = qApp->applicationVersion();
+    // 应用信息 - 安全获取
+    try {
+        if (qApp) {
+            deviceInfo["app_version"] = qApp->applicationVersion();
+        } else {
+            deviceInfo["app_version"] = "";
+        }
+    } catch (const std::exception& e) {
+        qWarning() << "[Analytics] Exception getting app version:" << e.what();
+        deviceInfo["app_version"] = "";
+    } catch (...) {
+        qWarning() << "[Analytics] Unknown exception getting app version.";
+        deviceInfo["app_version"] = "";
+    }
+    
     deviceInfo["qt_version"] = QT_VERSION_STR;
     
     return deviceInfo;

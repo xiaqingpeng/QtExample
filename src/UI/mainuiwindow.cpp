@@ -759,9 +759,25 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
     } else if (subMenu.contains("统计报表")) {
         contentWidget = new ReportsTab();
     } else if (subMenu.contains("服务器配置监控")) {
-        contentWidget = new ServerConfigTab();
+        try {
+            contentWidget = new ServerConfigTab(this);  // 传递 parent
+        } catch (const std::exception& e) {
+            qCritical() << "Exception creating ServerConfigTab:" << e.what();
+            contentWidget = new QLabel(tr("加载页面失败: ") + QString::fromStdString(e.what()), this);
+        } catch (...) {
+            qCritical() << "Unknown exception creating ServerConfigTab";
+            contentWidget = new QLabel(tr("加载页面失败: 未知错误"), this);
+        }
     } else if (subMenu.contains("电脑本机配置监控")) {
-        contentWidget = new ContentTab();
+        try {
+            contentWidget = new ContentTab(this);  // 传递 parent
+        } catch (const std::exception& e) {
+            qCritical() << "Exception creating ContentTab:" << e.what();
+            contentWidget = new QLabel(tr("加载页面失败: ") + QString::fromStdString(e.what()), this);
+        } catch (...) {
+            qCritical() << "Unknown exception creating ContentTab";
+            contentWidget = new QLabel(tr("加载页面失败: 未知错误"), this);
+        }
     } else if (subMenu.contains("用户信息")) {
         contentWidget = new UserInfoPage();
     } else if (subMenu.contains("修改密码")) {
@@ -774,9 +790,9 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         const QMetaObject *metaObject = contentWidget->metaObject();
         int methodIndex = metaObject->indexOfMethod("applyTheme()");
         if (methodIndex != -1) {
-            // 页面有applyTheme方法，调用它
+            // 页面有applyTheme方法，使用 QueuedConnection 避免在构造过程中调用
             QMetaMethod method = metaObject->method(methodIndex);
-            method.invoke(contentWidget, Qt::DirectConnection);
+            method.invoke(contentWidget, Qt::QueuedConnection);
             // 强制重绘以确保主题立即生效
             contentWidget->update();
             contentWidget->repaint();

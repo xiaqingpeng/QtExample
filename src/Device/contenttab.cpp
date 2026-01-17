@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QFile>
 #include <QDebug>
+#include <QLabel>
 #ifdef WEBENGINE_AVAILABLE
 #include <QWebEngineSettings>
 #include <QWebEnginePage>
@@ -24,69 +25,104 @@ ContentTab::ContentTab(QWidget *parent)
     , m_pageLoaded(false)
     , m_refreshTimer(new QTimer(this))
 {
+    // 检测环境，判断是否应该使用 WebEngine
+    // 在容器环境中，完全禁用 WebEngine 以避免段错误
+    bool useWebEngine = false;
+    
+    // 首先检查是否在容器中
+    QFile dockerFile("/.dockerenv");
+    bool inDocker = dockerFile.exists();
+    
+    // 检查环境变量
+    QString qpaPlatform = qgetenv("QT_QPA_PLATFORM");
+    QString display = qgetenv("DISPLAY");
+    
+    if (inDocker) {
+        qWarning() << "[ContentTab] Running in Docker container, WebEngine completely disabled to prevent segfault";
+        useWebEngine = false;
+    } else if (qpaPlatform == "offscreen" || display.isEmpty()) {
+        qWarning() << "[ContentTab] QT_QPA_PLATFORM=" << qpaPlatform << "or DISPLAY not set, WebEngine disabled";
+        useWebEngine = false;
+    } else {
+#ifdef WEBENGINE_AVAILABLE
+        // 只有在非容器环境且有完整图形环境时才尝试使用 WebEngine
+        useWebEngine = true;
+#else
+        useWebEngine = false;
+#endif
+    }
+    
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(20, 20, 20, 20);
     mainLayout->setSpacing(20);
     
 #ifdef WEBENGINE_AVAILABLE
-    // 创建WebView用于显示图表
-    // qDebug() << "[ContentTab] Creating WebView";
-    m_webView = new QWebEngineView(this);
-    m_webView->setObjectName("webView");
-    
-    // 配置WebEngineView设置
-    QWebEngineSettings *settings = m_webView->settings();
-    // qDebug() << "[ContentTab] Setting up WebEngine settings";
-    settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
-    settings->setAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls, true);
-    settings->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls, true);
-    settings->setAttribute(QWebEngineSettings::ErrorPageEnabled, true);
-    
-    // 检查设置是否生效
-    // qDebug() << "[ContentTab] JavaScriptEnabled:" << settings->testAttribute(QWebEngineSettings::JavascriptEnabled);
-    // qDebug() << "[ContentTab] LocalContentCanAccessRemoteUrls:" << settings->testAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls);
-    // qDebug() << "[ContentTab] LocalContentCanAccessFileUrls:" << settings->testAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls);
-    
-    // 连接所有相关信号，用于调试
-    connect(m_webView->page(), &QWebEnginePage::loadStarted, this, []() {
-        // qDebug() << "[ContentTab] Page load started:" << m_webView->url().toString();
-    });
-#else
-    // WebEngine不可用时，创建一个简单的标签作为占位符
-    m_webView = new QLabel("WebEngine 不可用 - 图表功能已禁用", this);
-    m_webView->setObjectName("webView");
-    m_webView->setAlignment(Qt::AlignCenter);
-    m_webView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
+    if (useWebEngine) {
+        // 创建WebView用于显示图表
+        // qDebug() << "[ContentTab] Creating WebView";
+        m_webView = new QWebEngineView(this);
+        m_webView->setObjectName("webView");
+        
+        // 配置WebEngineView设置
+        QWebEngineSettings *settings = m_webView->settings();
+        // qDebug() << "[ContentTab] Setting up WebEngine settings";
+        settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
+        settings->setAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls, true);
+        settings->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls, true);
+        settings->setAttribute(QWebEngineSettings::ErrorPageEnabled, true);
+        
+        // 连接所有相关信号，用于调试
+        connect(m_webView->page(), &QWebEnginePage::loadStarted, this, []() {
+            // qDebug() << "[ContentTab] Page load started:" << m_webView->url().toString();
+        });
+    }
 #endif
     
+    // 如果WebEngine不可用，使用QLabel
+    if (!useWebEngine || !m_webView) {
+        m_webView = new QLabel("WebEngine 不可用 - 图表功能已禁用\n系统信息将通过其他方式显示", this);
+        m_webView->setObjectName("webView");
+        m_webView->setAlignment(Qt::AlignCenter);
+        m_webView->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
+    }
+    
 #ifdef WEBENGINE_AVAILABLE
-    connect(m_webView->page(), &QWebEnginePage::loadProgress, this, [](int /*progress*/) {
-        // qDebug() << "[ContentTab] Page load progress:" << progress << "%";
-    });
-    
-    connect(m_webView, &QWebEngineView::loadFinished, this, &ContentTab::onPageLoaded);
-    
-    // 连接加载完成信号 (Qt 6)
-    connect(m_webView->page(), &QWebEnginePage::loadFinished, this, [](bool ok) {
-        if (!ok) {
-            qWarning() << "[ContentTab] Page load failed";
-        } else {
-            // qDebug() << "[ContentTab] Page load succeeded";
-        }
-    });
-    
-    // 创建WebChannel用于Qt与JS通信
-    // qDebug() << "[ContentTab] Creating WebChannel";
-    m_channel = new QWebChannel(this);
-    m_bridge = new ServerConfigBridge(this);
-    
-    // 连接刷新信号
-    connect(m_bridge, &ServerConfigBridge::refreshRequested, this, &ContentTab::refreshSystemInfo);
-    
-    m_channel->registerObject("qtBridge", m_bridge);
-    
-    // 在页面加载前设置WebChannel到WebEnginePage上
-    m_webView->page()->setWebChannel(m_channel);
+    // 检查是否是真正的QWebEngineView
+    QWebEngineView *webEngineView = qobject_cast<QWebEngineView*>(m_webView);
+    if (webEngineView) {
+        connect(webEngineView->page(), &QWebEnginePage::loadProgress, this, [](int /*progress*/) {
+            // qDebug() << "[ContentTab] Page load progress:" << progress << "%";
+        });
+        
+        connect(webEngineView, &QWebEngineView::loadFinished, this, &ContentTab::onPageLoaded);
+        
+        // 连接加载完成信号 (Qt 6)
+        connect(webEngineView->page(), &QWebEnginePage::loadFinished, this, [](bool ok) {
+            if (!ok) {
+                qWarning() << "[ContentTab] Page load failed";
+            } else {
+                // qDebug() << "[ContentTab] Page load succeeded";
+            }
+        });
+        
+        // 创建WebChannel用于Qt与JS通信
+        // qDebug() << "[ContentTab] Creating WebChannel";
+        m_channel = new QWebChannel(this);
+        m_bridge = new ServerConfigBridge(this);
+        
+        // 连接刷新信号
+        connect(m_bridge, &ServerConfigBridge::refreshRequested, this, &ContentTab::refreshSystemInfo);
+        
+        m_channel->registerObject("qtBridge", m_bridge);
+        
+        // 在页面加载前设置WebChannel到WebEnginePage上
+        webEngineView->page()->setWebChannel(m_channel);
+    } else {
+        // 不是QWebEngineView，可能是QLabel回退
+        m_channel = nullptr;
+        m_bridge = new ServerConfigBridge(this);
+        connect(m_bridge, &ServerConfigBridge::refreshRequested, this, &ContentTab::refreshSystemInfo);
+    }
 #else
     // WebEngine不可用时的简化处理
     m_channel = nullptr;
@@ -776,15 +812,18 @@ ContentTab::ContentTab(QWidget *parent)
     // qDebug() << "[ContentTab] 提前开始获取系统信息...";
     fetchSystemInfo();
     
-#ifdef WEBENGINE_AVAILABLE
     // 加载HTML内容
     // qDebug() << "[ContentTab] HTML内容长度:" << htmlContent.length();
     // qDebug() << "[ContentTab] 开始加载HTML内容...";
-    m_webView->setHtml(htmlContent, QUrl("qrc:/html/serverconfig.html"));
-    
-    // 立即检查WebEngineView状态
-    // qDebug() << "[ContentTab] WebView页面地址:" << m_webView->url().toString();
-    // qDebug() << "[ContentTab] WebView标题:" << m_webView->title();
+    // 只在 WebEngine 可用时加载 HTML
+#ifdef WEBENGINE_AVAILABLE
+    QWebEngineView *webEngineViewForHtml = qobject_cast<QWebEngineView*>(m_webView);
+    if (webEngineViewForHtml) {
+        webEngineViewForHtml->setHtml(htmlContent, QUrl("qrc:/html/serverconfig.html"));
+        // 立即检查WebEngineView状态
+        // qDebug() << "[ContentTab] WebView页面地址:" << webEngineViewForHtml->url().toString();
+        // qDebug() << "[ContentTab] WebView标题:" << webEngineViewForHtml->title();
+    }
 #else
     // WebEngine不可用时，显示简单信息
     QLabel* webViewLabel = qobject_cast<QLabel*>(m_webView);
@@ -795,8 +834,17 @@ ContentTab::ContentTab(QWidget *parent)
     
     // WebChannel将在页面加载完成后设置
     
-    // 应用主题
-    applyTheme();
+    // 延迟应用主题，确保所有组件都已完全初始化
+    // 使用 QTimer::singleShot 确保在事件循环中执行
+    QTimer::singleShot(0, this, [this]() {
+        try {
+            applyTheme();
+        } catch (const std::exception& e) {
+            qWarning() << "[ContentTab] Exception in delayed applyTheme:" << e.what();
+        } catch (...) {
+            qWarning() << "[ContentTab] Unknown exception in delayed applyTheme";
+        }
+    });
     
     // qDebug() << "[ContentTab] Constructor finished";
 }
@@ -1226,13 +1274,68 @@ void ContentTab::applyTheme()
     }
     
     if (m_webView) {
-        m_webView->setStyleSheet(QString(
-            "QWebEngineView { "
-            "    border: 1px solid %1; "
-            "    border-radius: 8px; "
-            "    background-color: %2; "
-            "}"
-        ).arg(theme->colors().BORDER)
-         .arg(theme->colors().BACKGROUND));
+        // 检查 m_webView 的实际类型，使用正确的样式选择器
+#ifdef WEBENGINE_AVAILABLE
+        QWebEngineView *webEngineView = qobject_cast<QWebEngineView*>(m_webView);
+        if (webEngineView) {
+            // 是 QWebEngineView，使用 QWebEngineView 样式
+            try {
+                webEngineView->setStyleSheet(QString(
+                    "QWebEngineView { "
+                    "    border: 1px solid %1; "
+                    "    border-radius: 8px; "
+                    "    background-color: %2; "
+                    "}"
+                ).arg(theme->colors().BORDER)
+                 .arg(theme->colors().BACKGROUND));
+            } catch (const std::exception& e) {
+                qWarning() << "[ContentTab] Exception setting WebEngineView stylesheet:" << e.what();
+            } catch (...) {
+                qWarning() << "[ContentTab] Unknown exception setting WebEngineView stylesheet";
+            }
+        } else {
+            // 是 QLabel，使用 QLabel 样式
+            QLabel *label = qobject_cast<QLabel*>(m_webView);
+            if (label) {
+                try {
+                    label->setStyleSheet(QString(
+                        "QLabel { "
+                        "    border: 1px solid %1; "
+                        "    border-radius: 8px; "
+                        "    background-color: %2; "
+                        "    color: %3; "
+                        "}"
+                    ).arg(theme->colors().BORDER)
+                     .arg(theme->colors().BACKGROUND)
+                     .arg(theme->colors().TEXT_PRIMARY));
+                } catch (const std::exception& e) {
+                    qWarning() << "[ContentTab] Exception setting Label stylesheet:" << e.what();
+                } catch (...) {
+                    qWarning() << "[ContentTab] Unknown exception setting Label stylesheet";
+                }
+            }
+        }
+#else
+        // WebEngine 不可用，m_webView 应该是 QLabel
+        QLabel *label = qobject_cast<QLabel*>(m_webView);
+        if (label) {
+            try {
+                label->setStyleSheet(QString(
+                    "QLabel { "
+                    "    border: 1px solid %1; "
+                    "    border-radius: 8px; "
+                    "    background-color: %2; "
+                    "    color: %3; "
+                    "}"
+                ).arg(theme->colors().BORDER)
+                 .arg(theme->colors().BACKGROUND)
+                 .arg(theme->colors().TEXT_PRIMARY));
+            } catch (const std::exception& e) {
+                qWarning() << "[ContentTab] Exception setting Label stylesheet:" << e.what();
+            } catch (...) {
+                qWarning() << "[ContentTab] Unknown exception setting Label stylesheet";
+            }
+        }
+#endif
     }
 }
