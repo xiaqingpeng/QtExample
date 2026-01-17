@@ -38,7 +38,6 @@ public:
 
 private slots:
     void onMainMenuClicked(QListWidgetItem *item);
-    void onSubMenuClicked(QListWidgetItem *item);
     void onLoginSuccess(const QString &token);
     void onLogoutClicked();
     void updateUserInfo();
@@ -51,10 +50,11 @@ private:
     void setupNavigationBar();
     void setupMainMenu();
     void setupSubMenu();
-    void setupSubMenu(const QString &mainMenu);
-    void setupSubMenuContent(const QString &mainMenu);
+    void setupMainMenuContent(const QString &mainMenu);  // Docker Desktop风格的主菜单内容
     void setupContent();
     void setupStatusBar();
+    QPushButton* createSubPageCard(const QString &icon, const QString &title, const QString &description);  // 创建子页面卡片
+    void showSubPageContent(const QString &subPage);  // 显示子页面内容
     QPixmap createCircularPixmap(const QPixmap &pixmap, int size);
     void setDefaultAvatar();
     void loadNetworkAvatar(const QString &avatarUrl);
@@ -66,6 +66,7 @@ private:
     // 导航栏组件
     QWidget *navigationBar;
     QLabel *appTitle;
+    QLabel *appIcon;
     QLabel *avatarLabel;
     QLabel *usernameLabel;
     QPushButton *logoutButton;

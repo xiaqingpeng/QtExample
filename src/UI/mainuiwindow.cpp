@@ -87,37 +87,36 @@ void MainUIWindow::setupUI(QWidget *parent)
     // LOG_DEBUG("setupUI started");
     
     try {
-        // 创建主布局
+        // 创建主布局 - Docker Desktop风格：顶部导航 + 左侧导航 + 主内容区
         if (mainLayout) {
             delete mainLayout;
         }
         mainLayout = new QGridLayout();
+        mainLayout->setContentsMargins(0, 0, 0, 0);
+        mainLayout->setSpacing(0);
         
-        // 1. 创建现代化的导航栏
+        // 1. 创建顶部导航栏 (Docker Desktop风格)
         setupNavigationBar();
-        mainLayout->addWidget(navigationBar, 0, 0, 1, 3);
+        mainLayout->addWidget(navigationBar, 0, 0, 1, 2);
         
-        // 2. 创建一级菜单
+        // 2. 创建左侧主导航菜单 (类似Docker Desktop侧边栏)
         setupMainMenu();
         mainLayout->addWidget(mainMenuList, 1, 0);
         
-        // 3. 创建二级菜单
-        setupSubMenu();
-        mainLayout->addWidget(subMenuList, 1, 1);
-        
-        // 4. 创建内容区域
+        // 3. 创建主内容区域 (移除二级菜单，直接显示内容)
         setupContent();
-        mainLayout->addWidget(contentStack, 1, 2);
+        mainLayout->addWidget(contentStack, 1, 1);
         
-        // 5. 创建状态栏
+        // 4. 创建状态栏
         setupStatusBar();
-        mainLayout->addWidget(statusBar, 2, 0, 1, 3);
+        mainLayout->addWidget(statusBar, 2, 0, 1, 2);
         
-        // 设置布局比例
-        mainLayout->setColumnStretch(0, 1);  // 一级菜单
-        mainLayout->setColumnStretch(1, 1);  // 二级菜单
-        mainLayout->setColumnStretch(2, 4);  // 内容区域
-        mainLayout->setRowStretch(1, 1);     // 主要内容行
+        // 设置布局比例 - Docker Desktop风格
+        mainLayout->setColumnStretch(0, 0);  // 左侧导航固定宽度
+        mainLayout->setColumnStretch(1, 1);  // 主内容区域自适应
+        mainLayout->setRowStretch(0, 0);     // 顶部导航固定高度
+        mainLayout->setRowStretch(1, 1);     // 主要内容行自适应
+        mainLayout->setRowStretch(2, 0);     // 状态栏固定高度
         
         // 设置布局到父窗口
         if (parent && parent->layout()) {
@@ -137,10 +136,10 @@ void MainUIWindow::setupUI(QWidget *parent)
                     this, &MainUIWindow::applyTheme);
         }
         
-        // 初始化菜单
+        // 初始化菜单 - 直接显示第一个菜单项的内容
         if (mainMenuList && mainMenuList->count() > 0) {
             mainMenuList->setCurrentRow(0);
-            setupSubMenuContent(mainMenuList->currentItem()->text());
+            onMainMenuClicked(mainMenuList->currentItem());
         }
         
         // LOG_DEBUG("setupUI completed successfully");
@@ -156,39 +155,46 @@ void MainUIWindow::setupNavigationBar()
 {
     navigationBar = new QWidget();
     navigationBar->setObjectName("navigationBar");
-    navigationBar->setFixedHeight(70);
+    navigationBar->setFixedHeight(60); // Docker Desktop风格的导航栏高度
     
     QHBoxLayout *navLayout = new QHBoxLayout(navigationBar);
-    navLayout->setContentsMargins(12, 12, 24, 12);
-    navLayout->setSpacing(20);
+    navLayout->setContentsMargins(20, 0, 20, 0);
+    navLayout->setSpacing(16);
+    
+    // 应用标题和图标 - Docker Desktop风格
+    QWidget *titleContainer = new QWidget();
+    QHBoxLayout *titleLayout = new QHBoxLayout(titleContainer);
+    titleLayout->setContentsMargins(0, 0, 0, 0);
+    titleLayout->setSpacing(12);
+    
+    // 应用图标
+    appIcon = new QLabel();
+    appIcon->setObjectName("appIcon");
+    appIcon->setFixedSize(32, 32);
+    appIcon->setText("Q");
+    appIcon->setAlignment(Qt::AlignCenter);
     
     // 应用标题
-    // appTitle = new QLabel("Qt 现代化应用");
-    // appTitle->setObjectName("appTitle");
-    // appTitle->setStyleSheet(QString(
-    //     "QLabel { "
-    //     "    font-family: %1; "
-    //     "    font-size: %2px; "
-    //     "    font-weight: 700; "
-    //     "    color: %3; "
-    //     "    padding: 0 8px; "
-    //     "}"
-    // ).arg(ThemeManager::Typography::FONT_FAMILY)
-    //  .arg(ThemeManager::Typography::FONT_SIZE_XL)
-    //  .arg(ThemeManager::instance()->colors().TEXT_PRIMARY));
+    appTitle = new QLabel("Qt Enterprise App");
+    appTitle->setObjectName("appTitle");
     
-   
+    titleLayout->addWidget(appIcon);
+    titleLayout->addWidget(appTitle);
+    titleLayout->addStretch();
     
-    // 用户信息区域容器
-    QWidget *userInfoContainer = new QWidget();
-    QHBoxLayout *userInfoLayout = new QHBoxLayout(userInfoContainer);
-    userInfoLayout->setContentsMargins(0, 0, 0, 0);
-    userInfoLayout->setSpacing(12);
+    navLayout->addWidget(titleContainer);
+    navLayout->addStretch();
     
-    // 语言切换器（放在主题切换器左侧）
+    // 右侧控制区域 - Docker Desktop风格
+    QWidget *controlsContainer = new QWidget();
+    QHBoxLayout *controlsLayout = new QHBoxLayout(controlsContainer);
+    controlsLayout->setContentsMargins(0, 0, 0, 0);
+    controlsLayout->setSpacing(12);
+    
+    // 语言切换器
     languageComboBox = new QComboBox();
-    languageComboBox->setMinimumWidth(120);
-    languageComboBox->setMaximumWidth(160);
+    languageComboBox->setMinimumWidth(100);
+    languageComboBox->setMaximumWidth(120);
 
     LocalizationManager *lm = LocalizationManager::instance();
     const QStringList languages = lm->availableLanguages();
@@ -216,9 +222,7 @@ void MainUIWindow::setupNavigationBar()
                 if (!code.isEmpty()) {
                     LocalizationManager *lm = LocalizationManager::instance();
                     if (lm) {
-                     //   qDebug() << "Language combo box changed to:" << code;
                         lm->setLanguage(code);
-                        // retranslateUi 会在 languageChanged 信号触发时自动调用
                     }
                 }
             });
@@ -229,8 +233,8 @@ void MainUIWindow::setupNavigationBar()
     themeComboBox->addItem(tr("深色主题"), static_cast<int>(ThemeManager::DARK));
     themeComboBox->addItem(tr("蓝色主题"), static_cast<int>(ThemeManager::BLUE));
     themeComboBox->addItem(tr("绿色主题"), static_cast<int>(ThemeManager::GREEN));
-    themeComboBox->setMinimumWidth(120);
-    themeComboBox->setMaximumWidth(140);
+    themeComboBox->setMinimumWidth(100);
+    themeComboBox->setMaximumWidth(120);
     
     // 设置当前主题
     ThemeManager *themeManager = ThemeManager::instance();
@@ -246,102 +250,86 @@ void MainUIWindow::setupNavigationBar()
                 }
             });
     
-    // 语言切换在左，主题切换在右
-    userInfoLayout->addWidget(languageComboBox);
-    userInfoLayout->addWidget(themeComboBox);
-    
     // 分隔线
     QFrame *separator = new QFrame();
     separator->setFrameShape(QFrame::VLine);
     separator->setFrameShadow(QFrame::Sunken);
-    separator->setFixedHeight(30);
+    separator->setFixedHeight(24);
     
-    // 设置分隔线样式（安全检查）
-    ThemeManager *tm = ThemeManager::instance();
-    if (tm) {
-        separator->setStyleSheet(QString(
-            "QFrame { "
-            "    color: %1; "
-            "    background-color: %2; "
-            "}"
-        ).arg(tm->colors().BORDER)
-         .arg(tm->colors().BORDER));
-    }
-    
-    userInfoLayout->addWidget(separator);
-    
-    // 用户头像和用户名容器
+    // 用户信息区域 - Docker Desktop风格
     QWidget *userContainer = new QWidget();
     QHBoxLayout *userLayout = new QHBoxLayout(userContainer);
     userLayout->setContentsMargins(0, 0, 0, 0);
-    userLayout->setSpacing(10);
+    userLayout->setSpacing(8);
     
     // 用户头像
     avatarLabel = new QLabel();
     avatarLabel->setObjectName("avatarLabel");
-    avatarLabel->setFixedSize(44, 44);
+    avatarLabel->setFixedSize(32, 32);
     avatarLabel->setAlignment(Qt::AlignCenter);
-    
-    userLayout->addWidget(avatarLabel);
     
     // 用户名
     usernameLabel = new QLabel("未登录");
     usernameLabel->setObjectName("usernameLabel");
-    usernameLabel->setMinimumWidth(80);
-    usernameLabel->setMaximumWidth(150);
+    usernameLabel->setMinimumWidth(60);
+    usernameLabel->setMaximumWidth(120);
     usernameLabel->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-    
-    userLayout->addWidget(usernameLabel);
-
-    navLayout->addWidget(userContainer);
-    navLayout->addStretch();
-    
-    // userInfoLayout->addWidget(userContainer);
     
     // 登出按钮
     logoutButton = new QPushButton(tr("登出"));
-    logoutButton->setMinimumWidth(60);
-    logoutButton->setMaximumWidth(80);
+    logoutButton->setMinimumWidth(50);
+    logoutButton->setMaximumWidth(70);
     connect(logoutButton, &QPushButton::clicked, this, &MainUIWindow::onLogoutClicked);
     
-    userInfoLayout->addWidget(logoutButton);
+    userLayout->addWidget(avatarLabel);
+    userLayout->addWidget(usernameLabel);
+    userLayout->addWidget(logoutButton);
     
-    navLayout->addWidget(userInfoContainer);
+    controlsLayout->addWidget(languageComboBox);
+    controlsLayout->addWidget(themeComboBox);
+    controlsLayout->addWidget(separator);
+    controlsLayout->addWidget(userContainer);
+    
+    navLayout->addWidget(controlsContainer);
 }
 
 void MainUIWindow::setupMainMenu()
 {
     mainMenuList = new QListWidget();
-    mainMenuList->setMaximumWidth(220);
+    mainMenuList->setObjectName("dockerStyleSidebar");
+    mainMenuList->setFixedWidth(200); // Docker Desktop风格的固定宽度侧边栏
 
-    // 添加一级菜单项
-    QListWidgetItem *item1 = new QListWidgetItem(tr("图表示例"));
+    // 添加主菜单项 - 使用安全的文本图标替代emoji
+    QListWidgetItem *item1 = new QListWidgetItem("■ " + tr("图表示例"));
     item1->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    item1->setSizeHint(QSize(200, 48)); // Docker Desktop风格的项目高度
     mainMenuList->addItem(item1);
 
-    QListWidgetItem *item2 = new QListWidgetItem(tr("数据分析"));
+    QListWidgetItem *item2 = new QListWidgetItem("▲ " + tr("数据分析"));
     item2->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    item2->setSizeHint(QSize(200, 48));
     mainMenuList->addItem(item2);
 
-    QListWidgetItem *item3 = new QListWidgetItem(tr("设备信息"));
+    QListWidgetItem *item3 = new QListWidgetItem("● " + tr("设备信息"));
     item3->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    item3->setSizeHint(QSize(200, 48));
     mainMenuList->addItem(item3);
 
-    QListWidgetItem *item4 = new QListWidgetItem(tr("个人中心"));
+    QListWidgetItem *item4 = new QListWidgetItem("◆ " + tr("个人中心"));
     item4->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    item4->setSizeHint(QSize(200, 48));
     mainMenuList->addItem(item4);
 
     connect(mainMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onMainMenuClicked);
 
-    // 默认选择第一个一级菜单
+    // 默认选择第一个菜单项
     mainMenuList->setCurrentRow(0);
 }
 
 void MainUIWindow::setupSubMenu()
 {
-    subMenuList = new QListWidget();
-    subMenuList->setMaximumWidth(220);
-    connect(subMenuList, &QListWidget::itemClicked, this, &MainUIWindow::onSubMenuClicked);
+    // Docker Desktop风格：移除二级菜单，直接在主内容区显示子页面选择
+    // 这个方法保留为空，以保持接口兼容性
 }
 
 void MainUIWindow::retranslateUi()
@@ -368,7 +356,6 @@ void MainUIWindow::retranslateUi()
 
     // 状态栏文本（根据当前状态更新）
     if (statusText) {
-        // 如果已经登录，保持"在线"，否则显示"离线"
         QString currentStatus = statusText->text();
         if (currentStatus.isEmpty() || currentStatus == tr("离线") || currentStatus == "离线") {
             statusText->setText(tr("离线"));
@@ -383,31 +370,18 @@ void MainUIWindow::retranslateUi()
         if (currentMsg.isEmpty() || currentMsg == tr("就绪") || currentMsg == "就绪") {
             statusMessage->setText(tr("就绪"));
         } else {
-            // 保持当前消息，但尝试翻译
             statusMessage->setText(tr("就绪"));
         }
     }
 
-    // 一级菜单
+    // 主菜单 - Docker Desktop风格，使用安全的文本图标
     if (mainMenuList && mainMenuList->count() >= 4) {
         mainMenuList->blockSignals(true);
-        mainMenuList->item(0)->setText(tr("图表示例"));
-        mainMenuList->item(1)->setText(tr("数据分析"));
-        mainMenuList->item(2)->setText(tr("设备信息"));
-        mainMenuList->item(3)->setText(tr("个人中心"));
+        mainMenuList->item(0)->setText("■ " + tr("图表示例"));
+        mainMenuList->item(1)->setText("▲ " + tr("数据分析"));
+        mainMenuList->item(2)->setText("● " + tr("设备信息"));
+        mainMenuList->item(3)->setText("◆ " + tr("个人中心"));
         mainMenuList->blockSignals(false);
-    }
-
-    // 二级菜单：根据当前选中的一级菜单重新生成
-    if (mainMenuList && subMenuList && mainMenuList->currentItem()) {
-        QString currentMainMenu = mainMenuList->currentItem()->text();
-        // 保存当前选中的二级菜单索引
-        int currentSubIndex = subMenuList->currentRow();
-        setupSubMenuContent(currentMainMenu);
-        // 恢复选中的二级菜单
-        if (currentSubIndex >= 0 && currentSubIndex < subMenuList->count()) {
-            subMenuList->setCurrentRow(currentSubIndex);
-        }
     }
 
     // 语言下拉框的显示名来自 LocalizationManager
@@ -441,36 +415,9 @@ void MainUIWindow::retranslateUi()
         } else if (currentUsername == tr("未知用户") || currentUsername == "未知用户") {
             usernameLabel->setText(tr("未知用户"));
         }
-        // 否则保持当前用户名不变
     }
     
    // qDebug() << "retranslateUi completed";
-}
-
-void MainUIWindow::setupSubMenuContent(const QString &mainMenu)
-{
-    subMenuList->clear();
-
-    if (mainMenu.contains(tr("图表示例"))) {
-        new QListWidgetItem(tr("ECharts示例"), subMenuList);
-        new QListWidgetItem(tr("日志统计"), subMenuList);
-    } else if (mainMenu.contains(tr("数据分析"))) {
-        new QListWidgetItem(tr("用户画像"), subMenuList);
-        new QListWidgetItem(tr("统计报表"), subMenuList);
-    } else if (mainMenu.contains(tr("设备信息"))) {
-        new QListWidgetItem(tr("服务器配置监控"), subMenuList);
-        new QListWidgetItem(tr("电脑本机配置监控"), subMenuList);
-    } else if (mainMenu.contains(tr("个人中心"))) {
-        new QListWidgetItem(tr("用户信息"), subMenuList);
-        new QListWidgetItem(tr("修改密码"), subMenuList);
-    }
-
-    // 默认选择第一个二级菜单
-    if (subMenuList->count() > 0) {
-        subMenuList->setCurrentRow(0);
-        // 触发二级菜单点击事件，显示对应的内容
-        onSubMenuClicked(subMenuList->currentItem());
-    }
 }
 
 void MainUIWindow::setupStatusBar()
@@ -519,41 +466,73 @@ void MainUIWindow::applyTheme()
      .arg(theme->colors().TEXT_PRIMARY)
      .arg(ThemeManager::Typography::FONT_FAMILY));
     
-    // 应用导航栏样式
+    // 应用Docker Desktop风格的导航栏样式
     if (navigationBar) {
-        navigationBar->setStyleSheet(theme->getNavigationStyle());
+        navigationBar->setStyleSheet(QString(
+            "QWidget#navigationBar { "
+            "    background-color: %1; "
+            "    border-bottom: 1px solid %2; "
+            "} "
+            "QLabel#appTitle { "
+            "    font-size: 18px; "
+            "    font-weight: 600; "
+            "    color: %3; "
+            "} "
+            "QLabel#appIcon { "
+            "    background-color: %4; "
+            "    border-radius: 6px; "
+            "    color: %5; "
+            "    font-weight: bold; "
+            "    font-size: 16px; "
+            "} "
+        ).arg(theme->colors().SURFACE)
+         .arg(theme->colors().BORDER)
+         .arg(theme->colors().TEXT_PRIMARY)
+         .arg(theme->colors().PRIMARY)
+         .arg(theme->colors().SURFACE));
     }
     
-    // 更新应用标题样式（已注释掉，因为 appTitle 未使用）
-    // if (appTitle) {
-    //     appTitle->setStyleSheet(QString(
-    //         "QLabel { "
-    //         "    font-family: %1; "
-    //         "    font-size: %2px; "
-    //         "    font-weight: 700; "
-    //         "    color: %3; "
-    //         "    padding: 0 8px; "
-    //         "}"
-    //     ).arg(ThemeManager::Typography::FONT_FAMILY)
-    //      .arg(ThemeManager::Typography::FONT_SIZE_XL)
-    //      .arg(theme->colors().TEXT_PRIMARY));
-    // }
+    // 应用Docker Desktop风格的侧边栏样式
+    if (mainMenuList) {
+        mainMenuList->setStyleSheet(QString(
+            "QListWidget#dockerStyleSidebar { "
+            "    background-color: %1; "
+            "    border: none; "
+            "    border-right: 1px solid %2; "
+            "    outline: none; "
+            "} "
+            "QListWidget#dockerStyleSidebar::item { "
+            "    padding: 12px 16px; "
+            "    border: none; "
+            "    color: %3; "
+            "    font-size: 14px; "
+            "    font-weight: 500; "
+            "} "
+            "QListWidget#dockerStyleSidebar::item:selected { "
+            "    background-color: %4; "
+            "    color: %5; "
+            "    border-left: 3px solid %6; "
+            "} "
+            "QListWidget#dockerStyleSidebar::item:hover { "
+            "    background-color: %7; "
+            "} "
+        ).arg(theme->colors().SURFACE)
+         .arg(theme->colors().BORDER)
+         .arg(theme->colors().TEXT_SECONDARY)
+         .arg(theme->colors().PRIMARY_LIGHT)
+         .arg(theme->colors().PRIMARY)
+         .arg(theme->colors().PRIMARY)
+         .arg(theme->colors().GRAY_100));
+    }
     
     // 应用主题切换器样式并同步当前选择
     if (themeComboBox) {
-        // 临时断开信号连接，避免递归调用
         themeComboBox->blockSignals(true);
-        
-        // 同步当前主题选择
         int currentThemeIndex = static_cast<int>(theme->getCurrentTheme());
         if (themeComboBox->currentIndex() != currentThemeIndex) {
             themeComboBox->setCurrentIndex(currentThemeIndex);
         }
-        
-        // 应用样式
         themeComboBox->setStyleSheet(theme->getThemeSwitcherStyle());
-        
-        // 重新连接信号
         themeComboBox->blockSignals(false);
     }
 
@@ -567,35 +546,29 @@ void MainUIWindow::applyTheme()
         logoutButton->setStyleSheet(theme->getButtonStyle("secondary"));
     }
     
-    // 应用菜单样式
-    if (mainMenuList) {
-        mainMenuList->setStyleSheet(theme->getMenuStyle());
-    }
-    
-    if (subMenuList) {
-        subMenuList->setStyleSheet(theme->getListStyle());
-    }
-    
     // 应用状态栏样式
     if (statusBar) {
         statusBar->setStyleSheet(theme->getStatusBarStyle());
     }
     
-    // 应用内容区域样式
+    // 应用Docker Desktop风格的内容区域样式
     if (contentStack) {
-        contentStack->setStyleSheet(theme->getScrollBarStyle());
+        contentStack->setStyleSheet(QString(
+            "QStackedWidget#dockerStyleContent { "
+            "    background-color: %1; "
+            "    border: none; "
+            "} "
+        ).arg(theme->colors().BACKGROUND) + theme->getScrollBarStyle());
     }
     
     // 更新默认头像以匹配新主题（仅当没有自定义头像时）
     if (avatarLabel && avatarLabel->pixmap().isNull()) {
         setDefaultAvatar();
     } else if (avatarLabel) {
-        // 检查是否使用的是默认头像（通过检查用户设置）
         QSettings settings("YourCompany", "QtApp");
         QString localAvatar = settings.value("user/avatar_local", "").toString();
         QString networkAvatar = settings.value("user/avatar", "").toString();
         
-        // 如果没有自定义头像，更新默认头像
         if (localAvatar.isEmpty() && networkAvatar.isEmpty()) {
             setDefaultAvatar();
         }
@@ -606,20 +579,16 @@ void MainUIWindow::applyTheme()
         for (int i = 0; i < contentStack->count(); ++i) {
             QWidget *page = contentStack->widget(i);
             if (page) {
-                // 先检查是否是滚动区域
                 QScrollArea *scrollArea = qobject_cast<QScrollArea*>(page);
                 QWidget *actualPage = scrollArea ? scrollArea->widget() : page;
                 
                 if (actualPage) {
-                    // 使用Qt元对象系统动态调用applyTheme方法（如果存在）
                     const QMetaObject *metaObject = actualPage->metaObject();
                     int methodIndex = metaObject->indexOfMethod("applyTheme()");
                     if (methodIndex != -1) {
-                        // 页面有applyTheme方法，调用它
                         QMetaMethod method = metaObject->method(methodIndex);
                         bool success = method.invoke(actualPage, Qt::DirectConnection);
                         if (success) {
-                            // 强制重绘页面以确保主题立即生效
                             actualPage->update();
                             actualPage->repaint();
                             if (scrollArea) {
@@ -628,7 +597,6 @@ void MainUIWindow::applyTheme()
                             }
                         }
                     } else {
-                        // 页面没有applyTheme方法，只更新基本样式
                         actualPage->setStyleSheet(QString(
                             "QWidget { "
                             "    background-color: %1; "
@@ -647,7 +615,6 @@ void MainUIWindow::applyTheme()
                     }
                 }
                 
-                // 如果是滚动区域，也要更新滚动区域的样式
                 if (scrollArea) {
                     scrollArea->setStyleSheet(theme->getScrollBarStyle() + QString(
                         "QScrollArea { "
@@ -665,37 +632,12 @@ void MainUIWindow::applyTheme()
     this->repaint();
 }
 
-void MainUIWindow::setupSubMenu(const QString &mainMenu)
-{
-    subMenuList->clear();
-
-    if (mainMenu.contains("图表示例")) {
-        new QListWidgetItem("ECharts示例", subMenuList);
-        new QListWidgetItem("日志统计", subMenuList);
-    } else if (mainMenu.contains("数据分析")) {
-        new QListWidgetItem("用户画像", subMenuList);
-        new QListWidgetItem("统计报表", subMenuList);
-    } else if (mainMenu.contains("设备信息")) {
-        new QListWidgetItem("服务器配置监控", subMenuList);
-        new QListWidgetItem("电脑本机配置监控", subMenuList);
-    } else if (mainMenu.contains("个人中心")) {
-        new QListWidgetItem("用户信息", subMenuList);
-        new QListWidgetItem("修改密码", subMenuList);
-    }
-
-    // 默认选择第一个二级菜单
-    if (subMenuList->count() > 0) {
-        subMenuList->setCurrentRow(0);
-        // 触发二级菜单点击事件，显示对应的内容
-        onSubMenuClicked(subMenuList->currentItem());
-    }
-}
-
 void MainUIWindow::setupContent()
 {
     contentStack = new QStackedWidget();
+    contentStack->setObjectName("dockerStyleContent");
     contentStack->setStyleSheet(
-        "QStackedWidget { "
+        "QStackedWidget#dockerStyleContent { "
         "    background-color: #ffffff; "
         "    border: none; "
         "    border-radius: 0; "
@@ -707,16 +649,23 @@ void MainUIWindow::onMainMenuClicked(QListWidgetItem *item)
 {
     QString mainMenu = item->text();
     
+    // 移除图标前缀，获取纯文本
+    QString menuText = mainMenu;
+    if (mainMenu.contains(" ")) {
+        menuText = mainMenu.split(" ", Qt::SkipEmptyParts).last();
+    }
+    
     // 追踪一级菜单切换事件
     Analytics::SDK::instance()->track("main_menu_changed", {
         {"event_type", "click"},
-        {"menu_name", mainMenu}
+        {"menu_name", menuText}
     });
     
-    setupSubMenuContent(mainMenu);
+    // Docker Desktop风格：直接显示对应的内容页面，创建子页面选择界面
+    setupMainMenuContent(menuText);
 }
 
-void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
+void MainUIWindow::setupMainMenuContent(const QString &mainMenu)
 {
     // 安全检查：确保contentStack已初始化
     if (!contentStack) {
@@ -724,12 +673,178 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         return;
     }
 
-    QString subMenu = item->text();
+    // 清空内容区域
+    while (contentStack->count() > 0) {
+        QWidget *widget = contentStack->widget(0);
+        contentStack->removeWidget(widget);
+        widget->deleteLater();
+    }
+
+    // 创建Docker Desktop风格的子页面选择界面
+    QWidget *menuContentWidget = new QWidget();
+    QVBoxLayout *menuLayout = new QVBoxLayout(menuContentWidget);
+    menuLayout->setContentsMargins(32, 32, 32, 32);
+    menuLayout->setSpacing(24);
+    
+    // 页面标题
+    QLabel *titleLabel = new QLabel(mainMenu);
+    titleLabel->setObjectName("pageTitle");
+    titleLabel->setStyleSheet(
+        "QLabel#pageTitle { "
+        "    font-size: 28px; "
+        "    font-weight: 600; "
+        "    color: #1f2937; "
+        "    margin-bottom: 16px; "
+        "}"
+    );
+    menuLayout->addWidget(titleLabel);
+    
+    // 子页面网格容器
+    QWidget *gridContainer = new QWidget();
+    QGridLayout *gridLayout = new QGridLayout(gridContainer);
+    gridLayout->setSpacing(20);
+    
+    // 根据主菜单创建子页面卡片
+    QStringList subPages;
+    QStringList subPageIcons;
+    QStringList subPageDescriptions;
+    
+    if (mainMenu.contains(tr("图表示例"))) {
+        subPages << tr("ECharts示例") << tr("日志统计");
+        subPageIcons << "■" << "▣";
+        subPageDescriptions << tr("交互式图表展示") << tr("系统日志分析");
+    } else if (mainMenu.contains(tr("数据分析"))) {
+        subPages << tr("用户画像") << tr("统计报表");
+        subPageIcons << "◉" << "▲";
+        subPageDescriptions << tr("用户行为分析") << tr("数据统计报告");
+    } else if (mainMenu.contains(tr("设备信息"))) {
+        subPages << tr("服务器配置监控") << tr("电脑本机配置监控");
+        subPageIcons << "●" << "○";
+        subPageDescriptions << tr("服务器状态监控") << tr("本地设备信息");
+    } else if (mainMenu.contains(tr("个人中心"))) {
+        subPages << tr("用户信息") << tr("修改密码");
+        subPageIcons << "◆" << "◇";
+        subPageDescriptions << tr("个人资料管理") << tr("账户安全设置");
+    }
+    
+    // 创建子页面卡片
+    for (int i = 0; i < subPages.size(); ++i) {
+        QPushButton *cardButton = createSubPageCard(
+            subPageIcons[i], 
+            subPages[i], 
+            subPageDescriptions[i]
+        );
+        
+        // 连接点击事件
+        connect(cardButton, &QPushButton::clicked, [this, subPages, i]() {
+            showSubPageContent(subPages[i]);
+        });
+        
+        gridLayout->addWidget(cardButton, i / 2, i % 2);
+    }
+    
+    menuLayout->addWidget(gridContainer);
+    menuLayout->addStretch();
+    
+    // 将内容控件放在滚动区域中
+    QScrollArea *scrollArea = new QScrollArea();
+    scrollArea->setWidget(menuContentWidget);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    
+    // 应用主题到滚动区域
+    ThemeManager *theme = ThemeManager::instance();
+    scrollArea->setStyleSheet(theme->getScrollBarStyle() + QString(
+        "QScrollArea { "
+        "    border: none; "
+        "    background-color: %1; "
+        "}"
+    ).arg(theme->colors().BACKGROUND));
+
+    contentStack->addWidget(scrollArea);
+    contentStack->setCurrentWidget(scrollArea);
+}
+
+QPushButton* MainUIWindow::createSubPageCard(const QString &icon, const QString &title, const QString &description)
+{
+    QPushButton *card = new QPushButton();
+    card->setObjectName("subPageCard");
+    card->setFixedSize(280, 120);
+    card->setCursor(Qt::PointingHandCursor);
+    
+    // 创建卡片内容
+    QWidget *cardContent = new QWidget(card);
+    QVBoxLayout *cardLayout = new QVBoxLayout(cardContent);
+    cardLayout->setContentsMargins(20, 16, 20, 16);
+    cardLayout->setSpacing(8);
+    
+    // 图标和标题行
+    QWidget *headerWidget = new QWidget();
+    QHBoxLayout *headerLayout = new QHBoxLayout(headerWidget);
+    headerLayout->setContentsMargins(0, 0, 0, 0);
+    headerLayout->setSpacing(12);
+    
+    QLabel *iconLabel = new QLabel(icon);
+    iconLabel->setStyleSheet("font-size: 24px;");
+    
+    QLabel *titleLabel = new QLabel(title);
+    titleLabel->setStyleSheet(
+        "font-size: 16px; "
+        "font-weight: 600; "
+        "color: #1f2937;"
+    );
+    
+    headerLayout->addWidget(iconLabel);
+    headerLayout->addWidget(titleLabel);
+    headerLayout->addStretch();
+    
+    // 描述文本
+    QLabel *descLabel = new QLabel(description);
+    descLabel->setStyleSheet(
+        "font-size: 14px; "
+        "color: #6b7280; "
+        "line-height: 1.4;"
+    );
+    descLabel->setWordWrap(true);
+    
+    cardLayout->addWidget(headerWidget);
+    cardLayout->addWidget(descLabel);
+    cardLayout->addStretch();
+    
+    // 设置卡片样式
+    card->setStyleSheet(
+        "QPushButton#subPageCard { "
+        "    background-color: #ffffff; "
+        "    border: 1px solid #e5e7eb; "
+        "    border-radius: 8px; "
+        "    text-align: left; "
+        "} "
+        "QPushButton#subPageCard:hover { "
+        "    background-color: #f9fafb; "
+        "    border-color: #d1d5db; "
+        "    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); "
+        "} "
+        "QPushButton#subPageCard:pressed { "
+        "    background-color: #f3f4f6; "
+        "}"
+    );
+    
+    return card;
+}
+
+void MainUIWindow::showSubPageContent(const QString &subPage)
+{
+    // 安全检查：确保contentStack已初始化
+    if (!contentStack) {
+        qWarning() << "contentStack is not initialized!";
+        return;
+    }
     
     // 追踪页面导航事件
     Analytics::SDK::instance()->track("page_navigated", {
         {"event_type", "view"},
-        {"page_name", subMenu}
+        {"page_name", subPage}
     });
 
     // 清空内容区域
@@ -739,13 +854,13 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         widget->deleteLater();
     }
 
-    // 根据二级菜单创建对应的内容
+    // 根据子页面创建对应的内容
     QWidget *contentWidget = nullptr;
-    if (subMenu.contains("ECharts示例")) {
+    if (subPage.contains("ECharts示例")) {
         contentWidget = new EChartsTab();
-    } else if (subMenu.contains("日志统计")) {
+    } else if (subPage.contains("日志统计")) {
         contentWidget = new LogStatsTab();
-    } else if (subMenu.contains("用户画像")) {
+    } else if (subPage.contains("用户画像")) {
         contentWidget = new UserProfileTab();
         // 获取当前登录用户的ID并传递给用户画像页面
         QSettings settings("YourCompany", "QtApp");
@@ -756,11 +871,11 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
                 userProfileTab->setUserId(userId);
             }
         }
-    } else if (subMenu.contains("统计报表")) {
+    } else if (subPage.contains("统计报表")) {
         contentWidget = new ReportsTab();
-    } else if (subMenu.contains("服务器配置监控")) {
+    } else if (subPage.contains("服务器配置监控")) {
         try {
-            contentWidget = new ServerConfigTab(this);  // 传递 parent
+            contentWidget = new ServerConfigTab(this);
         } catch (const std::exception& e) {
             qCritical() << "Exception creating ServerConfigTab:" << e.what();
             contentWidget = new QLabel(tr("加载页面失败: ") + QString::fromStdString(e.what()), this);
@@ -768,9 +883,9 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
             qCritical() << "Unknown exception creating ServerConfigTab";
             contentWidget = new QLabel(tr("加载页面失败: 未知错误"), this);
         }
-    } else if (subMenu.contains("电脑本机配置监控")) {
+    } else if (subPage.contains("电脑本机配置监控")) {
         try {
-            contentWidget = new ContentTab(this);  // 传递 parent
+            contentWidget = new ContentTab(this);
         } catch (const std::exception& e) {
             qCritical() << "Exception creating ContentTab:" << e.what();
             contentWidget = new QLabel(tr("加载页面失败: ") + QString::fromStdString(e.what()), this);
@@ -778,9 +893,9 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
             qCritical() << "Unknown exception creating ContentTab";
             contentWidget = new QLabel(tr("加载页面失败: 未知错误"), this);
         }
-    } else if (subMenu.contains("用户信息")) {
+    } else if (subPage.contains("用户信息")) {
         contentWidget = new UserInfoPage();
-    } else if (subMenu.contains("修改密码")) {
+    } else if (subPage.contains("修改密码")) {
         contentWidget = new ChangePasswordPage();
     }
 
@@ -790,14 +905,11 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         const QMetaObject *metaObject = contentWidget->metaObject();
         int methodIndex = metaObject->indexOfMethod("applyTheme()");
         if (methodIndex != -1) {
-            // 页面有applyTheme方法，使用 QueuedConnection 避免在构造过程中调用
             QMetaMethod method = metaObject->method(methodIndex);
             method.invoke(contentWidget, Qt::QueuedConnection);
-            // 强制重绘以确保主题立即生效
             contentWidget->update();
             contentWidget->repaint();
         } else {
-            // 页面没有applyTheme方法，应用基本主题样式
             ThemeManager *theme = ThemeManager::instance();
             contentWidget->setStyleSheet(QString(
                 "QWidget { "
@@ -832,18 +944,12 @@ void MainUIWindow::onSubMenuClicked(QListWidgetItem *item)
         contentStack->setCurrentWidget(scrollArea);
         
         // 如果是用户信息页面，连接头像更新信号
-        if (subMenu.contains("用户信息")) {
+        if (subPage.contains("用户信息")) {
             UserInfoPage *userInfoPage = qobject_cast<UserInfoPage*>(contentWidget);
             if (userInfoPage) {
-                // LOG_DEBUG("Connecting avatarUpdated signal for UserInfoPage");
                 connect(userInfoPage, &UserInfoPage::avatarUpdated, 
                         this, &MainUIWindow::updateUserInfoSafe, Qt::QueuedConnection);
-                
-                // 立即更新一次导航栏头像，确保同步（不使用定时器）
-                // LOG_DEBUG("Immediate avatar sync for navigation bar");
                 updateUserInfoSafe();
-            } else {
-                // LOG_DEBUG("Failed to cast to UserInfoPage");
             }
         }
     }
@@ -1048,8 +1154,8 @@ void MainUIWindow::setDefaultAvatar()
 {
     if (!avatarLabel) return;
     
-    // 设置一个简单的默认头像
-    QPixmap defaultAvatar(40, 40);
+    // 设置一个简单的默认头像 - Docker Desktop风格，更小尺寸
+    QPixmap defaultAvatar(32, 32);
     defaultAvatar.fill(Qt::transparent);
     QPainter painter(&defaultAvatar);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -1088,12 +1194,12 @@ void MainUIWindow::setDefaultAvatar()
     // 绘制圆形背景
     painter.setBrush(QBrush(QColor(backgroundColor)));
     painter.setPen(Qt::NoPen);
-    painter.drawEllipse(0, 0, 40, 40);
+    painter.drawEllipse(0, 0, 32, 32);
     
-    // 绘制简单的用户图标
+    // 绘制简单的用户图标 - 调整为32px尺寸
     painter.setBrush(QBrush(QColor(iconColor)));
-    painter.drawEllipse(12, 8, 16, 16); // 头部
-    painter.drawEllipse(6, 26, 28, 16); // 身体
+    painter.drawEllipse(10, 6, 12, 12); // 头部
+    painter.drawEllipse(5, 20, 22, 12); // 身体
     
     avatarLabel->setPixmap(defaultAvatar);
     // LOG_DEBUG("Theme-responsive default avatar set for theme:" << static_cast<int>(currentTheme));
