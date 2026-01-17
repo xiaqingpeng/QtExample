@@ -194,23 +194,27 @@ void MainUIWindow::setupNavigationBar()
     controlsLayout->setContentsMargins(0, 0, 0, 0);
     controlsLayout->setSpacing(12);
     
-    // 语言切换按钮
+    // 语言切换按钮 - Docker Desktop风格
     languageButton = new QPushButton();
-    languageButton->setMinimumWidth(100);
-    languageButton->setMaximumWidth(120);
+    languageButton->setObjectName("dockerStyleButton");
+    languageButton->setMinimumWidth(110);
+    languageButton->setMaximumWidth(130);
+    languageButton->setMinimumHeight(32);
     languageButton->setCursor(Qt::PointingHandCursor);
 
     LocalizationManager *lm = LocalizationManager::instance();
     const QString currentLang = lm->currentLanguage();
     const QString displayName = lm->getLanguageDisplayName(currentLang);
-    languageButton->setText(displayName + " ▼");
+    languageButton->setText(displayName);
 
     connect(languageButton, &QPushButton::clicked, this, &MainUIWindow::showLanguagePopover);
     
-    // 主题切换按钮
+    // 主题切换按钮 - Docker Desktop风格
     themeButton = new QPushButton();
-    themeButton->setMinimumWidth(100);
-    themeButton->setMaximumWidth(120);
+    themeButton->setObjectName("dockerStyleButton");
+    themeButton->setMinimumWidth(110);
+    themeButton->setMaximumWidth(130);
+    themeButton->setMinimumHeight(32);
     themeButton->setCursor(Qt::PointingHandCursor);
     
     // 设置当前主题显示
@@ -223,7 +227,7 @@ void MainUIWindow::setupNavigationBar()
             case ThemeManager::BLUE: themeText = tr("蓝色主题"); break;
             case ThemeManager::GREEN: themeText = tr("绿色主题"); break;
         }
-        themeButton->setText(themeText + " ▼");
+        themeButton->setText(themeText);
     }
     
     connect(themeButton, &QPushButton::clicked, this, &MainUIWindow::showThemePopover);
@@ -343,7 +347,7 @@ void MainUIWindow::retranslateUi()
                 case ThemeManager::BLUE: themeText = tr("蓝色主题"); break;
                 case ThemeManager::GREEN: themeText = tr("绿色主题"); break;
             }
-            themeButton->setText(themeText + " ▼");
+            themeButton->setText(themeText);
         }
     }
 
@@ -400,7 +404,7 @@ void MainUIWindow::retranslateUi()
         LocalizationManager *lm = LocalizationManager::instance();
         const QString currentLang = lm->currentLanguage();
         const QString displayName = lm->getLanguageDisplayName(currentLang);
-        languageButton->setText(displayName + " ▼");
+        languageButton->setText(displayName);
     }
     
     // 用户名标签（如果已登录）
@@ -533,14 +537,58 @@ void MainUIWindow::applyTheme()
          .arg(theme->colors().GRAY_100));
     }
     
-    // 应用主题切换按钮样式
+    // 应用Docker Desktop风格的按钮样式
     if (themeButton) {
-        themeButton->setStyleSheet(theme->getButtonStyle("secondary"));
+        themeButton->setStyleSheet(QString(
+            "QPushButton#dockerStyleButton { "
+            "    background-color: %1; "
+            "    border: 1px solid %2; "
+            "    border-radius: 6px; "
+            "    padding: 6px 12px; "
+            "    color: %3; "
+            "    font-size: 13px; "
+            "    font-weight: 500; "
+            "} "
+            "QPushButton#dockerStyleButton:hover { "
+            "    background-color: %4; "
+            "    border-color: %5; "
+            "} "
+            "QPushButton#dockerStyleButton:pressed { "
+            "    background-color: %6; "
+            "} "
+        ).arg(theme->colors().SURFACE)
+         .arg(theme->colors().BORDER)
+         .arg(theme->colors().TEXT_PRIMARY)
+         .arg(theme->colors().GRAY_100)
+         .arg(theme->colors().PRIMARY_LIGHT)
+         .arg(theme->colors().PRIMARY_LIGHT));
     }
 
-    // 应用语言切换按钮样式
+    // 应用Docker Desktop风格的按钮样式
     if (languageButton) {
-        languageButton->setStyleSheet(theme->getButtonStyle("secondary"));
+        languageButton->setStyleSheet(QString(
+            "QPushButton#dockerStyleButton { "
+            "    background-color: %1; "
+            "    border: 1px solid %2; "
+            "    border-radius: 6px; "
+            "    padding: 6px 12px; "
+            "    color: %3; "
+            "    font-size: 13px; "
+            "    font-weight: 500; "
+            "} "
+            "QPushButton#dockerStyleButton:hover { "
+            "    background-color: %4; "
+            "    border-color: %5; "
+            "} "
+            "QPushButton#dockerStyleButton:pressed { "
+            "    background-color: %6; "
+            "} "
+        ).arg(theme->colors().SURFACE)
+         .arg(theme->colors().BORDER)
+         .arg(theme->colors().TEXT_PRIMARY)
+         .arg(theme->colors().GRAY_100)
+         .arg(theme->colors().PRIMARY_LIGHT)
+         .arg(theme->colors().PRIMARY_LIGHT));
     }
     
     // 应用按钮样式
@@ -1514,7 +1562,7 @@ void MainUIWindow::showLanguagePopover()
                 lm->setLanguage(code);
                 const QString displayName = lm->getLanguageDisplayName(code);
                 if (languageButton) {
-                    languageButton->setText(displayName + " ▼");
+                    languageButton->setText(displayName);
                 }
             }
             // 不需要手动调用hidePopovers，弹窗会自动关闭
@@ -1553,7 +1601,7 @@ void MainUIWindow::showThemePopover()
                         case 2: themeText = tr("蓝色主题"); break;
                         case 3: themeText = tr("绿色主题"); break;
                     }
-                    themeButton->setText(themeText + " ▼");
+                    themeButton->setText(themeText);
                 }
             }
             // 不需要手动调用hidePopovers，弹窗会自动关闭
@@ -1584,72 +1632,86 @@ void MainUIWindow::hidePopovers()
 QWidget* MainUIWindow::createPopover(const QStringList &items, const QStringList &values, 
                                    const QString &currentValue, std::function<void(const QString&)> onSelect)
 {
-    QWidget *popover = new QWidget(nullptr); // 不设置父对象，让它作为独立窗口
+    QWidget *popover = new QWidget(nullptr);
     popover->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
-    popover->setAttribute(Qt::WA_DeleteOnClose, true); // 关闭时自动删除
+    popover->setAttribute(Qt::WA_DeleteOnClose, true);
     
-    // 设置弹窗样式
+    // Docker Desktop风格的弹窗样式
     ThemeManager *theme = ThemeManager::instance();
     popover->setStyleSheet(QString(
         "QWidget { "
         "    background-color: %1; "
         "    border: 1px solid %2; "
-        "    border-radius: 8px; "
-        "    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); "
+        "    border-radius: 12px; "
+        "    padding: 8px 0px; "
         "} "
         "QPushButton { "
         "    background-color: transparent; "
         "    border: none; "
-        "    padding: 8px 16px; "
+        "    padding: 10px 20px; "
         "    text-align: left; "
         "    color: %3; "
         "    font-size: 14px; "
+        "    font-weight: 500; "
+        "    border-radius: 8px; "
+        "    margin: 2px 8px; "
         "} "
         "QPushButton:hover { "
         "    background-color: %4; "
+        "    color: %5; "
         "} "
         "QPushButton:pressed { "
-        "    background-color: %5; "
+        "    background-color: %6; "
+        "} "
+        "QPushButton[selected=\"true\"] { "
+        "    background-color: %7; "
+        "    color: %8; "
+        "    font-weight: 600; "
         "} "
     ).arg(theme->colors().SURFACE)
      .arg(theme->colors().BORDER)
      .arg(theme->colors().TEXT_PRIMARY)
      .arg(theme->colors().GRAY_100)
-     .arg(theme->colors().PRIMARY_LIGHT));
+     .arg(theme->colors().TEXT_PRIMARY)
+     .arg(theme->colors().PRIMARY_LIGHT)
+     .arg(theme->colors().PRIMARY)
+     .arg("#ffffff"));
     
     QVBoxLayout *layout = new QVBoxLayout(popover);
-    layout->setContentsMargins(4, 4, 4, 4);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     
     for (int i = 0; i < items.size(); ++i) {
         QPushButton *item = new QPushButton(items[i]);
         item->setCursor(Qt::PointingHandCursor);
-        item->setMinimumWidth(120);
+        item->setMinimumWidth(140);
+        item->setMinimumHeight(36);
         
-        // 高亮当前选中项
+        // Docker Desktop风格的选中状态
         if (values[i] == currentValue) {
-            item->setStyleSheet(item->styleSheet() + QString(
-                "QPushButton { background-color: %1; color: %2; }"
-            ).arg(theme->colors().PRIMARY_LIGHT).arg(theme->colors().PRIMARY));
+            item->setProperty("selected", true);
         }
         
-        // 连接点击事件，确保在回调中弹窗仍然有效
+        // 连接点击事件
         connect(item, &QPushButton::clicked, [onSelect, values, i, popover]() {
             onSelect(values[i]);
             if (popover) {
-                popover->close(); // 关闭弹窗
+                popover->close();
             }
         });
         
         layout->addWidget(item);
     }
     
-    // 添加阴影效果
+    // Docker Desktop风格的阴影效果
     QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect();
-    shadow->setBlurRadius(12);
-    shadow->setColor(QColor(0, 0, 0, 40));
-    shadow->setOffset(0, 4);
+    shadow->setBlurRadius(20);
+    shadow->setColor(QColor(0, 0, 0, 25));
+    shadow->setOffset(0, 8);
     popover->setGraphicsEffect(shadow);
+    
+    // 设置最小尺寸
+    popover->setMinimumWidth(160);
     
     return popover;
 }
