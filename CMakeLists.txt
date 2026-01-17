@@ -43,10 +43,6 @@ if(APPLE)
     set(MACOSX_BUNDLE_ICON_FILE "icon")
 elseif(WIN32)
     # Windows 特定配置
-    # 设置 Windows 应用程序版本信息
-    set_target_properties(QTExample PROPERTIES
-        WIN32_EXECUTABLE TRUE
-    )
     # Windows 上禁用 WebEngine（兼容性考虑）
     message(STATUS "Windows platform: WebEngine disabled for compatibility")
 endif()
