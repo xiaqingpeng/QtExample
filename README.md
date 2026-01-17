@@ -16,6 +16,7 @@
 
 ```
 ├── docs/                    # 📚 文档目录
+│   ├── DOCKER.md           # Docker 开发环境完整指南
 │   ├── build/              # 构建相关文档
 │   ├── release/            # 发布相关文档
 │   ├── development/        # 开发相关文档
@@ -32,6 +33,23 @@
 ```
 
 ## 🚀 快速开始
+
+### Docker 开发环境（推荐）
+
+**快速开始**：
+```bash
+# 启动容器
+docker-compose up -d
+
+# 运行程序（自动检测最佳模式）
+./quick-run.sh
+```
+
+**详细文档**：请查看 [Docker 开发环境指南](docs/DOCKER.md)
+
+---
+
+## 📦 本地构建
 
 ### 查看所有构建选项
 ```bash
