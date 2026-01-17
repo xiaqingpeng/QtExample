@@ -130,6 +130,10 @@
         <translation>Qt UIコンポーネント総合デモ</translation>
     </message>
     <message>
+        <source>Qt Enterprise App</source>
+        <translation>Qt エンタープライズアプリ</translation>
+    </message>
+    <message>
         <source>浅色主题</source>
         <translation>ライトテーマ</translation>
     </message>
