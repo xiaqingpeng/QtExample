@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QComboBox>
 #include <QGraphicsDropShadowEffect>
+#include <QPointer>
 #include <functional>
 #include "../Charts/echartstab.h"
 #include "../Charts/logstatstab.h"
@@ -77,8 +78,8 @@ private:
     QPushButton *logoutButton;
     QPushButton *themeButton;
     QPushButton *languageButton;
-    QWidget *themePopover;
-    QWidget *languagePopover;
+    QPointer<QWidget> themePopover;
+    QPointer<QWidget> languagePopover;
     
     // 菜单组件
     QListWidget *mainMenuList;

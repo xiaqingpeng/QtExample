@@ -36,6 +36,8 @@ MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
     , appTitle(nullptr)
     , m_networkService(nullptr)
     , m_authService(nullptr)
+    , themePopover(nullptr)
+    , languagePopover(nullptr)
 {
     setWindowTitle(tr("Qt UI控件综合示例"));
     resize(1200, 800);
@@ -1511,15 +1513,19 @@ void MainUIWindow::showLanguagePopover()
             if (lm) {
                 lm->setLanguage(code);
                 const QString displayName = lm->getLanguageDisplayName(code);
-                languageButton->setText(displayName + " ▼");
+                if (languageButton) {
+                    languageButton->setText(displayName + " ▼");
+                }
             }
-            hidePopovers();
+            // 不需要手动调用hidePopovers，弹窗会自动关闭
         });
     
-    // 定位弹窗到按钮下方
-    QPoint buttonPos = languageButton->mapToGlobal(QPoint(0, languageButton->height()));
-    languagePopover->move(buttonPos);
-    languagePopover->show();
+    if (languagePopover && languageButton) {
+        // 定位弹窗到按钮下方
+        QPoint buttonPos = languageButton->mapToGlobal(QPoint(0, languageButton->height()));
+        languagePopover->move(buttonPos);
+        languagePopover->show();
+    }
 }
 
 void MainUIWindow::showThemePopover()
@@ -1539,45 +1545,48 @@ void MainUIWindow::showThemePopover()
                 int index = themeIndex.toInt();
                 tm->setTheme(static_cast<ThemeManager::ThemeType>(index));
                 
-                QString themeText;
-                switch (index) {
-                    case 0: themeText = tr("浅色主题"); break;
-                    case 1: themeText = tr("深色主题"); break;
-                    case 2: themeText = tr("蓝色主题"); break;
-                    case 3: themeText = tr("绿色主题"); break;
+                if (themeButton) {
+                    QString themeText;
+                    switch (index) {
+                        case 0: themeText = tr("浅色主题"); break;
+                        case 1: themeText = tr("深色主题"); break;
+                        case 2: themeText = tr("蓝色主题"); break;
+                        case 3: themeText = tr("绿色主题"); break;
+                    }
+                    themeButton->setText(themeText + " ▼");
                 }
-                themeButton->setText(themeText + " ▼");
             }
-            hidePopovers();
+            // 不需要手动调用hidePopovers，弹窗会自动关闭
         });
     
-    // 定位弹窗到按钮下方
-    QPoint buttonPos = themeButton->mapToGlobal(QPoint(0, themeButton->height()));
-    themePopover->move(buttonPos);
-    themePopover->show();
+    if (themePopover && themeButton) {
+        // 定位弹窗到按钮下方
+        QPoint buttonPos = themeButton->mapToGlobal(QPoint(0, themeButton->height()));
+        themePopover->move(buttonPos);
+        themePopover->show();
+    }
 }
 
 void MainUIWindow::hidePopovers()
 {
+    // 使用QPointer的安全检查，避免访问已删除的对象
     if (languagePopover) {
-        languagePopover->hide();
-        languagePopover->deleteLater();
-        languagePopover = nullptr;
+        languagePopover->close(); // 使用close()而不是hide()
+        languagePopover = nullptr; // 不调用deleteLater，让Qt自动管理
     }
     
     if (themePopover) {
-        themePopover->hide();
-        themePopover->deleteLater();
-        themePopover = nullptr;
+        themePopover->close(); // 使用close()而不是hide()
+        themePopover = nullptr; // 不调用deleteLater，让Qt自动管理
     }
 }
 
 QWidget* MainUIWindow::createPopover(const QStringList &items, const QStringList &values, 
                                    const QString &currentValue, std::function<void(const QString&)> onSelect)
 {
-    QWidget *popover = new QWidget(this);
+    QWidget *popover = new QWidget(nullptr); // 不设置父对象，让它作为独立窗口
     popover->setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
-    popover->setAttribute(Qt::WA_DeleteOnClose);
+    popover->setAttribute(Qt::WA_DeleteOnClose, true); // 关闭时自动删除
     
     // 设置弹窗样式
     ThemeManager *theme = ThemeManager::instance();
@@ -1624,8 +1633,12 @@ QWidget* MainUIWindow::createPopover(const QStringList &items, const QStringList
             ).arg(theme->colors().PRIMARY_LIGHT).arg(theme->colors().PRIMARY));
         }
         
-        connect(item, &QPushButton::clicked, [onSelect, values, i]() {
+        // 连接点击事件，确保在回调中弹窗仍然有效
+        connect(item, &QPushButton::clicked, [onSelect, values, i, popover]() {
             onSelect(values[i]);
+            if (popover) {
+                popover->close(); // 关闭弹窗
+            }
         });
         
         layout->addWidget(item);
