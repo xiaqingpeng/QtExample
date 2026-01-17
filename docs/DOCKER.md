@@ -24,7 +24,7 @@ docker-compose up -d
 docker-compose -f docker-compose.x11.yml up -d
 
 # 或使用 offscreen 模式（显式指定）
-docker-compose -f docker-compose.offscreen.yml up -d
+docker-compose up -d  # 默认配置已经是 offscreen 模式
 ```
 
 ### 2. 运行程序
@@ -116,7 +116,8 @@ Linux 用户通常不需要额外配置，直接使用即可。
 
 **使用方法**：
 ```bash
-docker-compose -f docker-compose.offscreen.yml up -d
+# 默认配置已经是 offscreen 模式
+docker-compose up -d
 ./run-app-offscreen.sh
 ```
 
@@ -244,13 +245,17 @@ docker-compose down
 ./docker-build-and-run.sh
 ```
 
-### 仅构建
+### 仅构建镜像
 
 ```bash
-# 构建 Docker 镜像
+# 构建 Docker 镜像（不编译）
 docker-compose build qt-dev
+```
 
-# 在容器中编译
+### 在容器中编译
+
+```bash
+# 进入容器并编译
 docker-compose run --rm qt-dev bash -c "cd /workspace/build && cmake .. && make -j\$(nproc)"
 ```
 

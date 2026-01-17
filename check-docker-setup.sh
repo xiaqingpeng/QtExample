@@ -30,7 +30,7 @@ if docker run --rm -v "$CURRENT_PATH:/test" alpine ls /test &> /dev/null; then
     echo "✅ 文件共享配置正确！"
     echo ""
     echo "🚀 可以开始使用 Docker 了："
-    echo "   ./build-docker-linux.sh"
+    echo "   ./docker-build-and-run.sh"
 else
     echo "❌ 文件共享配置有问题"
     echo ""

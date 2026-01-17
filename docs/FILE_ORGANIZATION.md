@@ -4,7 +4,7 @@
 
 ## 📋 整理总结
 
-### ✅ 已删除的重复文件（8个）
+### ✅ 已删除的重复文件（10个）
 
 #### Docker 相关文档（7个）
 - `README-DOCKER.md` - 已整合到 `docs/DOCKER.md`
@@ -15,8 +15,12 @@
 - `DOCKER-字体配置说明.md` - 已整合到 `docs/DOCKER.md`
 - `配置Docker文件共享-步骤.md` - 已整合到 `docs/DOCKER.md`
 
-#### 脚本文件（1个）
+#### 脚本文件（2个）
 - `run-app.sh` - 功能已整合到 `quick-run.sh`
+- `build-docker-linux.sh` - 功能已整合到 `docker-build-and-run.sh`
+
+#### YAML 配置文件（1个）
+- `docker-compose.offscreen.yml` - 与默认配置重复，已删除
 
 ### ✅ 新创建的统一文档
 
@@ -48,8 +52,7 @@
 - `run-app-offscreen.sh` - Offscreen 模式（无图形界面）
 
 #### 构建脚本
-- `build-docker-linux.sh` - Docker Linux 构建脚本
-- `docker-build-and-run.sh` - Docker 构建并运行脚本
+- `docker-build-and-run.sh` - Docker 构建并运行脚本（整合了原 build-docker-linux.sh 的功能）
 
 #### 工具脚本
 - `check-docker-setup.sh` - 检查 Docker 配置
@@ -64,7 +67,6 @@
 #### Docker Compose 配置
 - `docker-compose.yml` - 主配置（默认 offscreen 模式）
 - `docker-compose.x11.yml` - X11 图形界面配置
-- `docker-compose.offscreen.yml` - Offscreen 模式配置
 - `docker-compose.cn.yml` - 中国镜像源配置
 - `docker-compose.yml.template` - 通用模板
 
