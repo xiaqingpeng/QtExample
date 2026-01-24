@@ -1173,22 +1173,31 @@ void MainUIWindow::updateUserInfoSafe()
         }
         
         // 优先使用本地头像
-        if (!localAvatar.isEmpty() && QFileInfo::exists(localAvatar)) {
-            // LOG_DEBUG("Loading local avatar from:" << localAvatar);
-            
-            QPixmap localPixmap(localAvatar);
-            if (!localPixmap.isNull()) {
-                // 为导航栏创建40px的圆形头像
-                QPixmap circularPixmap = createCircularPixmap(localPixmap, 40);
-                if (!circularPixmap.isNull()) {
-                    avatarLabel->setPixmap(circularPixmap);
-                    // LOG_DEBUG("Local avatar loaded successfully for navigation bar");
-                    return; // 使用本地头像，不需要继续
+        if (!localAvatar.isEmpty()) {
+            // 先检查路径是否有效
+            QFileInfo fileInfo(localAvatar);
+            if (fileInfo.exists() && fileInfo.isReadable()) {
+                // LOG_DEBUG("Loading local avatar from:" << localAvatar);
+                
+                QPixmap localPixmap(localAvatar);
+                if (!localPixmap.isNull()) {
+                    // 为导航栏创建40px的圆形头像
+                    QPixmap circularPixmap = createCircularPixmap(localPixmap, 40);
+                    if (!circularPixmap.isNull()) {
+                        avatarLabel->setPixmap(circularPixmap);
+                        // LOG_DEBUG("Local avatar loaded successfully for navigation bar");
+                        return; // 使用本地头像，不需要继续
+                    } else {
+                        // LOG_DEBUG("Failed to create circular pixmap from local avatar");
+                    }
                 } else {
-                    // LOG_DEBUG("Failed to create circular pixmap from local avatar");
+                    // LOG_DEBUG("Failed to load local avatar pixmap");
                 }
             } else {
-                // LOG_DEBUG("Failed to load local avatar pixmap");
+                // 如果路径无效，清除本地头像设置
+                QSettings settings("YourCompany", "QtApp");
+                settings.remove("user/avatar_local");
+                // LOG_DEBUG("Invalid local avatar path, cleared setting");
             }
         }
         
@@ -1322,12 +1331,21 @@ void MainUIWindow::loadNetworkAvatar(const QString &avatarUrl)
                                 // 可选：保存到本地缓存
                                 QSettings settings("YourCompany", "QtApp");
                                 QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-                                QDir().mkpath(cacheDir);
-                                QString localPath = cacheDir + "/avatar_cache.png";
-                                
-                                if (pixmap.save(localPath, "PNG")) {
-                                    settings.setValue("user/avatar_local", localPath);
-                                    // LOG_DEBUG("Avatar cached locally at:" << localPath);
+                                if (cacheDir.isEmpty()) {
+                                    // 如果无法获取缓存目录，使用应用数据目录作为备选
+                                    cacheDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+                                }
+                                if (!cacheDir.isEmpty()) {
+                                    QDir().mkpath(cacheDir);
+                                    QString localPath = cacheDir + "/avatar_cache.png";
+                                    // 确保路径是有效的
+                                    QFileInfo fileInfo(localPath);
+                                    if (fileInfo.dir().exists() && fileInfo.dir().isWritable()) {
+                                        if (pixmap.save(localPath, "PNG")) {
+                                            settings.setValue("user/avatar_local", localPath);
+                                            // LOG_DEBUG("Avatar cached locally at:" << localPath);
+                                        }
+                                    }
                                 }
                             } else {
                                 // LOG_DEBUG("Failed to create circular pixmap from network avatar");
