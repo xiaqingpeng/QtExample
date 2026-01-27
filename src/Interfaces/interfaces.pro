@@ -4,7 +4,7 @@ CONFIG += c++17 staticlib
 CONFIG -= single_module
 
 TEMPLATE = lib
-TARGET = enterpriseinterfaces
+TARGET = Interfaces
 
 HEADERS += \
     INetworkService.h \
