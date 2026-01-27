@@ -1340,7 +1340,8 @@ void MainUIWindow::loadNetworkAvatar(const QString &avatarUrl)
                                     QString localPath = cacheDir + "/avatar_cache.png";
                                     // 确保路径是有效的
                                     QFileInfo fileInfo(localPath);
-                                    if (fileInfo.dir().exists() && fileInfo.dir().isWritable()) {
+                                    QFileInfo dirInfo(fileInfo.dir().path());
+                                    if (fileInfo.dir().exists() && dirInfo.isWritable()) {
                                         if (pixmap.save(localPath, "PNG")) {
                                             settings.setValue("user/avatar_local", localPath);
                                             // LOG_DEBUG("Avatar cached locally at:" << localPath);
