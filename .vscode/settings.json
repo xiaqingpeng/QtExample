@@ -1,0 +1,6 @@
+{
+  "cmake.preferredGenerators": ["Unix Makefiles"],
+  "cmake.configureSettings": {
+    "CMAKE_MAKE_PROGRAM": "/usr/local/bin/ninja"
+  }
+}
