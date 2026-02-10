@@ -34,10 +34,10 @@
 
 MainUIWindow::MainUIWindow(QWidget *parent) : QWidget(parent)
     , appTitle(nullptr)
-    , m_networkService(nullptr)
-    , m_authService(nullptr)
     , themePopover(nullptr)
     , languagePopover(nullptr)
+    , m_networkService(nullptr)
+    , m_authService(nullptr)
 {
     setWindowTitle(tr("Qt UI控件综合示例"));
     resize(1200, 800);

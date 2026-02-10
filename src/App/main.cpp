@@ -37,8 +37,7 @@ void initializeEnterpriseServices(Application* app)
 // 检测并返回最佳字体族
 QString getBestFontFamily()
 {
-    QFontDatabase fontDb;
-    QStringList availableFamilies = fontDb.families();
+    QStringList availableFamilies = QFontDatabase::families();
     
 #ifdef Q_OS_MACOS
     // macOS 优先使用 PingFang SC（更现代的中文字体）
@@ -125,9 +124,8 @@ int main(int argc, char *argv[])
     
     // ========== 跨平台 UI 优化配置 ==========
     
-    // 1. 启用高 DPI 支持（必须在创建 QApplication 后立即设置）
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
-    QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
+    // 1. 启用高 DPI 支持（Qt6 中已默认启用，但保留设置以确保兼容性）
+    // 注意：Qt6 中 AA_EnableHighDpiScaling 和 AA_UseHighDpiPixmaps 已弃用，高 DPI 总是启用
     QApplication::setAttribute(Qt::AA_UseStyleSheetPropagationInWidgetStyles, true);
     
     // 2. 设置平台原生样式（必须在设置字体之前）
@@ -195,8 +193,7 @@ int main(int argc, char *argv[])
     // 5. 平台特定的字体替换优化
 #ifdef Q_OS_LINUX
     // Linux 上为常见字体设置替换
-    QFontDatabase fontDb;
-    if (fontDb.families().contains("sans-serif")) {
+    if (QFontDatabase::families().contains("sans-serif")) {
         QFont::insertSubstitution("sans-serif", bestFontFamily);
     }
 #endif

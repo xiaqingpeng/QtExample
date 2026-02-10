@@ -78,8 +78,9 @@ ContentTab::ContentTab(QWidget *parent)
         settings->setAttribute(QWebEngineSettings::ErrorPageEnabled, true);
         
         // 连接所有相关信号，用于调试
-        connect(webEngineView->page(), &QWebEnginePage::loadStarted, this, [webEngineView]() {
-            // qDebug() << "[ContentTab] Page load started:" << webEngineView->url().toString();
+        connect(webEngineView->page(), &QWebEnginePage::loadStarted, this, [this]() {
+            Q_UNUSED(this)
+            // qDebug() << "[ContentTab] Page load started";
         });
     }
 #endif

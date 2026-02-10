@@ -81,6 +81,10 @@ QFuture<QJsonObject> NetworkService::deleteResource(const QString& url)
 
 QFuture<QJsonObject> NetworkService::uploadFile(const QString& url, const QString& filePath, const QString& fieldName)
 {
+    Q_UNUSED(url)
+    Q_UNUSED(filePath)
+    Q_UNUSED(fieldName)
+    
     // 简化实现
     auto promise = std::make_shared<QPromise<QJsonObject>>();
     promise->start();

@@ -51,6 +51,9 @@ QFuture<AuthResult> AuthenticationService::login(const QString& email, const QSt
 
 QFuture<AuthResult> AuthenticationService::registerUser(const UserInfo& userInfo, const QString& password)
 {
+    Q_UNUSED(userInfo)
+    Q_UNUSED(password)
+    
     QPromise<AuthResult> promise;
     promise.start();
     
@@ -108,6 +111,9 @@ QFuture<AuthResult> AuthenticationService::refreshToken()
 
 QFuture<AuthResult> AuthenticationService::changePassword(const QString& oldPassword, const QString& newPassword)
 {
+    Q_UNUSED(oldPassword)
+    Q_UNUSED(newPassword)
+    
     QPromise<AuthResult> promise;
     promise.start();
     
@@ -123,6 +129,8 @@ QFuture<AuthResult> AuthenticationService::changePassword(const QString& oldPass
 
 QFuture<AuthResult> AuthenticationService::resetPassword(const QString& email)
 {
+    Q_UNUSED(email)
+    
     QPromise<AuthResult> promise;
     promise.start();
     
