@@ -7,10 +7,12 @@ TEMPLATE = lib
 TARGET = network
 
 HEADERS += \
-    networkmanager.h
+    networkmanager.h \
+    apiService.h \
 
 SOURCES += \
-    networkmanager.cpp
+    networkmanager.cpp \
+     apiService.cpp \
 
 # 包含路径
 INCLUDEPATH += ../..

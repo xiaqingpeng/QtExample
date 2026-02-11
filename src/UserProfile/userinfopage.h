@@ -13,6 +13,7 @@
 #include <QLineEdit>
 #include <QRegularExpressionValidator>
 #include "networkmanager.h"
+#include "../Network/apiService.h"
 #include "../Analytics/analytics.h"
 
 class UserInfoPage : public QWidget
@@ -73,6 +74,7 @@ private:
     
     // 网络请求
     NetworkManager *m_networkManager;
+    ApiService *m_apiService;
 };
 
 #endif // USERINFOPAGE_H

@@ -32,6 +32,7 @@
 UserInfoPage::UserInfoPage(QWidget *parent)
     : QWidget(parent)
     , m_networkManager(new NetworkManager(this))
+    , m_apiService(new ApiService(m_networkManager, this))
 {
     // 设置用户ID（从设置中获取）
     QSettings settings("YourCompany", "QtApp");
@@ -965,7 +966,7 @@ void UserInfoPage::uploadAvatar(const QString &filePath)
                 QJsonObject profileData;
                 profileData["avatar"] = imageUrl;
 
-                m_networkManager->updateUserProfile(userId, profileData,
+                m_apiService->updateUserProfile(userId, profileData,
                     [](const QJsonObject &response) {
                         Q_UNUSED(response);
                         // 用户资料更新成功
@@ -1061,7 +1062,7 @@ void UserInfoPage::onAvatarUploadFinished(QNetworkReply *reply)
         QJsonObject profileData;
         profileData["avatar"] = imageUrl;
 
-        m_networkManager->updateUserProfile(userId, profileData,
+        m_apiService->updateUserProfile(userId, profileData,
             [](const QJsonObject &response) {
                 Q_UNUSED(response);
                 // 用户资料更新成功

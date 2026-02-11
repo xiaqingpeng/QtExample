@@ -1,5 +1,6 @@
 #include "reportstab.h"
 #include "../Network/networkmanager.h"
+#include "../Network/apiService.h"
 #include "common.h"
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -240,10 +241,11 @@ void ReportsTab::refreshReports()
 void ReportsTab::loadActivityStats()
 {
     NetworkManager *networkManager = new NetworkManager(this);
+    ApiService *apiService = new ApiService(networkManager, this);
     QString startDate = m_startDateEdit->date().toString("yyyy-MM-dd");
     QString endDate = m_endDateEdit->date().toString("yyyy-MM-dd");
     
-    networkManager->getActivityStats(startDate, endDate,
+    apiService->getActivityStats(startDate, endDate,
         [this](const QJsonObject &response) {
             updateKeyMetricsDisplay(response["data"].toObject());
         },
@@ -253,7 +255,8 @@ void ReportsTab::loadActivityStats()
     
     // 加载事件统计以获取总事件数
     networkManager = new NetworkManager(this);
-    networkManager->getEventStats(startDate, endDate,
+    ApiService *apiService2 = new ApiService(networkManager, this);
+    apiService2->getEventStats(startDate, endDate,
         [this](const QJsonObject &response) {
             QJsonArray eventStats = response["data"].toArray();
             int totalEvents = 0;
@@ -271,8 +274,9 @@ void ReportsTab::loadActivityStats()
 void ReportsTab::loadRetentionStats()
 {
     NetworkManager *networkManager = new NetworkManager(this);
+    ApiService *apiService = new ApiService(networkManager, this);
     
-    networkManager->getRetentionStats(
+    apiService->getRetentionStats(
         [this](const QJsonObject &response) {
            // // LOG_DEBUG() << "留存率API返回数据:" << QJsonDocument(response).toJson(QJsonDocument::Compact);
             QJsonObject data = response["data"].toObject();
@@ -306,10 +310,11 @@ void ReportsTab::loadRetentionStats()
 void ReportsTab::loadPageViewStats()
 {
     NetworkManager *networkManager = new NetworkManager(this);
+    ApiService *apiService = new ApiService(networkManager, this);
     QString startDate = m_startDateEdit->date().toString("yyyy-MM-dd");
     QString endDate = m_endDateEdit->date().toString("yyyy-MM-dd");
     
-    networkManager->getPageViewStats(startDate, endDate,
+    apiService->getPageViewStats(startDate, endDate,
         [this](const QJsonObject &response) {
             QJsonArray stats = response["data"].toArray();
             updateTopPagesTable(stats);
@@ -322,10 +327,11 @@ void ReportsTab::loadPageViewStats()
 void ReportsTab::loadEventStats()
 {
     NetworkManager *networkManager = new NetworkManager(this);
+    ApiService *apiService = new ApiService(networkManager, this);
     QString startDate = m_startDateEdit->date().toString("yyyy-MM-dd");
     QString endDate = m_endDateEdit->date().toString("yyyy-MM-dd");
     
-    networkManager->getEventStats(startDate, endDate,
+    apiService->getEventStats(startDate, endDate,
         [this](const QJsonObject &response) {
             QJsonArray stats = response["data"].toArray();
             updateTopEventsTable(stats);
@@ -338,6 +344,7 @@ void ReportsTab::loadEventStats()
 void ReportsTab::loadTrendAnalysis()
 {
     NetworkManager *networkManager = new NetworkManager(this);
+    ApiService *apiService = new ApiService(networkManager, this);
     QString startDate = m_startDateEdit->date().toString("yyyy-MM-dd");
     QString endDate = m_endDateEdit->date().toString("yyyy-MM-dd");
     QString reportType = m_reportTypeCombo->currentData().toString();
@@ -363,7 +370,7 @@ void ReportsTab::loadTrendAnalysis()
     }
     
     // 调用统一的trends接口
-    networkManager->getTrendAnalysis(metric, startDate, endDate,
+    apiService->getTrendAnalysis(metric, startDate, endDate,
         [this, title, metric](const QJsonObject &response) {
             QJsonArray trendData = response["data"].toArray();
             
@@ -424,10 +431,11 @@ void ReportsTab::loadTrendAnalysis()
 void ReportsTab::loadTopPages()
 {
     NetworkManager *networkManager = new NetworkManager(this);
+    ApiService *apiService = new ApiService(networkManager, this);
     QString startDate = m_startDateEdit->date().toString("yyyy-MM-dd");
     QString endDate = m_endDateEdit->date().toString("yyyy-MM-dd");
     
-    networkManager->getTopPages(startDate, endDate, 10,
+    apiService->getTopPages(startDate, endDate, 10,
         [this](const QJsonObject &response) {
             QJsonArray pages = response["data"].toArray();
             updateTopPagesTable(pages);
@@ -440,10 +448,11 @@ void ReportsTab::loadTopPages()
 void ReportsTab::loadTopEvents()
 {
     NetworkManager *networkManager = new NetworkManager(this);
+    ApiService *apiService = new ApiService(networkManager, this);
     QString startDate = m_startDateEdit->date().toString("yyyy-MM-dd");
     QString endDate = m_endDateEdit->date().toString("yyyy-MM-dd");
     
-    networkManager->getTopEvents(startDate, endDate, 10,
+    apiService->getTopEvents(startDate, endDate, 10,
         [this](const QJsonObject &response) {
             QJsonArray events = response["data"].toArray();
             updateTopEventsTable(events);
@@ -456,8 +465,9 @@ void ReportsTab::loadTopEvents()
 void ReportsTab::loadTopUsers()
 {
     NetworkManager *networkManager = new NetworkManager(this);
+    ApiService *apiService = new ApiService(networkManager, this);
     
-    networkManager->getTopUsers(1, 10,
+    apiService->getTopUsers(1, 10,
         [this](const QJsonObject &response) {
             // 处理活跃用户API响应
     QJsonObject data = response["data"].toObject();
@@ -502,8 +512,9 @@ void ReportsTab::loadTopUsers()
 void ReportsTab::loadRealTimeStats()
 {
     NetworkManager *networkManager = new NetworkManager(this);
+    ApiService *apiService = new ApiService(networkManager, this);
     
-    networkManager->getRealTimeStats(
+    apiService->getRealTimeStats(
         [this](const QJsonObject &response) {
             updateRealTimeStats(response["data"].toArray());
         },
@@ -1479,4 +1490,3 @@ QWidget *ReportsTab::createRealTimeStatsWidget()
     
     return widget;
 }
-

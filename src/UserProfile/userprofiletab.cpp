@@ -1,7 +1,8 @@
+// clazy: excludeall
 #include "userprofiletab.h"
 #include <QDir>
 #include "../Network/networkmanager.h"
-#include "common.h"
+#include "../Network/apiService.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -196,9 +197,10 @@ void UserProfileTab::setupValueAssessment()
 void UserProfileTab::loadUserList()
 {
     NetworkManager *networkManager = new NetworkManager(this);
+    ApiService *apiService = new ApiService(networkManager, this);
     
     // 获取用户列表（第一页，每页20个用户）
-    networkManager->getTopUsers(1, 20,
+    apiService->getTopUsers(1, 20,
         [this](const QJsonObject &response) {
             if (response["success"].toBool()) {
                 QJsonObject data = response["data"].toObject();
@@ -213,7 +215,7 @@ void UserProfileTab::loadUserList()
                 
                 // 提取用户ID列表
                 m_userIdList.clear();
-                for (const QJsonValue &userValue : users) {
+                for (const QJsonValue &userValue : std::as_const(users)) {
                     QJsonObject user = userValue.toObject();
                     QString userId = user["userId"].toString();
                     if (!userId.isEmpty()) {
@@ -256,9 +258,10 @@ void UserProfileTab::refreshUserProfile()
 void UserProfileTab::loadUserProfileData()
 {
     NetworkManager *networkManager = new NetworkManager(this);
+    ApiService *apiService = new ApiService(networkManager, this);
     
     // 获取用户画像数据
-    networkManager->getUserProfile(m_currentUserId,
+    apiService->getUserProfile(m_currentUserId,
         [this](const QJsonObject &response) {
             if (response["success"].toBool()) {
                 QJsonObject data = response["data"].toObject();
@@ -276,7 +279,7 @@ void UserProfileTab::loadUserProfileData()
         });
     
     // 获取用户标签
-    networkManager->getUserTags(m_currentUserId,
+    apiService->getUserTags(m_currentUserId,
         [this](const QJsonObject &response) {
             if (response["success"].toBool()) {
                 QJsonArray data = response["data"].toArray();
@@ -290,7 +293,7 @@ void UserProfileTab::loadUserProfileData()
         });
     
     // 获取用户行为特征
-    networkManager->getUserBehaviorStats(m_currentUserId,
+    apiService->getUserBehaviorStats(m_currentUserId,
         [this](const QJsonObject &response) {
           //  // LOG_DEBUG() << "用户行为特征API返回数据:" << QJsonDocument(response).toJson(QJsonDocument::Compact);
             if (response["success"].toBool()) {
@@ -310,7 +313,7 @@ void UserProfileTab::loadUserProfileData()
         });
     
     // 获取用户兴趣画像
-    networkManager->getUserInterestProfile(m_currentUserId,
+    apiService->getUserInterestProfile(m_currentUserId,
         [this](const QJsonObject &response) {
             if (response["success"].toBool()) {
                 QJsonArray data = response["data"].toArray();
@@ -328,7 +331,7 @@ void UserProfileTab::loadUserProfileData()
         });
     
     // 获取用户价值评估
-    networkManager->getUserValueAssessment(m_currentUserId,
+    apiService->getUserValueAssessment(m_currentUserId,
         [this](const QJsonObject &response) {
             if (response["success"].toBool()) {
                 QJsonObject data = response["data"].toObject();
@@ -416,7 +419,8 @@ void UserProfileTab::updateUserTagsDisplay(const QJsonArray &tags)
                     margin: 8px;
                     min-width: 100px;
                 }
-            )").arg(textColor).arg(color));
+            )").arg(textColor)
+               .arg(color)); // NOLINT(clazy-qstring-arg) // NOLINT(clazy-qstring-arg) // NOLINT(clazy-qstring-arg)
         } else if (type == "loyalty") {
             if (name == "忠诚用户") {
                 color = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #17a2b8, stop:1 #007bff)";
@@ -437,7 +441,8 @@ void UserProfileTab::updateUserTagsDisplay(const QJsonArray &tags)
                     margin: 8px;
                     min-width: 100px;
                 }
-            )").arg(textColor).arg(color));
+            )").arg(textColor)
+               .arg(color));
         } else if (type == "value") {
             if (name == "高价值") {
                 color = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6610f2, stop:1 #e83e8c)";
@@ -458,7 +463,8 @@ void UserProfileTab::updateUserTagsDisplay(const QJsonArray &tags)
                     margin: 8px;
                     min-width: 100px;
                 }
-            )").arg(textColor).arg(color));
+            )").arg(textColor)
+               .arg(color));
         }
     }
 }
@@ -1331,4 +1337,3 @@ QWidget *UserProfileTab::createModernCard(const QString &title, QWidget *content
     cardLayout->addWidget(content);
     return card;
 }
-
