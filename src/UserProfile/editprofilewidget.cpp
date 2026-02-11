@@ -61,7 +61,9 @@ QHBoxLayout* EditProfileWidget::createAvatarSection()
     if (avatarPixmap.isNull()) {
         avatarPixmap = createPlaceholderAvatar(AVATAR_SIZE);
     }
-    setupAvatarLabel(m_avatarLabel, roundAvatar(avatarPixmap, AVATAR_SIZE), AVATAR_SIZE);
+    // 先生成圆形头像，再统一设置到 QLabel 上
+    QPixmap roundedAvatar = roundAvatar(avatarPixmap, AVATAR_SIZE);
+    setupAvatarLabel(m_avatarLabel, roundedAvatar, AVATAR_SIZE);
     
     // 计算头像位置（必须在容器设置大小之后）
     const int avatarX = (AVATAR_CONTAINER_WIDTH - AVATAR_SIZE) / 2;
@@ -79,7 +81,8 @@ QHBoxLayout* EditProfileWidget::createAvatarSection()
     cameraBtn->setFixedSize(CAMERA_BUTTON_SIZE, CAMERA_BUTTON_SIZE);
     cameraBtn->setStyleSheet("QPushButton { border-radius:16px; background-color:#007aff; border: 2px solid white; }");
     
-    setupCameraButton(cameraBtn, avatarContainer, avatarX, avatarY, AVATAR_SIZE);
+    // 基于头像 QLabel 的实际几何信息定位按钮，保证始终在头像正下方居中
+    setupCameraButton(cameraBtn, m_avatarLabel);
     cameraBtn->raise();
     
     // 连接相机按钮信号
@@ -170,16 +173,22 @@ void EditProfileWidget::setupAvatarLabel(QLabel *label, const QPixmap &pixmap, i
     label->setScaledContents(false);
 }
 
-void EditProfileWidget::setupCameraButton(QPushButton *button, QWidget */*parent*/, 
-                                          int avatarX, int avatarY, int avatarSize)
+void EditProfileWidget::setupCameraButton(QPushButton *button, QLabel *avatarLabel)
 {
-    // 计算相机按钮位置：在头像底部边缘居中
-    const int avatarCenterX = avatarX + avatarSize / 2;
-    const int avatarBottomY = avatarY + avatarSize;
-    
-    const int camX = avatarCenterX - CAMERA_BUTTON_SIZE / 2;
-    const int camY = avatarBottomY - CAMERA_BUTTON_SIZE / 2;
-    
+    if (!avatarLabel || !button) {
+        return;
+    }
+
+    // 使用头像 QLabel 的真实几何信息，避免依赖常量计算造成偏移
+    const QRect avatarRect = avatarLabel->geometry();
+
+    const int avatarCenterX = avatarRect.center().x();
+    const int avatarBottomY = avatarRect.bottom();
+
+    // 相机按钮水平居中于头像，垂直放在头像正下方，留一点间距
+    const int camX = avatarCenterX - button->width() / 2;
+    const int camY = avatarBottomY + 4; // 头像底部下方 4px
+
     button->move(camX, camY);
 }
 

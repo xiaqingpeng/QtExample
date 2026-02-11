@@ -27,6 +27,18 @@ TARGET = userprofiletab
 # 添加networkmanager.h的相对路径
 INCLUDEPATH += ..
 
+# 显式添加 Qt 包含路径（用于 IntelliSense）
+INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtCore
+INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtGui
+INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtWidgets
+INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtNetwork
+INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtPrintSupport
+INCLUDEPATH += $$[QT_INSTALL_LIBS]/QtCore.framework/Headers
+INCLUDEPATH += $$[QT_INSTALL_LIBS]/QtGui.framework/Headers
+INCLUDEPATH += $$[QT_INSTALL_LIBS]/QtWidgets.framework/Headers
+INCLUDEPATH += $$[QT_INSTALL_LIBS]/QtNetwork.framework/Headers
+INCLUDEPATH += $$[QT_INSTALL_LIBS]/QtPrintSupport.framework/Headers
+
 # 链接networkmanager库
 LIBS += -L$$OUT_PWD/../networkmanager -lnetworkmanager
 

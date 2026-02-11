@@ -44,7 +44,8 @@ private:
     QPixmap createPlaceholderAvatar(int size);
     QIcon createCameraIcon();
     void setupAvatarLabel(QLabel *label, const QPixmap &pixmap, int size);
-    void setupCameraButton(QPushButton *button, QWidget *parent, int avatarX, int avatarY, int avatarSize);
+    // 根据头像 QLabel 的实际几何信息放置相机按钮，保证始终在头像正下方居中
+    void setupCameraButton(QPushButton *button, QLabel *avatarLabel);
     
     // 常量
     static constexpr int AVATAR_SIZE = 110;
