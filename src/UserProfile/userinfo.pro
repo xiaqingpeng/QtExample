@@ -11,20 +11,22 @@ CONFIG += shared
 TARGET = userinfo
 
 SOURCES += \
-    userinfopage.cpp \
-    ../networkmanager.cpp \
-    ../analytics/analytics.cpp
+    userinfopage.cpp
 
 HEADERS += \
-    userinfopage.h \
-    ../networkmanager.h \
-    ../analytics/analytics.h
+    userinfopage.h
 
-# 包含项目根目录以访问networkmanager.h和analytics.h
-INCLUDEPATH += .. ../analytics ../styles
+# 包含路径
+INCLUDEPATH += .. ../analytics ../styles ../Services
+
+# 链接Services库
+LIBS += -L$$OUT_PWD/../Services -lenterpriseservices
+
+# 链接Analytics库
+LIBS += -L$$OUT_PWD/../Analytics -lanalytics
 
 # 链接styles库 (静态库) - 使用PRE_TARGETDEPS确保构建顺序
-PRE_TARGETDEPS += $$OUT_PWD/../styles/libstyles.a
+PRE_TARGETDEPS += $OUT_PWD/../styles/libstyles.a
 LIBS += -L$$OUT_PWD/../styles -lstyles
 
 # 安装配置

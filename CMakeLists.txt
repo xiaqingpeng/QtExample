@@ -16,13 +16,16 @@ find_package(Qt6 COMPONENTS WebEngineWidgets QUIET)
 
 # 检查WebEngine是否可用，特别处理Windows平台
 set(WEBENGINE_AVAILABLE FALSE)
-if(Qt6WebEngineWidgets_FOUND AND NOT WIN32)
+if(Qt6WebEngineWidgets_FOUND AND NOT WIN32 AND NOT APPLE)
     message(STATUS "Qt WebEngine found - enabling web features")
     set(WEBENGINE_AVAILABLE TRUE)
     add_definitions(-DWEBENGINE_AVAILABLE)
     set(WEBENGINE_LIBRARIES Qt6::WebEngineWidgets)
 elseif(WIN32)
     message(STATUS "Windows platform detected - WebEngine features disabled for compatibility")
+    set(WEBENGINE_LIBRARIES "")
+elseif(APPLE)
+    message(STATUS "macOS platform detected - WebEngine features disabled to avoid GPU crashes")
     set(WEBENGINE_LIBRARIES "")
 else()
     message(WARNING "Qt WebEngine not found - web features will be disabled")
@@ -165,9 +168,6 @@ target_link_libraries(EnterpriseLocalization PRIVATE
 target_include_directories(EnterpriseLocalization PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
-
-# NetworkManager模块
-add_subdirectory(src/Network)
 
 # Styles主题管理模块 - 需要在其他模块之前定义
 qt_add_library(Styles STATIC
@@ -374,7 +374,6 @@ target_include_directories(QTExample PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Analytics
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Styles
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Device
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Network
     ${CMAKE_CURRENT_SOURCE_DIR}/src/UI
     ${CMAKE_CURRENT_SOURCE_DIR}/src/App
 )

@@ -30,8 +30,11 @@ SOURCES += \
 INCLUDEPATH += ../..
 INCLUDEPATH += ../Core
 INCLUDEPATH += ../Services
-INCLUDEPATH += ../Network
+
 INCLUDEPATH += ../Auth
 INCLUDEPATH += ../Analytics
 INCLUDEPATH += ../Styles
 INCLUDEPATH += ../App
+
+# 链接Services库
+LIBS += -L$$OUT_PWD/../Services -lenterpriseservices

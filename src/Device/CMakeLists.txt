@@ -32,7 +32,6 @@ endif()
 
 target_include_directories(Device PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../Core
-    ${CMAKE_CURRENT_SOURCE_DIR}/../Network
     ${CMAKE_CURRENT_SOURCE_DIR}/../Services
     ${CMAKE_CURRENT_SOURCE_DIR}/../Styles
 )

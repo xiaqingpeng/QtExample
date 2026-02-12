@@ -2,6 +2,7 @@
 #include "common.h"
 #include "../Analytics/analytics.h"
 #include "../Styles/theme_manager.h"
+#include "../Services/NetworkService.h"
 #include <QElapsedTimer>
 #include <QHeaderView>
 #include <QMessageBox>
@@ -16,12 +17,14 @@
 
 LogStatsTab::LogStatsTab(QWidget *parent)
     : QWidget(parent)
-    , m_networkManager(new NetworkManager(this))
+    , m_networkManager(nullptr)
     , m_currentPage(1)
     , m_pageSize(10)
     , m_totalPages(1)
     , m_totalRecords(0)
 {
+    NetworkService *networkService = new NetworkService(this);
+    m_networkManager = new NetworkManagerAdapter(networkService, this);
     setupUI();
 }
 

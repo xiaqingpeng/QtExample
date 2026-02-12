@@ -8,13 +8,19 @@ TARGET = enterpriseservices
 
 HEADERS += \
     NetworkService.h \
+    NetworkManagerAdapter.h \
     AuthenticationService.h \
-    AnalyticsService.h
+    AnalyticsService.h \
+    PersistentCookieJar.h \
+    ApiService.h
 
 SOURCES += \
     NetworkService.cpp \
+    NetworkManagerAdapter.cpp \
     AuthenticationService.cpp \
-    AnalyticsService.cpp
+    AnalyticsService.cpp \
+    PersistentCookieJar.cpp \
+    ApiService.cpp
 
 # 包含路径
 INCLUDEPATH += ../..

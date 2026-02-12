@@ -6,7 +6,7 @@
 #include <QJsonObject>
 
 #include "ILoginView.h"
-#include "networkmanager.h"
+#include "../Services/NetworkManagerAdapter.h"
 
 // 登录控制器（MVC 中的 C）：承载登录与自动登录的业务逻辑
 class LoginController : public QObject
@@ -14,7 +14,7 @@ class LoginController : public QObject
     Q_OBJECT
 public:
     explicit LoginController(ILoginView *view,
-                             NetworkManager *networkManager,
+                             NetworkManagerAdapter *networkManager,
                              QObject *parent = nullptr);
 
 public slots:
@@ -29,7 +29,7 @@ signals:
 
 private:
     ILoginView *m_view;               // 由外部（LoginPage）管理生命周期
-    NetworkManager *m_networkManager; // 由外部管理生命周期
+    NetworkManagerAdapter *m_networkManager; // 由外部管理生命周期
 };
 
 #endif // LOGINCONTROLLER_H

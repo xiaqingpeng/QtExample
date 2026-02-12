@@ -16,8 +16,9 @@ CONFIG -= single_module
 # 企业级架构作为标准（移除条件编译）
 # DEFINES += ENTERPRISE_EDITION # 不再需要条件编译
 
-# 设置macOS部署目标版本为14.0，与Qt库版本兼容
-QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
+# 设置macOS部署目标版本
+# 注意：如果 Qt 库是为更高版本构建的，可能需要调整此值
+# QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
 
 # 创建应用程序
 TEMPLATE = app
@@ -42,7 +43,6 @@ LIBS += -L$$OUT_PWD/../Services -lenterpriseservices
 LIBS += -L$$OUT_PWD/../Localization -lenterpriselocalization
 LIBS += -L$$OUT_PWD/../Utils -lutils
 LIBS += -L$$OUT_PWD/../Styles -lstyles
-LIBS += -L$$OUT_PWD/../Network -lnetwork
 LIBS += -L$$OUT_PWD/../Analytics -lanalytics
 LIBS += -L$$OUT_PWD/../Auth -lauth
 LIBS += -L$$OUT_PWD/../UserProfile -luserprofile
@@ -59,7 +59,6 @@ INCLUDEPATH += ../Services
 INCLUDEPATH += ../Localization
 INCLUDEPATH += ../Utils
 INCLUDEPATH += ../Styles
-INCLUDEPATH += ../Network
 INCLUDEPATH += ../Analytics
 INCLUDEPATH += ../Auth
 INCLUDEPATH += ../UserProfile

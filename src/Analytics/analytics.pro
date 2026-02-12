@@ -16,4 +16,3 @@ SOURCES += \
 INCLUDEPATH += ../..
 INCLUDEPATH += ../Core
 INCLUDEPATH += ../Services
-INCLUDEPATH += ../Network

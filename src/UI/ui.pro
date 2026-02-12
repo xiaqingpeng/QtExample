@@ -26,7 +26,7 @@ SOURCES += \
 INCLUDEPATH += ../..
 INCLUDEPATH += ../Core
 INCLUDEPATH += ../Services
-INCLUDEPATH += ../Network
+
 INCLUDEPATH += ../Analytics
 INCLUDEPATH += ../Auth
 INCLUDEPATH += ../UserProfile

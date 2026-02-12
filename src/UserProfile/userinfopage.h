@@ -12,8 +12,9 @@
 #include <QStackedWidget>
 #include <QLineEdit>
 #include <QRegularExpressionValidator>
-#include "networkmanager.h"
-#include "../Network/apiService.h"
+#include "../Services/NetworkService.h"
+#include "../Services/NetworkManagerAdapter.h"
+#include "../Services/ApiService.h"
 #include "../Analytics/analytics.h"
 
 class UserInfoPage : public QWidget
@@ -73,7 +74,7 @@ private:
     QPushButton *m_cancelButton;
     
     // 网络请求
-    NetworkManager *m_networkManager;
+    NetworkManagerAdapter *m_networkManager;
     ApiService *m_apiService;
 };
 

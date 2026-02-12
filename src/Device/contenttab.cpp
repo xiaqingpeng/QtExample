@@ -17,12 +17,13 @@
 #include <QNetworkInterface>
 #include <QHostInfo>
 #include <QDir>
+#include "../Services/NetworkService.h"
 #include "theme_manager.h"
 #include "serverconfigtab.h"
 
 ContentTab::ContentTab(QWidget *parent)
     : QWidget(parent)
-    , m_networkManager(new NetworkManager(this))
+    , m_networkManager(nullptr)
     , m_titleLabel(nullptr)
     , m_webView(nullptr)
     , m_channel(nullptr)
@@ -30,6 +31,9 @@ ContentTab::ContentTab(QWidget *parent)
     , m_pageLoaded(false)
     , m_refreshTimer(new QTimer(this))
 {
+    NetworkService *networkService = new NetworkService(this);
+    m_networkManager = new NetworkManagerAdapter(networkService, this);
+    
     // 检测环境，判断是否应该使用 WebEngine
     // 在容器环境中，完全禁用 WebEngine 以避免段错误
     bool useWebEngine = false;

@@ -11,7 +11,7 @@ const QString ThemeManager::Shadow::XL = "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0
 
 // 字体定义 - 针对不同平台优化
 #ifdef Q_OS_MACOS
-const QString ThemeManager::Typography::FONT_FAMILY = "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif";
+const QString ThemeManager::Typography::FONT_FAMILY = "SF Pro Text, SF Pro Display, Helvetica Neue, Arial, sans-serif";
 #elif defined(Q_OS_WIN)
 const QString ThemeManager::Typography::FONT_FAMILY = "'Segoe UI', 'Microsoft YaHei', Arial, sans-serif";
 #else

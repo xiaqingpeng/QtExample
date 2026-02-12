@@ -1,8 +1,9 @@
 // clazy: excludeall
 #include "userprofiletab.h"
 #include <QDir>
-#include "../Network/networkmanager.h"
-#include "../Network/apiService.h"
+#include "../Services/NetworkService.h"
+#include "../Services/NetworkManagerAdapter.h"
+#include "../Services/ApiService.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -196,7 +197,8 @@ void UserProfileTab::setupValueAssessment()
 
 void UserProfileTab::loadUserList()
 {
-    NetworkManager *networkManager = new NetworkManager(this);
+    NetworkService *networkService = new NetworkService(this);
+    NetworkManagerAdapter *networkManager = new NetworkManagerAdapter(networkService, this);
     ApiService *apiService = new ApiService(networkManager, this);
     
     // 获取用户列表（第一页，每页20个用户）
@@ -257,7 +259,8 @@ void UserProfileTab::refreshUserProfile()
 
 void UserProfileTab::loadUserProfileData()
 {
-    NetworkManager *networkManager = new NetworkManager(this);
+    NetworkService *networkService = new NetworkService(this);
+    NetworkManagerAdapter *networkManager = new NetworkManagerAdapter(networkService, this);
     ApiService *apiService = new ApiService(networkManager, this);
     
     // 获取用户画像数据

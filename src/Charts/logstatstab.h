@@ -9,7 +9,7 @@
 #include <QDateTimeEdit>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include "networkmanager.h"
+#include "../Services/NetworkManagerAdapter.h"
 #include "theme_manager.h"
 
 class LogStatsTab : public QWidget
@@ -53,7 +53,7 @@ private:
     void updatePaginationInfo();
 
     // 网络管理器
-    NetworkManager *m_networkManager;
+    NetworkManagerAdapter *m_networkManager;
 
     // 布局
     QHBoxLayout *m_filterLayout;      // 筛选控件布局

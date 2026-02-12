@@ -21,7 +21,6 @@ target_link_libraries(auth
 target_include_directories(auth PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/src/Network
     ${CMAKE_SOURCE_DIR}/src/Analytics
     ${CMAKE_SOURCE_DIR}/src/App
 )

@@ -9,7 +9,7 @@
 #include <QNetworkReply>
 #include <QCheckBox>
 #include <QEvent>
-#include "networkmanager.h"
+#include "../Services/NetworkManagerAdapter.h"
 #include "ILoginView.h"
 
 // analytics.h 在 loginpage.cpp 中被大量使用，因此需要在头文件中包含
@@ -90,7 +90,7 @@ private:
     QStackedWidget *m_pageStack;
 
     // 网络请求
-    NetworkManager *m_networkManager;
+    NetworkManagerAdapter *m_networkManager;
 
     // 控制器（MVC 中的 C）
     LoginController *m_loginController;

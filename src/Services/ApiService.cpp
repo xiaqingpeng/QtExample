@@ -1,10 +1,10 @@
-#include "apiservice.h"
-#include "networkmanager.h"
+#include "ApiService.h"
+#include "NetworkManagerAdapter.h"
 #include <QDate>
 
-ApiService::ApiService(NetworkManager *networkManager, QObject *parent)
+ApiService::ApiService(NetworkManagerAdapter *networkManager, QObject *parent)
     : QObject(parent)
-    , m_networkManager(networkManager)
+    , m_networkManagerAdapter(networkManager)
 {
 }
 
@@ -12,14 +12,53 @@ ApiService::~ApiService()
 {
 }
 
-// 用户画像API实现
+void ApiService::get(const QString &url,
+                     const SuccessCallback &successCallback,
+                     const ErrorCallback &errorCallback,
+                     const QUrlQuery &queryParams)
+{
+    m_networkManagerAdapter->get(url, successCallback, errorCallback, queryParams);
+}
+
+void ApiService::post(const QString &url,
+                      const QJsonObject &data,
+                      const SuccessCallback &successCallback,
+                      const ErrorCallback &errorCallback)
+{
+    m_networkManagerAdapter->post(url, data, successCallback, errorCallback);
+}
+
+void ApiService::put(const QString &url,
+                     const QJsonObject &data,
+                     const SuccessCallback &successCallback,
+                     const ErrorCallback &errorCallback)
+{
+    m_networkManagerAdapter->put(url, data, successCallback, errorCallback);
+}
+
+void ApiService::deleteResource(const QString &url,
+                                const SuccessCallback &successCallback,
+                                const ErrorCallback &errorCallback)
+{
+    m_networkManagerAdapter->deleteResource(url, successCallback, errorCallback);
+}
+
+void ApiService::uploadFile(const QString &url,
+                             const QString &filePath,
+                             const QString &fileFieldName,
+                             const SuccessCallback &successCallback,
+                             const ErrorCallback &errorCallback)
+{
+    m_networkManagerAdapter->uploadFile(url, filePath, fileFieldName, successCallback, errorCallback);
+}
+
 void ApiService::getUserProfile(const QString &userId,
                                 const SuccessCallback &successCallback,
                                 const ErrorCallback &errorCallback)
 {
     QUrlQuery queryParams;
     queryParams.addQueryItem("userId", userId);
-    m_networkManager->get("/api/analytics/user/profile", successCallback, errorCallback, queryParams);
+    get("/api/analytics/user/profile", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::getUserTags(const QString &userId,
@@ -28,7 +67,7 @@ void ApiService::getUserTags(const QString &userId,
 {
     QUrlQuery queryParams;
     queryParams.addQueryItem("userId", userId);
-    m_networkManager->get("/api/analytics/user/tags", successCallback, errorCallback, queryParams);
+    get("/api/analytics/user/tags", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::getUserBehaviorStats(const QString &userId,
@@ -37,7 +76,7 @@ void ApiService::getUserBehaviorStats(const QString &userId,
 {
     QUrlQuery queryParams;
     queryParams.addQueryItem("userId", userId);
-    m_networkManager->get("/api/analytics/user/behavior", successCallback, errorCallback, queryParams);
+    get("/api/analytics/user/behavior", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::getUserInterestProfile(const QString &userId,
@@ -46,7 +85,7 @@ void ApiService::getUserInterestProfile(const QString &userId,
 {
     QUrlQuery queryParams;
     queryParams.addQueryItem("userId", userId);
-    m_networkManager->get("/api/analytics/user/interest", successCallback, errorCallback, queryParams);
+    get("/api/analytics/user/interest", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::getUserValueAssessment(const QString &userId,
@@ -55,7 +94,7 @@ void ApiService::getUserValueAssessment(const QString &userId,
 {
     QUrlQuery queryParams;
     queryParams.addQueryItem("userId", userId);
-    m_networkManager->get("/api/analytics/user/value", successCallback, errorCallback, queryParams);
+    get("/api/analytics/user/value", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::updateUserProfile(const QString &userId,
@@ -64,10 +103,9 @@ void ApiService::updateUserProfile(const QString &userId,
                                   const ErrorCallback &errorCallback)
 {
     QString url = "/api/user-profile/update/" + userId;
-    m_networkManager->post(url, data, successCallback, errorCallback);
+    post(url, data, successCallback, errorCallback);
 }
 
-// 统计报表API实现
 void ApiService::getActivityStats(const QString &startDate, const QString &endDate,
                                  const SuccessCallback &successCallback,
                                  const ErrorCallback &errorCallback)
@@ -76,7 +114,7 @@ void ApiService::getActivityStats(const QString &startDate, const QString &endDa
     queryParams.addQueryItem("startDate", startDate);
     queryParams.addQueryItem("endDate", endDate);
     
-    m_networkManager->get("/api/analytics/activity", successCallback, errorCallback, queryParams);
+    get("/api/analytics/activity", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::getRetentionStats(const SuccessCallback &successCallback,
@@ -85,7 +123,7 @@ void ApiService::getRetentionStats(const SuccessCallback &successCallback,
     QUrlQuery queryParams;
     queryParams.addQueryItem("days", "7");
     
-    m_networkManager->get("/api/analytics/retention", successCallback, errorCallback, queryParams);
+    get("/api/analytics/retention", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::getPageViewStats(const QString &startDate, const QString &endDate,
@@ -96,7 +134,7 @@ void ApiService::getPageViewStats(const QString &startDate, const QString &endDa
     queryParams.addQueryItem("startDate", startDate);
     queryParams.addQueryItem("endDate", endDate);
     
-    m_networkManager->get("/api/analytics/page-views", successCallback, errorCallback, queryParams);
+    get("/api/analytics/page-views", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::getEventStats(const QString &startDate, const QString &endDate,
@@ -107,7 +145,7 @@ void ApiService::getEventStats(const QString &startDate, const QString &endDate,
     queryParams.addQueryItem("startDate", startDate);
     queryParams.addQueryItem("endDate", endDate);
     
-    m_networkManager->get("/api/analytics/event-stats", successCallback, errorCallback, queryParams);
+    get("/api/analytics/event-stats", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::getTrendAnalysis(const QString &metric, const QString &startDate, const QString &endDate,
@@ -120,7 +158,7 @@ void ApiService::getTrendAnalysis(const QString &metric, const QString &startDat
     queryParams.addQueryItem("metric", metric);
     queryParams.addQueryItem("interval", "day");
     
-    m_networkManager->get("/api/analytics/trends", successCallback, errorCallback, queryParams);
+    get("/api/analytics/trends", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::getTopPages(const QString &startDate, const QString &endDate, int limit,
@@ -132,7 +170,7 @@ void ApiService::getTopPages(const QString &startDate, const QString &endDate, i
     queryParams.addQueryItem("endDate", endDate);
     queryParams.addQueryItem("limit", QString::number(limit));
     
-    m_networkManager->get("/api/analytics/page-views", successCallback, errorCallback, queryParams);
+    get("/api/analytics/page-views", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::getTopEvents(const QString &startDate, const QString &endDate, int limit,
@@ -144,7 +182,7 @@ void ApiService::getTopEvents(const QString &startDate, const QString &endDate, 
     queryParams.addQueryItem("endDate", endDate);
     queryParams.addQueryItem("limit", QString::number(limit));
     
-    m_networkManager->get("/api/analytics/event-stats", successCallback, errorCallback, queryParams);
+    get("/api/analytics/event-stats", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::getTopUsers(int page, int pageSize,
@@ -155,7 +193,7 @@ void ApiService::getTopUsers(int page, int pageSize,
     queryParams.addQueryItem("page", QString::number(page));
     queryParams.addQueryItem("pageSize", QString::number(pageSize));
     
-    m_networkManager->get("/api/analytics/user/list", successCallback, errorCallback, queryParams);
+    get("/api/analytics/user/list", successCallback, errorCallback, queryParams);
 }
 
 void ApiService::getRealTimeStats(const SuccessCallback &successCallback,
@@ -167,5 +205,5 @@ void ApiService::getRealTimeStats(const SuccessCallback &successCallback,
     queryParams.addQueryItem("endDate", today);
     queryParams.addQueryItem("interval", "day");
     
-    m_networkManager->get("/api/analytics/trends", successCallback, errorCallback, queryParams);
+    get("/api/analytics/trends", successCallback, errorCallback, queryParams);
 }

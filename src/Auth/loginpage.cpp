@@ -2,6 +2,7 @@
 #include "LoginController.h"
 #include "../Styles/theme_manager.h"
 #include "../Localization/LocalizationManager.h"
+#include "../Services/NetworkService.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -19,7 +20,8 @@
 
 LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
 {
-    m_networkManager = new NetworkManager(this);
+    NetworkService *networkService = new NetworkService(this);
+    m_networkManager = new NetworkManagerAdapter(networkService, this);
     m_loginController = new LoginController(this, m_networkManager, this);
 
     m_pageStack = new QStackedWidget(this);
@@ -378,12 +380,16 @@ void LoginPage::onLoginClicked()
     m_networkManager->post("http://120.48.95.51:7001/login",
                            json,
                            [this, timer](const QJsonObject &response) {
+        qDebug() << "[LoginPage] Login response received:" << response;
+        
         // 记录登录性能
         qint64 loginTime = timer.elapsed();
         
         // 成功回调
         int code = response["code"].toInt();
         QString msg = response["msg"].toString();
+        
+        qDebug() << "[LoginPage] Code:" << code << "Message:" << msg;
 
         // 处理登录响应
 
@@ -447,6 +453,9 @@ void LoginPage::onLoginClicked()
         m_loginButton->setText(tr("登录"));
     },
     [this, timer](const QString &errorMsg) {
+        qDebug() << "[LoginPage] ========== ERROR CALLBACK STARTED ==========";
+        qDebug() << "[LoginPage] Error callback received:" << errorMsg;
+        
         // 记录登录失败性能
         qint64 loginTime = timer.elapsed();
         

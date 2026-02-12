@@ -19,23 +19,27 @@ QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
 TEMPLATE = lib
 TARGET = echarts
 
-# 添加networkmanager.h和styles的相对路径
+# 添加包含路径
 INCLUDEPATH += ..
 INCLUDEPATH += ../styles
+INCLUDEPATH += ../Services
 
-# 链接networkmanager库和styles库
-LIBS += -L../networkmanager -lnetworkmanager
+# 链接Services库
+LIBS += -L../Services -lenterpriseservices
+
+# 链接Analytics库
+LIBS += -L../Analytics -lanalytics
+
+# 链接styles库
 LIBS += -L../styles -lstyles
 
 SOURCES += \
     echartstab.cpp \
-    logstatstab.cpp \
-    ../analytics/analytics.cpp
+    logstatstab.cpp
 
 HEADERS += \
     echartstab.h \
-    logstatstab.h \
-    ../analytics/analytics.h
+    logstatstab.h
 
 # 包含analytics头文件
 INCLUDEPATH += ../analytics

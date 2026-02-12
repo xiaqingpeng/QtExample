@@ -19,9 +19,12 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
     , m_webView(nullptr)
     , m_channel(nullptr)
     , m_bridge(nullptr)
-    , m_networkManager(new NetworkManager(this))
+    , m_networkManager(nullptr)
     , m_refreshTimer(new QTimer(this))
 {
+    NetworkService *networkService = new NetworkService(this);
+    m_networkManager = new NetworkManagerAdapter(networkService, this);
+    
     try {
         // 检测环境，判断是否应该使用 WebEngine
         // 在容器环境中，完全禁用 WebEngine 以避免段错误

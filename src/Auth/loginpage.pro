@@ -12,19 +12,21 @@ TARGET = loginpage
 
 SOURCES += \
     loginpage.cpp \
-    LoginController.cpp \
-    ../networkmanager.cpp \
-    ../analytics/analytics.cpp
+    LoginController.cpp
 
 HEADERS += \
     loginpage.h \
     ILoginView.h \
-    LoginController.h \
-    ../networkmanager.h \
-    ../analytics/analytics.h
+    LoginController.h
 
-# 包含项目根目录以访问networkmanager.h和analytics.h
-INCLUDEPATH += .. ../analytics ../styles
+# 包含路径
+INCLUDEPATH += .. ../analytics ../styles ../Services
+
+# 链接Services库
+LIBS += -L$$OUT_PWD/../Services -lenterpriseservices
+
+# 链接Analytics库
+LIBS += -L$$OUT_PWD/../Analytics -lanalytics
 
 # 链接styles库
 LIBS += -L$$OUT_PWD/../styles -lstyles

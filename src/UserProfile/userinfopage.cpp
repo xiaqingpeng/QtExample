@@ -31,9 +31,13 @@
 
 UserInfoPage::UserInfoPage(QWidget *parent)
     : QWidget(parent)
-    , m_networkManager(new NetworkManager(this))
-    , m_apiService(new ApiService(m_networkManager, this))
+    , m_networkManager(nullptr)
+    , m_apiService(nullptr)
 {
+    NetworkService *networkService = new NetworkService(this);
+    m_networkManager = new NetworkManagerAdapter(networkService, this);
+    m_apiService = new ApiService(m_networkManager, this);
+    
     // 设置用户ID（从设置中获取）
     QSettings settings("YourCompany", "QtApp");
     QString userId = settings.value("user/id", "").toString();

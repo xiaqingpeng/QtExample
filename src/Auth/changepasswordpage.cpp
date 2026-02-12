@@ -1,5 +1,6 @@
 #include "changepasswordpage.h"
 #include "../Styles/theme_manager.h"
+#include "../Services/NetworkService.h"
 #include <QMessageBox>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -10,8 +11,11 @@
 
 ChangePasswordPage::ChangePasswordPage(QWidget *parent)
     : QWidget(parent)
-    , m_networkManager(new NetworkManager(this))
+    , m_networkManager(nullptr)
 {
+    NetworkService *networkService = new NetworkService(this);
+    m_networkManager = new NetworkManagerAdapter(networkService, this);
+    
     // 设置页面背景
     this->setObjectName("changePasswordPage");
     

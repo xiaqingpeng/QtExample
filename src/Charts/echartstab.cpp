@@ -10,7 +10,8 @@
 #include <QWebEngineView>
 #endif
 #include <QFile>
-#include "networkmanager.h"
+#include "../Services/NetworkService.h"
+#include "../Services/NetworkManagerAdapter.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -28,8 +29,11 @@
 
 EChartsTab::EChartsTab(QWidget *parent)
     : QMainWindow(parent)
-    , m_networkManager(new NetworkManager(this))
+    , m_networkManager(nullptr)
 {
+    NetworkService *networkService = new NetworkService(this);
+    m_networkManager = new NetworkManagerAdapter(networkService, this);
+    
     // 1. 设置窗口基本属性
     this->setWindowTitle("Qt + ECharts Demo");
     this->resize(800, 600);

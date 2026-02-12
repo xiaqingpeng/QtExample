@@ -19,11 +19,11 @@ QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
 TEMPLATE = lib
 TARGET = reportstab
 
-# 添加networkmanager.h的相对路径
-INCLUDEPATH += ..
+# 添加包含路径
+INCLUDEPATH += .. ../Services
 
-# 链接networkmanager库
-LIBS += -L$$OUT_PWD/../networkmanager -lnetworkmanager
+# 链接Services库
+LIBS += -L$$OUT_PWD/../Services -lenterpriseservices
 
 SOURCES += \
     reportstab.cpp

@@ -28,8 +28,10 @@ SOURCES += \
 INCLUDEPATH += ../..
 INCLUDEPATH += ../Core
 INCLUDEPATH += ../Services
-INCLUDEPATH += ../Network
 INCLUDEPATH += ../Styles
+
+# 链接Services库
+LIBS += -L$$OUT_PWD/../Services -lenterpriseservices
 
 # 资源文件
 RESOURCES += ../../layoutexamplestab.qrc

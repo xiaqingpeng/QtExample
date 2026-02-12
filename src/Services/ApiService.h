@@ -6,14 +6,14 @@
 #include <functional>
 #include <QUrlQuery>
 
-class NetworkManager;
+class NetworkManagerAdapter;
 
 class ApiService : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ApiService(NetworkManager *networkManager, QObject *parent = nullptr);
+    explicit ApiService(NetworkManagerAdapter *networkManager, QObject *parent = nullptr);
     ~ApiService();
 
     using SuccessCallback = std::function<void(const QJsonObject &)>;
@@ -68,7 +68,28 @@ public:
                          const ErrorCallback &errorCallback = nullptr);
 
 private:
-    NetworkManager *m_networkManager;
+    void get(const QString &url,
+             const SuccessCallback &successCallback,
+             const ErrorCallback &errorCallback,
+             const QUrlQuery &queryParams = QUrlQuery());
+    void post(const QString &url,
+              const QJsonObject &data,
+              const SuccessCallback &successCallback,
+              const ErrorCallback &errorCallback = nullptr);
+    void put(const QString &url,
+             const QJsonObject &data,
+             const SuccessCallback &successCallback,
+             const ErrorCallback &errorCallback = nullptr);
+    void deleteResource(const QString &url,
+                        const SuccessCallback &successCallback,
+                        const ErrorCallback &errorCallback = nullptr);
+    void uploadFile(const QString &url,
+                    const QString &filePath,
+                    const QString &fileFieldName,
+                    const SuccessCallback &successCallback,
+                    const ErrorCallback &errorCallback = nullptr);
+
+    NetworkManagerAdapter *m_networkManagerAdapter;
 };
 
 #endif // APISERVICE_H

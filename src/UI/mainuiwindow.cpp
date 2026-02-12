@@ -892,7 +892,7 @@ QPushButton* MainUIWindow::createSubPageCard(const QString &icon, const QString 
         "QPushButton#subPageCard:hover { "
         "    background-color: #f9fafb; "
         "    border-color: #d1d5db; "
-        "    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); "
+        // "    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); "
         "} "
         "QPushButton#subPageCard:pressed { "
         "    background-color: #f3f4f6; "

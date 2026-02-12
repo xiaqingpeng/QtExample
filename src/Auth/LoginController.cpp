@@ -4,7 +4,7 @@
 #include <QTimer>
 
 LoginController::LoginController(ILoginView *view,
-                                 NetworkManager *networkManager,
+                                 NetworkManagerAdapter *networkManager,
                                  QObject *parent)
     : QObject(parent)
     , m_view(view)
@@ -15,11 +15,14 @@ LoginController::LoginController(ILoginView *view,
 void LoginController::handleLoginRequested()
 {
     if (!m_view || !m_networkManager) {
+       // qDebug() << "[LoginController] View or network manager is null";
         return;
     }
 
     const QString email = m_view->email().trimmed();
     const QString password = m_view->password();
+
+   // qDebug() << "[LoginController] Login attempt for email:" << email;
 
     if (email.isEmpty() || password.isEmpty()) {
         const QString errorMsg = QObject::tr("邮箱和密码不能为空");
@@ -43,9 +46,11 @@ void LoginController::handleLoginRequested()
     json["email"] = email;
     json["password"] = password;
 
+    qDebug() << "[LoginController] Sending login request";
     m_networkManager->post("http://120.48.95.51:7001/login",
                            json,
                            [this, timer, email](const QJsonObject &response) {
+        qDebug() << "[LoginController] Login response received:" << response;
         const qint64 loginTime = timer.elapsed();
 
         const int code = response["code"].toInt();
@@ -100,6 +105,7 @@ void LoginController::handleLoginRequested()
     },
     [this, timer](const QString &errorMsg) {
         const qint64 loginTime = timer.elapsed();
+        qDebug() << "[LoginController] Network error:" << errorMsg;
 
         // 追踪网络错误
         Analytics::SDK::instance()->trackError("network_error", errorMsg, {

@@ -3,11 +3,11 @@ QT       += core gui network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 # WebEngine 模块设为可选
-# Windows平台禁用WebEngine以确保兼容性
-win32 {
-    message("Windows platform detected - WebEngine features disabled for compatibility")
+# Windows和macOS平台禁用WebEngine以确保兼容性
+win32|macx {
+    message("Windows/macOS platform detected - WebEngine features disabled for compatibility")
 } else {
-    # 非Windows平台检查WebEngine可用性
+    # 非Windows/macOS平台检查WebEngine可用性
     qtHaveModule(webenginewidgets) {
         QT += webenginewidgets
         DEFINES += WEBENGINE_AVAILABLE
