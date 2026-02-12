@@ -302,10 +302,6 @@ case $choice in
                 ./quick-build-upload.sh --no-upload
                 ;;
         esac
-        else
-            echo -e "${RED}✗ 错误: quick-build-upload.sh 不存在${NC}"
-            exit 1
-        fi
         ;;
     0)
         echo -e "${YELLOW}退出${NC}"
