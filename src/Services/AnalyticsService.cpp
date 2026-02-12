@@ -1,12 +1,18 @@
 #include "AnalyticsService.h"
-#include <QUuid>
+#include "ApiService.h"
+
+#include <QObject>
+#include <QString>
+#include <QJsonObject>
 #include <QDateTime>
+#include <QUuid>
 #include <QDebug>
 #include <QFutureWatcher>
+#include <QUrlQuery>
 
-AnalyticsService::AnalyticsService(INetworkService* networkService, QObject *parent)
+AnalyticsService::AnalyticsService(ApiService* apiService, QObject *parent)
     : QObject(parent)
-    , m_networkService(networkService)
+    , m_apiService(apiService)
     , m_baseUrl("http://120.48.95.51:7001/api/analytics")
 {
     m_sessionId = generateSessionId();
@@ -24,7 +30,7 @@ void AnalyticsService::trackEvent(const QString& eventName, const QJsonObject& p
     eventData["userId"] = m_userId;
     eventData["sessionId"] = m_sessionId;
     eventData["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-    
+
     sendEvent("/events", eventData);
     emit eventTracked(eventName, properties);
 }
@@ -46,92 +52,94 @@ void AnalyticsService::trackUserAction(const QString& action, const QJsonObject&
 QFuture<QJsonObject> AnalyticsService::getActivityStats(const QString& startDate, const QString& endDate)
 {
     QString url = QString("%1/activity?startDate=%2&endDate=%3")
-                  .arg(m_baseUrl, startDate, endDate);
-    return m_networkService->get(url);
+    .arg(m_baseUrl, startDate, endDate);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 QFuture<QJsonObject> AnalyticsService::getEventStats(const QString& startDate, const QString& endDate)
 {
     QString url = QString("%1/events?startDate=%2&endDate=%3")
-                  .arg(m_baseUrl, startDate, endDate);
-    return m_networkService->get(url);
+    .arg(m_baseUrl, startDate, endDate);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 QFuture<QJsonObject> AnalyticsService::getRetentionStats()
 {
     QString url = QString("%1/retention").arg(m_baseUrl);
-    return m_networkService->get(url);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 QFuture<QJsonObject> AnalyticsService::getPageViewStats(const QString& startDate, const QString& endDate)
 {
     QString url = QString("%1/pageviews?startDate=%2&endDate=%3")
-                  .arg(m_baseUrl, startDate, endDate);
-    return m_networkService->get(url);
+    .arg(m_baseUrl, startDate, endDate);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
-QFuture<QJsonObject> AnalyticsService::getTrendAnalysis(const QString& metric, const QString& startDate, const QString& endDate)
+QFuture<QJsonObject> AnalyticsService::getTrendAnalysis(const QString& metric,
+                                                        const QString& startDate,
+                                                        const QString& endDate)
 {
     QString url = QString("%1/trends?metric=%2&startDate=%3&endDate=%4")
-                  .arg(m_baseUrl, metric, startDate, endDate);
-    return m_networkService->get(url);
+    .arg(m_baseUrl, metric, startDate, endDate);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 QFuture<QJsonObject> AnalyticsService::getTopPages(const QString& startDate, const QString& endDate, int limit)
 {
     QString url = QString("%1/top-pages?startDate=%2&endDate=%3&limit=%4")
-                  .arg(m_baseUrl, startDate, endDate).arg(limit);
-    return m_networkService->get(url);
+    .arg(m_baseUrl, startDate, endDate).arg(limit);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 QFuture<QJsonObject> AnalyticsService::getTopEvents(const QString& startDate, const QString& endDate, int limit)
 {
     QString url = QString("%1/top-events?startDate=%2&endDate=%3&limit=%4")
-                  .arg(m_baseUrl, startDate, endDate).arg(limit);
-    return m_networkService->get(url);
+    .arg(m_baseUrl, startDate, endDate).arg(limit);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 QFuture<QJsonObject> AnalyticsService::getTopUsers(int page, int pageSize)
 {
     QString url = QString("%1/top-users?page=%2&pageSize=%3")
-                  .arg(m_baseUrl).arg(page).arg(pageSize);
-    return m_networkService->get(url);
+    .arg(m_baseUrl).arg(page).arg(pageSize);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 QFuture<QJsonObject> AnalyticsService::getRealTimeStats()
 {
     QString url = QString("%1/realtime").arg(m_baseUrl);
-    return m_networkService->get(url);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 QFuture<QJsonObject> AnalyticsService::getUserProfile(const QString& userId)
 {
     QString url = QString("http://120.48.95.51:7001/api/user-profile/%1").arg(userId);
-    return m_networkService->get(url);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 QFuture<QJsonObject> AnalyticsService::getUserTags(const QString& userId)
 {
     QString url = QString("http://120.48.95.51:7001/api/user-profile/%1/tags").arg(userId);
-    return m_networkService->get(url);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 QFuture<QJsonObject> AnalyticsService::getUserBehaviorStats(const QString& userId)
 {
     QString url = QString("http://120.48.95.51:7001/api/user-profile/%1/behavior").arg(userId);
-    return m_networkService->get(url);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 QFuture<QJsonObject> AnalyticsService::getUserInterestProfile(const QString& userId)
 {
     QString url = QString("http://120.48.95.51:7001/api/user-profile/%1/interests").arg(userId);
-    return m_networkService->get(url);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 QFuture<QJsonObject> AnalyticsService::getUserValueAssessment(const QString& userId)
 {
     QString url = QString("http://120.48.95.51:7001/api/user-profile/%1/value").arg(userId);
-    return m_networkService->get(url);
+    return m_apiService->get(url, QUrlQuery{});
 }
 
 void AnalyticsService::setUserId(const QString& userId)
@@ -147,10 +155,10 @@ void AnalyticsService::setSessionId(const QString& sessionId)
 void AnalyticsService::sendEvent(const QString& endpoint, const QJsonObject& data)
 {
     QString url = m_baseUrl + endpoint;
-    
-    auto future = m_networkService->post(url, data);
-    
-    // 异步处理结果，不阻塞UI
+
+    auto future = m_apiService->post(url, data);
+
+    // 异步处理结果，不阻塞 UI
     auto watcher = new QFutureWatcher<QJsonObject>(this);
     connect(watcher, &QFutureWatcher<QJsonObject>::finished, [watcher]() {
         QJsonObject result = watcher->result();
@@ -159,7 +167,7 @@ void AnalyticsService::sendEvent(const QString& endpoint, const QJsonObject& dat
         }
         watcher->deleteLater();
     });
-    
+
     watcher->setFuture(future);
 }
 
