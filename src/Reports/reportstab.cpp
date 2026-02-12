@@ -1,8 +1,6 @@
 #include "reportstab.h"
-#include "../Services/NetworkService.h"
-#include "../Services/NetworkManagerAdapter.h"
 #include "../Services/ApiService.h"
-#include "common.h"
+#include "../App/common.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>

@@ -1,5 +1,5 @@
 #include "logstatstab.h"
-#include "common.h"
+#include "../App/common.h"
 #include "../Analytics/analytics.h"
 #include "../Styles/theme_manager.h"
 #include "../Services/ApiService.h"

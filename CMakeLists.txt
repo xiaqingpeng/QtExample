@@ -90,10 +90,16 @@ target_include_directories(EnterpriseInterfaces PRIVATE
 qt_add_library(EnterpriseServices STATIC
     src/Services/NetworkService.cpp
     src/Services/NetworkService.h
+    src/Services/NetworkManagerAdapter.cpp
+    src/Services/NetworkManagerAdapter.h
+    src/Services/ApiService.cpp
+    src/Services/ApiService.h
     src/Services/AuthenticationService.cpp
     src/Services/AuthenticationService.h
     src/Services/AnalyticsService.cpp
     src/Services/AnalyticsService.h
+    src/Services/PersistentCookieJar.cpp
+    src/Services/PersistentCookieJar.h
 )
 target_link_libraries(EnterpriseServices PUBLIC
     Qt6::Core
@@ -208,7 +214,7 @@ target_link_libraries(ECharts PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::Network
-    network
+    EnterpriseServices
     analytics
     Styles
     Device
@@ -245,7 +251,7 @@ target_link_libraries(ReportsTab PRIVATE
     Qt6::Widgets
     Qt6::Network
     Qt6::PrintSupport
-    network
+    EnterpriseServices
     Styles
 )
 
@@ -271,19 +277,14 @@ add_subdirectory(src/Analytics)
 add_subdirectory(src/Device)
 
 # 创建库别名以保持向后兼容（在所有库创建后）
-add_library(NetworkManager ALIAS network)
 add_library(LoginPage ALIAS auth)
 add_library(ChangePasswordPage ALIAS auth)
 add_library(UserInfo ALIAS userprofile)
 add_library(UserProfileTab ALIAS userprofile)  # UserProfileTab 是 userprofile 的别名
 add_library(Analytics ALIAS analytics)
 
-# 添加依赖关系，确保 network 先于依赖它的模块构建
+# 添加依赖关系
 # 注意：auth 包含 LoginPage 和 ChangePasswordPage，userprofile 包含 UserInfo
-add_dependencies(auth network)
-add_dependencies(userprofile network)
-add_dependencies(ECharts network)
-add_dependencies(ReportsTab network)
 add_dependencies(auth analytics)
 add_dependencies(userprofile analytics)
 add_dependencies(ECharts analytics)
@@ -344,7 +345,6 @@ target_link_libraries(QTExample PRIVATE
     EnterpriseCore
     EnterpriseInterfaces
     EnterpriseLocalization
-    network
     ECharts
     ReportsTab
     auth
@@ -421,7 +421,7 @@ install(TARGETS QTExample
 )
 
 # 安装模块库
-install(TARGETS network ECharts ReportsTab auth userprofile analytics Styles Device
+install(TARGETS ECharts ReportsTab auth userprofile analytics Styles Device
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

@@ -21,8 +21,7 @@
 #include <QList>
 #include <QDateTimeEdit>
 #include <QDate>
-#include "echartstab.h"
-#include "common.h"
+#include "../App/common.h"
 #include "../Analytics/analytics.h"
 #include "../Styles/theme_manager.h"
 
