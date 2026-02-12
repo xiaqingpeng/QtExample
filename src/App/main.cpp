@@ -5,7 +5,7 @@
 #include <QStyleFactory>
 #include "../Analytics/analytics.h"
 #include "../Core/Application.h"
-#include "../Services/NetworkService.h"
+#include "../Services/ApiService.h"
 #include "../Services/AuthenticationService.h"
 #include "../Services/AnalyticsService.h"
 #include "../Localization/LocalizationManager.h"
@@ -19,17 +19,17 @@ void initializeEnterpriseServices(Application* app)
         return;
     }
 
-    // 注册网络服务
-    auto networkService = new NetworkService(app);
-    networkService->setBaseUrl("http://120.48.95.51:7001");
-    serviceManager->registerService("NetworkService", networkService);
+    // 注册 API 服务
+    auto apiService = new ApiService(app);
+    apiService->setBaseUrl("http://120.48.95.51:7001");
+    serviceManager->registerService("ApiService", apiService);
 
     // 注册认证服务
-    auto authService = new AuthenticationService(networkService, app);
+    auto authService = new AuthenticationService(apiService, app);
     serviceManager->registerService("AuthenticationService", authService);
 
     // 注册分析服务
-    auto analyticsService = new AnalyticsService(networkService, app);
+    auto analyticsService = new AnalyticsService(apiService, app);
     serviceManager->registerService("AnalyticsService", analyticsService);
 
     // qDebug() << "Enterprise services initialized successfully";

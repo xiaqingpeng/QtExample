@@ -11,7 +11,7 @@
 #endif
 #include <QThread>
 #include <QTimer>
-#include "../Services/NetworkManagerAdapter.h"
+#include "../Services/ApiService.h"
 #include "../Styles/theme_manager.h"
 
 class ServerConfigBridge;
@@ -31,7 +31,7 @@ private slots:
     void refreshSystemInfo();
 
 private:
-    NetworkManagerAdapter *m_networkManager;
+    ApiService *m_apiService;
     QLabel *m_titleLabel;
     // 使用 QWidget* 作为基类指针，支持运行时类型检查
     QWidget *m_webView;

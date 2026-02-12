@@ -1,6 +1,6 @@
 #include "changepasswordpage.h"
 #include "../Styles/theme_manager.h"
-#include "../Services/NetworkService.h"
+#include "../Services/ApiService.h"
 #include <QMessageBox>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -11,10 +11,9 @@
 
 ChangePasswordPage::ChangePasswordPage(QWidget *parent)
     : QWidget(parent)
-    , m_networkManager(nullptr)
+    , m_apiService(nullptr)
 {
-    NetworkService *networkService = new NetworkService(this);
-    m_networkManager = new NetworkManagerAdapter(networkService, this);
+    m_apiService = new ApiService(this);
     
     // 设置页面背景
     this->setObjectName("changePasswordPage");
@@ -164,8 +163,8 @@ void ChangePasswordPage::onChangePasswordClicked()
 
     // 发送修改密码请求
 
-    // 使用NetworkManager发送POST请求，自动添加平台识别头、Token和Cookie
-    m_networkManager->post("http://120.48.95.51:7001/user/change-password",
+    // 使用ApiService发送POST请求，自动添加平台识别头、Token和Cookie
+    m_apiService->post("http://120.48.95.51:7001/user/change-password",
                            json,
                            [this](const QJsonObject &response) {
         // 成功回调

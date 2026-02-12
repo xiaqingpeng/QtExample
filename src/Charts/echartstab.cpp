@@ -10,8 +10,7 @@
 #include <QWebEngineView>
 #endif
 #include <QFile>
-#include "../Services/NetworkService.h"
-#include "../Services/NetworkManagerAdapter.h"
+#include "../Services/ApiService.h"
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -29,10 +28,9 @@
 
 EChartsTab::EChartsTab(QWidget *parent)
     : QMainWindow(parent)
-    , m_networkManager(nullptr)
+    , m_apiService(nullptr)
 {
-    NetworkService *networkService = new NetworkService(this);
-    m_networkManager = new NetworkManagerAdapter(networkService, this);
+    m_apiService = new ApiService(this);
     
     // 1. 设置窗口基本属性
     this->setWindowTitle("Qt + ECharts Demo");
@@ -510,7 +508,7 @@ void EChartsTab::fetchApiData()
     queryParams.addQueryItem("pageNum", "1");
     queryParams.addQueryItem("pageSize", "20");  // 减少到20条，对图表展示足够了
     
-    m_networkManager->get(apiUrl, [this, timer](const QJsonObject &rootObj) {
+    m_apiService->get(apiUrl, [this, timer](const QJsonObject &rootObj) {
         // 记录API请求成功性能
         qint64 responseTime = timer.elapsed();
         Analytics::SDK::instance()->trackPerformance("api_response_time", responseTime, {

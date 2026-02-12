@@ -12,6 +12,7 @@
 #include <QWebEngineSettings>
 #include <QWebEnginePage>
 #endif
+#include "../Services/ApiService.h"
 #include "theme_manager.h"
 
 ServerConfigTab::ServerConfigTab(QWidget *parent)
@@ -19,11 +20,10 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
     , m_webView(nullptr)
     , m_channel(nullptr)
     , m_bridge(nullptr)
-    , m_networkManager(nullptr)
+    , m_apiService(nullptr)
     , m_refreshTimer(new QTimer(this))
 {
-    NetworkService *networkService = new NetworkService(this);
-    m_networkManager = new NetworkManagerAdapter(networkService, this);
+    m_apiService = new ApiService(this);
     
     try {
         // 检测环境，判断是否应该使用 WebEngine
@@ -876,7 +876,7 @@ void ServerConfigTab::fetchSystemInfo()
     updateCharts(mockData);
     
     // 同时尝试真实的网络请求
-    m_networkManager->get("/system/info", [this](const QJsonObject &response) {
+    m_apiService->get("/system/info", [this](const QJsonObject &response) {
         // qDebug()() << "[ServerConfigTab] Network response received:" << response;
         if (response["code"].toInt() == 0) {
             QJsonObject data = response["data"].toObject();

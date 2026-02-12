@@ -2,7 +2,7 @@
 #include "common.h"
 #include "../Analytics/analytics.h"
 #include "../Styles/theme_manager.h"
-#include "../Services/NetworkService.h"
+#include "../Services/ApiService.h"
 #include <QElapsedTimer>
 #include <QHeaderView>
 #include <QMessageBox>
@@ -17,14 +17,13 @@
 
 LogStatsTab::LogStatsTab(QWidget *parent)
     : QWidget(parent)
-    , m_networkManager(nullptr)
+    , m_apiService(nullptr)
     , m_currentPage(1)
     , m_pageSize(10)
     , m_totalPages(1)
     , m_totalRecords(0)
 {
-    NetworkService *networkService = new NetworkService(this);
-    m_networkManager = new NetworkManagerAdapter(networkService, this);
+    m_apiService = new ApiService(this);
     setupUI();
 }
 
@@ -334,8 +333,8 @@ void LogStatsTab::fetchLogData()
     // // LOG_DEBUG() << "Fetching log data from:" << apiUrl;
     // // LOG_DEBUG() << "Query params:" << queryParams.toString();
 
-    // 使用NetworkManager发送GET请求
-    m_networkManager->get(apiUrl,
+    // 使用ApiService发送GET请求
+    m_apiService->get(apiUrl,
         [this, timer](const QJsonObject &rootObj) {
             // 记录API请求性能
             qint64 responseTime = timer.elapsed();

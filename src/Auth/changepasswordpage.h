@@ -7,7 +7,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include "../Services/NetworkManagerAdapter.h"
+#include "../Services/ApiService.h"
 
 class ChangePasswordPage : public QWidget
 {
@@ -31,7 +31,7 @@ private:
     QLineEdit *m_newPasswordEdit;
     QLineEdit *m_confirmPasswordEdit;
     QPushButton *m_changePasswordBtn;
-    NetworkManagerAdapter *m_networkManager;
+    ApiService *m_apiService;
 };
 
 #endif // CHANGEPASSWORDPAGE_H

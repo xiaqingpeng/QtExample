@@ -197,9 +197,7 @@ void UserProfileTab::setupValueAssessment()
 
 void UserProfileTab::loadUserList()
 {
-    NetworkService *networkService = new NetworkService(this);
-    NetworkManagerAdapter *networkManager = new NetworkManagerAdapter(networkService, this);
-    ApiService *apiService = new ApiService(networkManager, this);
+    ApiService *apiService = new ApiService(this);
     
     // 获取用户列表（第一页，每页20个用户）
     apiService->getTopUsers(1, 20,
@@ -259,9 +257,7 @@ void UserProfileTab::refreshUserProfile()
 
 void UserProfileTab::loadUserProfileData()
 {
-    NetworkService *networkService = new NetworkService(this);
-    NetworkManagerAdapter *networkManager = new NetworkManagerAdapter(networkService, this);
-    ApiService *apiService = new ApiService(networkManager, this);
+    ApiService *apiService = new ApiService(this);
     
     // 获取用户画像数据
     apiService->getUserProfile(m_currentUserId,

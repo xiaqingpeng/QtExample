@@ -31,12 +31,9 @@
 
 UserInfoPage::UserInfoPage(QWidget *parent)
     : QWidget(parent)
-    , m_networkManager(nullptr)
     , m_apiService(nullptr)
 {
-    NetworkService *networkService = new NetworkService(this);
-    m_networkManager = new NetworkManagerAdapter(networkService, this);
-    m_apiService = new ApiService(m_networkManager, this);
+    m_apiService = new ApiService(this);
     
     // 设置用户ID（从设置中获取）
     QSettings settings("YourCompany", "QtApp");
@@ -917,8 +914,8 @@ void UserInfoPage::uploadAvatar(const QString &filePath)
     }
 
     // 如果需要网络上传，保留原有逻辑
-    if (!m_networkManager) {
-        showError("网络管理器未初始化");
+    if (!m_apiService) {
+        showError("API服务未初始化");
         return;
     }
 
@@ -926,8 +923,8 @@ void UserInfoPage::uploadAvatar(const QString &filePath)
     QElapsedTimer timer;
     timer.start();
 
-    // 使用NetworkManager的uploadFile方法上传头像
-    m_networkManager->uploadFile(
+    // 使用ApiService的uploadFile方法上传头像
+    m_apiService->uploadFile(
         "http://120.48.95.51:7001/api/upload/image",
         filePath,
         "file",

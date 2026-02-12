@@ -17,13 +17,13 @@
 #include <QNetworkInterface>
 #include <QHostInfo>
 #include <QDir>
-#include "../Services/NetworkService.h"
+#include "../Services/ApiService.h"
 #include "theme_manager.h"
 #include "serverconfigtab.h"
 
 ContentTab::ContentTab(QWidget *parent)
     : QWidget(parent)
-    , m_networkManager(nullptr)
+    , m_apiService(nullptr)
     , m_titleLabel(nullptr)
     , m_webView(nullptr)
     , m_channel(nullptr)
@@ -31,8 +31,7 @@ ContentTab::ContentTab(QWidget *parent)
     , m_pageLoaded(false)
     , m_refreshTimer(new QTimer(this))
 {
-    NetworkService *networkService = new NetworkService(this);
-    m_networkManager = new NetworkManagerAdapter(networkService, this);
+    m_apiService = new ApiService(this);
     
     // 检测环境，判断是否应该使用 WebEngine
     // 在容器环境中，完全禁用 WebEngine 以避免段错误
@@ -1400,9 +1399,9 @@ void ContentTab::fetchSystemInfo()
     thread->start();
     
     // 同时尝试从网络获取系统信息
-    if (m_networkManager) {
+    if (m_apiService) {
         // qDebug() << "[ContentTab] Attempting to fetch system info from network...";
-        m_networkManager->get("/system/info", [this](const QJsonObject &response) {
+        m_apiService->get("/system/info", [this](const QJsonObject &response) {
             // qDebug() << "[ContentTab] Network response received:" << response;
             if (response["code"].toInt() == 0) {
                 QJsonObject data = response["data"].toObject();

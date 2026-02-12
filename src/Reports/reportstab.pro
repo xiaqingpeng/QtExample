@@ -13,7 +13,7 @@ qtHaveModule(webenginewidgets) {
 CONFIG += c++17 sdk_no_version_check
 
 # 设置macOS部署目标版本为14.0，与Qt库版本兼容
-QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 27.0
 
 # 创建共享库
 TEMPLATE = lib

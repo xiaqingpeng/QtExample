@@ -2,7 +2,7 @@
 #include "LoginController.h"
 #include "../Styles/theme_manager.h"
 #include "../Localization/LocalizationManager.h"
-#include "../Services/NetworkService.h"
+#include "../Services/ApiService.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -20,9 +20,8 @@
 
 LoginPage::LoginPage(QWidget *parent) : QWidget(parent)
 {
-    NetworkService *networkService = new NetworkService(this);
-    m_networkManager = new NetworkManagerAdapter(networkService, this);
-    m_loginController = new LoginController(this, m_networkManager, this);
+    m_apiService = new ApiService(this);
+    m_loginController = new LoginController(this, m_apiService, this);
 
     m_pageStack = new QStackedWidget(this);
 
@@ -376,8 +375,8 @@ void LoginPage::onLoginClicked()
     json["email"] = email;
     json["password"] = password;
 
-    // 使用NetworkManager发送登录请求，自动添加平台识别头
-    m_networkManager->post("http://120.48.95.51:7001/login",
+    // 使用ApiService发送登录请求，自动添加平台识别头
+    m_apiService->post("http://120.48.95.51:7001/login",
                            json,
                            [this, timer](const QJsonObject &response) {
         qDebug() << "[LoginPage] Login response received:" << response;
@@ -521,8 +520,8 @@ void LoginPage::onRegisterClicked()
     json["password"] = password;
     json["confirmPassword"] = confirmPassword;
 
-    // 使用NetworkManager发送注册请求，自动添加平台识别头
-    m_networkManager->post("http://120.48.95.51:7001/register",
+    // 使用ApiService发送注册请求，自动添加平台识别头
+    m_apiService->post("http://120.48.95.51:7001/register",
                            json,
                            [this, timer](const QJsonObject &response) {
         // 记录注册性能

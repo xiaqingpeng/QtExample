@@ -4,18 +4,18 @@
 #include <QTimer>
 
 LoginController::LoginController(ILoginView *view,
-                                 NetworkManagerAdapter *networkManager,
+                                 ApiService *apiService,
                                  QObject *parent)
     : QObject(parent)
     , m_view(view)
-    , m_networkManager(networkManager)
+    , m_apiService(apiService)
 {
 }
 
 void LoginController::handleLoginRequested()
 {
-    if (!m_view || !m_networkManager) {
-       // qDebug() << "[LoginController] View or network manager is null";
+    if (!m_view || !m_apiService) {
+       // qDebug() << "[LoginController] View or api service is null";
         return;
     }
 
@@ -47,7 +47,7 @@ void LoginController::handleLoginRequested()
     json["password"] = password;
 
     qDebug() << "[LoginController] Sending login request";
-    m_networkManager->post("http://120.48.95.51:7001/login",
+    m_apiService->post("http://120.48.95.51:7001/login",
                            json,
                            [this, timer, email](const QJsonObject &response) {
         qDebug() << "[LoginController] Login response received:" << response;

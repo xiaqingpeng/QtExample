@@ -9,7 +9,7 @@
 #include <QVariant>
 #include <QLabel>
 #include <QTimer>
-#include "../Services/NetworkManagerAdapter.h"
+#include "../Services/ApiService.h"
 #include "theme_manager.h"
 
 class ServerConfigBridge : public QObject
@@ -54,7 +54,7 @@ private:
     QObject *m_channel; // 占位符
 #endif
     ServerConfigBridge *m_bridge;
-    NetworkManagerAdapter *m_networkManager;
+    ApiService *m_apiService;
     QLabel *m_titleLabel;
     QTimer *m_refreshTimer;
     

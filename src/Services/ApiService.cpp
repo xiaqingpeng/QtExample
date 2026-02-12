@@ -1,15 +1,117 @@
 #include "ApiService.h"
 #include "NetworkManagerAdapter.h"
+#include "NetworkService.h"
 #include <QDate>
+#include <QPromise>
 
 ApiService::ApiService(NetworkManagerAdapter *networkManager, QObject *parent)
     : QObject(parent)
     , m_networkManagerAdapter(networkManager)
+    , m_ownsNetworkManager(false)
+    , m_networkService(nullptr)
 {
+}
+
+ApiService::ApiService(QObject *parent)
+    : QObject(parent)
+    , m_networkManagerAdapter(nullptr)
+    , m_ownsNetworkManager(true)
+    , m_networkService(nullptr)
+{
+    m_networkService = new NetworkService(this);
+    m_networkManagerAdapter = new NetworkManagerAdapter(m_networkService, this);
 }
 
 ApiService::~ApiService()
 {
+}
+
+void ApiService::setBaseUrl(const QString &baseUrl)
+{
+    if (m_networkManagerAdapter) {
+        m_networkManagerAdapter->setBaseUrl(baseUrl);
+    }
+}
+
+QFuture<QJsonObject> ApiService::get(const QString& url, const QUrlQuery& params)
+{
+    if (m_networkService) {
+        return m_networkService->get(url, params);
+    }
+    auto promise = std::make_shared<QPromise<QJsonObject>>();
+    promise->start();
+    promise->addResult(QJsonObject{{"error", "Network service not available"}});
+    promise->finish();
+    return promise->future();
+}
+
+QFuture<QJsonObject> ApiService::post(const QString& url, const QJsonObject& data)
+{
+    if (m_networkService) {
+        return m_networkService->post(url, data);
+    }
+    auto promise = std::make_shared<QPromise<QJsonObject>>();
+    promise->start();
+    promise->addResult(QJsonObject{{"error", "Network service not available"}});
+    promise->finish();
+    return promise->future();
+}
+
+QFuture<QJsonObject> ApiService::put(const QString& url, const QJsonObject& data)
+{
+    if (m_networkService) {
+        return m_networkService->put(url, data);
+    }
+    auto promise = std::make_shared<QPromise<QJsonObject>>();
+    promise->start();
+    promise->addResult(QJsonObject{{"error", "Network service not available"}});
+    promise->finish();
+    return promise->future();
+}
+
+QFuture<QJsonObject> ApiService::deleteResource(const QString& url)
+{
+    if (m_networkService) {
+        return m_networkService->deleteResource(url);
+    }
+    auto promise = std::make_shared<QPromise<QJsonObject>>();
+    promise->start();
+    promise->addResult(QJsonObject{{"error", "Network service not available"}});
+    promise->finish();
+    return promise->future();
+}
+
+QFuture<QJsonObject> ApiService::uploadFile(const QString& url, const QString& filePath, const QString& fieldName)
+{
+    if (m_networkService) {
+        return m_networkService->uploadFile(url, filePath, fieldName);
+    }
+    auto promise = std::make_shared<QPromise<QJsonObject>>();
+    promise->start();
+    promise->addResult(QJsonObject{{"error", "Network service not available"}});
+    promise->finish();
+    return promise->future();
+}
+
+void ApiService::setDefaultHeaders(const QHash<QString, QString>& headers)
+{
+    if (m_networkService) {
+        m_networkService->setDefaultHeaders(headers);
+    }
+}
+
+void ApiService::setTimeout(int timeoutMs)
+{
+    if (m_networkService) {
+        m_networkService->setTimeout(timeoutMs);
+    }
+}
+
+void ApiService::setRetryPolicy(int maxRetries, int delayMs)
+{
+    if (m_networkService) {
+        m_networkService->setRetryPolicy(maxRetries, delayMs);
+    }
 }
 
 void ApiService::get(const QString &url,

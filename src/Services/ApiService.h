@@ -1,6 +1,7 @@
 #ifndef APISERVICE_H
 #define APISERVICE_H
 
+#include "../Interfaces/INetworkService.h"
 #include <QObject>
 #include <QJsonObject>
 #include <functional>
@@ -8,16 +9,30 @@
 
 class NetworkManagerAdapter;
 
-class ApiService : public QObject
+class ApiService : public QObject, public INetworkService
 {
     Q_OBJECT
+    Q_INTERFACES(INetworkService)
 
 public:
     explicit ApiService(NetworkManagerAdapter *networkManager, QObject *parent = nullptr);
+    explicit ApiService(QObject *parent = nullptr);
     ~ApiService();
 
     using SuccessCallback = std::function<void(const QJsonObject &)>;
     using ErrorCallback = std::function<void(const QString &)>;
+
+    void setBaseUrl(const QString &baseUrl);
+
+    // INetworkService 接口实现（返回 QFuture）
+    QFuture<QJsonObject> get(const QString& url, const QUrlQuery& params = {}) override;
+    QFuture<QJsonObject> post(const QString& url, const QJsonObject& data) override;
+    QFuture<QJsonObject> put(const QString& url, const QJsonObject& data) override;
+    QFuture<QJsonObject> deleteResource(const QString& url) override;
+    QFuture<QJsonObject> uploadFile(const QString& url, const QString& filePath, const QString& fieldName = "file") override;
+    void setDefaultHeaders(const QHash<QString, QString>& headers) override;
+    void setTimeout(int timeoutMs) override;
+    void setRetryPolicy(int maxRetries, int delayMs) override;
 
     // 用户画像API
     void getUserProfile(const QString &userId,
@@ -67,7 +82,7 @@ public:
     void getRealTimeStats(const SuccessCallback &successCallback,
                          const ErrorCallback &errorCallback = nullptr);
 
-private:
+    // 基础网络请求方法（回调风格，供外部直接使用）
     void get(const QString &url,
              const SuccessCallback &successCallback,
              const ErrorCallback &errorCallback,
@@ -89,7 +104,10 @@ private:
                     const SuccessCallback &successCallback,
                     const ErrorCallback &errorCallback = nullptr);
 
+private:
     NetworkManagerAdapter *m_networkManagerAdapter;
+    bool m_ownsNetworkManager;
+    class NetworkService *m_networkService;
 };
 
 #endif // APISERVICE_H

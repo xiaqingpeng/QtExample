@@ -18,7 +18,7 @@ CONFIG -= single_module
 
 # 设置macOS部署目标版本
 # 注意：如果 Qt 库是为更高版本构建的，可能需要调整此值
-# QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0
+# QMAKE_MACOSX_DEPLOYMENT_TARGET = 27.0
 
 # 创建应用程序
 TEMPLATE = app

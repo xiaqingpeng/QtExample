@@ -12,8 +12,6 @@
 #include <QStackedWidget>
 #include <QLineEdit>
 #include <QRegularExpressionValidator>
-#include "../Services/NetworkService.h"
-#include "../Services/NetworkManagerAdapter.h"
 #include "../Services/ApiService.h"
 #include "../Analytics/analytics.h"
 
@@ -73,8 +71,7 @@ private:
     QPushButton *m_saveButton;
     QPushButton *m_cancelButton;
     
-    // 网络请求
-    NetworkManagerAdapter *m_networkManager;
+    // API 服务
     ApiService *m_apiService;
 };
 
