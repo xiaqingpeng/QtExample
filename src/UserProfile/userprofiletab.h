@@ -10,10 +10,10 @@
 #include <QGroupBox>
 #include <QComboBox>
 #include <QProgressBar>
-#ifdef WEBENGINE_AVAILABLE
-#include <QWebEngineView>
-#endif
 #include <QTimer>
+#include <QtCharts/QChartView>
+#include <QtCharts/QChart>
+#include <QtCharts/QPieSeries>
 #include "../Styles/theme_manager.h"
 
 class UserProfileTab : public QWidget
@@ -87,13 +87,11 @@ private:
     QLabel *m_topPagesLabel;
     QLabel *m_topFeaturesLabel;
     
-#ifdef WEBENGINE_AVAILABLE
-    QWebEngineView *m_interestChartView;
-    QWebEngineView *m_valueRadarView;
-#else
-    QLabel *m_interestChartView;  // 使用QLabel作为占位符
-    QLabel *m_valueRadarView;
-#endif
+    // 图表组件（使用 Qt Charts）
+    QChartView *m_interestChartView;  // 饼图
+    QLabel *m_valueRadarView;  // 雷达图（Qt Charts 不支持，使用标签显示）
+    QChart *m_interestChart;
+    QPieSeries *m_interestSeries;
     
     QPushButton *m_refreshButton;
     QPushButton *m_exportButton;

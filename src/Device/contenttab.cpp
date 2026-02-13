@@ -1,899 +1,59 @@
 #include "contenttab.h"
 #include <QJsonDocument>
-#include <QJsonObject>
-#include <QApplication>
-#include <QFile>
 #include <QDebug>
-#include <QLabel>
-#ifdef WEBENGINE_AVAILABLE
-#include <QWebEngineSettings>
-#include <QWebEnginePage>
-#endif
-#include <QProcess>
-#include <QRegularExpression>
+#include <QThread>
 #include <QPointer>
 #include <QSysInfo>
 #include <QStorageInfo>
 #include <QNetworkInterface>
 #include <QHostInfo>
 #include <QDir>
-#include "../Services/ApiService.h"
-#include "theme_manager.h"
-#include "serverconfigtab.h"
+#include <QRegularExpression>
+#include <QProcess>
+#include <QDateTime>
+#include <QPushButton>
+#include <QPainter>
+#include <algorithm>
 
 ContentTab::ContentTab(QWidget *parent)
     : QWidget(parent)
     , m_apiService(nullptr)
-    , m_titleLabel(nullptr)
-    , m_webView(nullptr)
-    , m_channel(nullptr)
-    , m_bridge(nullptr)
-    , m_pageLoaded(false)
     , m_refreshTimer(new QTimer(this))
+    , m_serverIpLabel(nullptr)
+    , m_osInfoLabel(nullptr)
+    , m_uptimeLabel(nullptr)
+    , m_cpuGauge(nullptr)
+    , m_memoryGauge(nullptr)
+    , m_diskGauge(nullptr)
+    , m_loadChartView(nullptr)
+    , m_networkChartView(nullptr)
+    , m_loadChart(nullptr)
+    , m_networkChart(nullptr)
+    , m_loadSeries(nullptr)
+    , m_networkSeries(nullptr)
 {
     m_apiService = new ApiService(this);
     
-    // 检测环境，判断是否应该使用 WebEngine
-    // 在容器环境中，完全禁用 WebEngine 以避免段错误
-    bool useWebEngine = false;
+    setupUI();
     
-    // 首先检查是否在容器中
-    QFile dockerFile("/.dockerenv");
-    bool inDocker = dockerFile.exists();
-    
-    // 检查环境变量
-    QString qpaPlatform = qgetenv("QT_QPA_PLATFORM");
-    QString display = qgetenv("DISPLAY");
-    
-    if (inDocker) {
-        qWarning() << "[ContentTab] Running in Docker container, WebEngine completely disabled to prevent segfault";
-        useWebEngine = false;
-    } else if (qpaPlatform == "offscreen" || display.isEmpty()) {
-        qWarning() << "[ContentTab] QT_QPA_PLATFORM=" << qpaPlatform << "or DISPLAY not set, WebEngine disabled";
-        useWebEngine = false;
-    } else {
-#ifdef WEBENGINE_AVAILABLE
-        // 只有在非容器环境且有完整图形环境时才尝试使用 WebEngine
-        useWebEngine = true;
-#else
-        useWebEngine = false;
-#endif
-    }
-    
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(20, 20, 20, 20);
-    mainLayout->setSpacing(20);
-    
-#ifdef WEBENGINE_AVAILABLE
-    if (useWebEngine) {
-        // 创建WebView用于显示图表
-        // qDebug() << "[ContentTab] Creating WebView";
-        QWebEngineView *webEngineView = new QWebEngineView(this);
-        webEngineView->setObjectName("webView");
-        m_webView = webEngineView;  // 赋值给基类指针
-        
-        // 配置WebEngineView设置
-        QWebEngineSettings *settings = webEngineView->settings();
-        // qDebug() << "[ContentTab] Setting up WebEngine settings";
-        settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
-        settings->setAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls, true);
-        settings->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls, true);
-        settings->setAttribute(QWebEngineSettings::ErrorPageEnabled, true);
-        
-        // 连接所有相关信号，用于调试
-        connect(webEngineView->page(), &QWebEnginePage::loadStarted, this, [this]() {
-            Q_UNUSED(this)
-            // qDebug() << "[ContentTab] Page load started";
-        });
-    }
-#endif
-    
-    // 如果WebEngine不可用，使用QLabel
-    if (!useWebEngine || !m_webView) {
-        QLabel *label = new QLabel("WebEngine 不可用 - 图表功能已禁用\n系统信息将通过其他方式显示", this);
-        label->setObjectName("webView");
-        label->setAlignment(Qt::AlignCenter);
-        label->setStyleSheet("QLabel { color: #666; font-size: 14px; }");
-        m_webView = label;  // 赋值给基类指针
-    }
-    
-#ifdef WEBENGINE_AVAILABLE
-    // 检查是否是真正的QWebEngineView
-    QWebEngineView *webEngineView = qobject_cast<QWebEngineView*>(m_webView);
-    if (webEngineView) {
-        connect(webEngineView->page(), &QWebEnginePage::loadProgress, this, [](int /*progress*/) {
-            // qDebug() << "[ContentTab] Page load progress:" << progress << "%";
-        });
-        
-        connect(webEngineView, &QWebEngineView::loadFinished, this, &ContentTab::onPageLoaded);
-        
-        // 连接加载完成信号 (Qt 6)
-        connect(webEngineView->page(), &QWebEnginePage::loadFinished, this, [](bool ok) {
-            if (!ok) {
-                qWarning() << "[ContentTab] Page load failed";
-            } else {
-                // qDebug() << "[ContentTab] Page load succeeded";
-            }
-        });
-        
-        // 创建WebChannel用于Qt与JS通信
-        // qDebug() << "[ContentTab] Creating WebChannel";
-        m_channel = new QWebChannel(this);
-        m_bridge = new ServerConfigBridge(this);
-        
-        // 连接刷新信号
-        connect(m_bridge, &ServerConfigBridge::refreshRequested, this, &ContentTab::refreshSystemInfo);
-        
-        m_channel->registerObject("qtBridge", m_bridge);
-        
-        // 在页面加载前设置WebChannel到WebEnginePage上
-        webEngineView->page()->setWebChannel(m_channel);
-    } else {
-        // 不是QWebEngineView，可能是QLabel回退
-        m_channel = nullptr;
-        m_bridge = new ServerConfigBridge(this);
-        connect(m_bridge, &ServerConfigBridge::refreshRequested, this, &ContentTab::refreshSystemInfo);
-    }
-#else
-    // WebEngine不可用时的简化处理
-    m_channel = nullptr;
-    m_bridge = new ServerConfigBridge(this);
-    connect(m_bridge, &ServerConfigBridge::refreshRequested, this, &ContentTab::refreshSystemInfo);
-#endif
-    
-    mainLayout->addWidget(m_webView);
-    
-    // 连接定时器信号到槽函数
     connect(m_refreshTimer, &QTimer::timeout, this, &ContentTab::fetchSystemInfo);
+    m_refreshTimer->start(5000); // 每5秒刷新一次
     
-    // 设置定时器周期为5秒（5000毫秒）
-    m_refreshTimer->start(5000);
-    
-    // 立即调用一次fetchSystemInfo，获取初始数据
     fetchSystemInfo();
     
-    // 使用包含WebChannel初始化的HTML内容
-    // qDebug() << "[ContentTab] Loading HTML content with WebChannel support";
-    QString htmlContent = R"HTML(
-<html>
-<head>
-    <title>服务器配置</title>
-    <script src="qrc:/qtwebchannel/qwebchannel.js"></script>
-    <script src="qrc:/src/ECharts/echarts.min.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            margin: 20px;
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin: 10px 0;
-            font-size: 24px;
-        }
-        h2 {
-            color: #333;
-            margin: 10px 0;
-            font-size: 20px;
-        }
-        .loading-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            text-align: center;
-        }
-        .loading-spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .loading-text {
-            color: #666;
-            font-size: 16px;
-        }
-        .main-container {
-            display: grid;
-            grid-template-rows: auto auto;
-            gap: 20px;
-            box-sizing: border-box;
-        }
-        .system-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            padding: 15px;
-            background-color: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        .info-item {
-            display: flex;
-            flex-direction: column;
-        }
-        .info-label {
-            font-weight: bold;
-            color: #555;
-            font-size: 14px;
-            margin-bottom: 3px;
-        }
-        .info-value {
-            color: #333;
-            font-size: 16px;
-        }
-        .charts-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-        }
-        .chart-container {
-            width: 100%;
-            height: 300px;
-            margin: 20px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: white;
-            overflow: visible;
-        }
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .main-container {
-                max-height: none;
-            }
-            .system-info {
-                grid-template-columns: 1fr;
-            }
-            .charts-container {
-                grid-template-columns: 1fr;
-            }
-            .chart-container {
-                height: 220px;
-            }
-        }
-    </style>
-    <script>
-        var qtBridge;
-        var cpuChart = null;
-        var memoryChart = null;
-        var diskChart = null;
-        var loadChart = null;
-        var networkChart = null;
-        var chartsInitialized = false;
-        var dataLoaded = false;
-        
-        // 检查ECharts库是否加载
-        if (typeof echarts === 'undefined') {
-            console.error('ECharts library not loaded!');
-        }
-        
-        // 初始化WebChannel
-        if (typeof qt !== 'undefined' && qt.webChannelTransport) {
-            new QWebChannel(qt.webChannelTransport, function(channel) {
-                qtBridge = channel.objects.qtBridge;
-                console.log("WebChannel initialized");
-            });
-        } else {
-            console.error('Qt WebChannel not available!');
-        }
-        
-        // 页面加载完成后初始化图表
-        window.onload = function() {
-            console.log('Page loaded, initializing charts...');
-            initCharts();
-            
-            // 如果数据还没加载完成，显示加载状态
-            if (!dataLoaded) {
-                showLoadingState();
-            }
-        };
-        
-        // 显示加载状态
-        function showLoadingState() {
-            var systemInfo = document.querySelector('.system-info');
-            var chartsContainer = document.querySelector('.charts-container');
-            
-            if (systemInfo) {
-                systemInfo.innerHTML = `
-                    <div class="loading-container">
-                        <div class="loading-spinner"></div>
-                        <div class="loading-text">正在获取系统信息...</div>
-                    </div>
-                `;
-            }
-            
-            if (chartsContainer) {
-                chartsContainer.style.display = 'none';
-            }
-        }
-        
-        // 隐藏加载状态
-        function hideLoadingState() {
-            var loadingContainer = document.querySelector('.system-info .loading-container');
-            if (loadingContainer) {
-                loadingContainer.style.display = 'none';
-            }
-            
-            var chartsContainer = document.querySelector('.charts-container');
-            if (chartsContainer) {
-                chartsContainer.style.display = 'grid';
-            }
-        }
-        
-        // 初始化图表配置
-        function initCharts() {
-            if (typeof echarts === 'undefined') {
-                console.error('Cannot initialize charts: ECharts not loaded');
-                return;
-            }
-            
-            try {
-                // 检查DOM元素是否存在
-                var cpuElement = document.getElementById('cpuChart');
-                var memoryElement = document.getElementById('memoryChart');
-                var diskElement = document.getElementById('diskChart');
-                var loadElement = document.getElementById('loadChart');
-                var networkElement = document.getElementById('networkChart');
-                
-                if (!cpuElement || !memoryElement || !diskElement || !loadElement || !networkElement) {
-                    console.error('Chart container elements not found');
-                    return;
-                }
-                
-                // 初始化图表
-                cpuChart = echarts.init(cpuElement);
-                memoryChart = echarts.init(memoryElement);
-                diskChart = echarts.init(diskElement);
-                loadChart = echarts.init(loadElement);
-                networkChart = echarts.init(networkElement);
-                
-                console.log('Charts initialized successfully');
-                
-                // 设置初始图表配置
-                setInitialChartOptions();
-                chartsInitialized = true;
-            } catch (error) {
-                console.error('Error initializing charts:', error);
-            }
-        }
-        
-        // 设置初始图表选项
-        function setInitialChartOptions() {
-            // CPU使用率图表
-            if (cpuChart) {
-                cpuChart.setOption({
-                    title: {
-                        text: 'CPU使用率',
-                        left: 'center'
-                    },
-                    tooltip: {
-                        trigger: 'item',
-                        formatter: '{a} <br/>{b}: {c}%'
-                    },
-                    series: [{
-                        name: 'CPU',
-                        type: 'gauge',
-                        detail: { 
-                            formatter: '{value}%',
-                            fontSize: 14
-                        },
-                        data: [{ value: 0, name: '使用率' }]
-                    }]
-                });
-            }
-            
-            // 内存使用率图表
-            if (memoryChart) {
-                memoryChart.setOption({
-                    title: {
-                        text: '内存使用率',
-                        left: 'center'
-                    },
-                    tooltip: {
-                        trigger: 'item',
-                        formatter: '{a} <br/>{b}: {c}%'
-                    },
-                    series: [{
-                        name: '内存',
-                        type: 'gauge',
-                        detail: { 
-                            formatter: '{value}%',
-                            fontSize: 14
-                        },
-                        data: [{ value: 0, name: '使用率' }]
-                    }]
-                });
-            }
-            
-            // 磁盘使用率图表
-            if (diskChart) {
-                diskChart.setOption({
-                    title: {
-                        text: '磁盘使用率',
-                        left: 'center'
-                    },
-                    tooltip: {
-                        trigger: 'item',
-                        formatter: '{a} <br/>{b}: {c}%'
-                    },
-                    series: [{
-                        name: '磁盘',
-                        type: 'gauge',
-                        detail: { 
-                            formatter: '{value}%',
-                            fontSize: 14
-                        },
-                        data: [{ value: 0, name: '使用率' }]
-                    }]
-                });
-            }
-            
-            // 系统负载图表
-            if (loadChart) {
-                loadChart.setOption({
-                    title: {
-                        text: '系统负载',
-                        left: 'center'
-                    },
-                    tooltip: {
-                        trigger: 'axis',
-                        formatter: '{b}: {c}'
-                    },
-                    xAxis: {
-                        type: 'category',
-                        data: ['1分钟', '5分钟', '15分钟']
-                    },
-                    yAxis: {
-                        type: 'value',
-                        min: 0
-                    },
-                    series: [{
-                        name: '系统负载',
-                        type: 'bar',
-                        data: [0, 0, 0],
-                        itemStyle: {
-                            color: function(params) {
-                                const colors = ['#FF6384', '#36A2EB', '#FFCE56'];
-                                return colors[params.dataIndex];
-                            }
-                        }
-                    }]
-                });
-            }
-            
-            // 网络流量图表
-            if (networkChart) {
-                networkChart.setOption({
-                    title: {
-                        text: '网络流量',
-                        left: 'center'
-                    },
-                    tooltip: {
-                        trigger: 'axis',
-                        formatter: '{b}: {c} MB'
-                    },
-                    grid: {
-                        left: '10%',
-                        right: '10%',
-                        top: '15%',
-                        bottom: '25%', // 增加底部空间，避免 x 轴标签与 markPoint 重叠
-                        containLabel: true
-                    },
-                    xAxis: {
-                        type: 'category',
-                        data: ['下行', '上行', '总接收', '总发送'],
-                        axisLabel: {
-                            interval: 0, // 显示所有标签
-                            margin: 10 // 增加标签与轴线的距离
-                        },
-                        axisTick: {
-                            alignWithLabel: true // 刻度线与标签对齐
-                        }
-                    },
-                    yAxis: {
-                        type: 'value',
-                        min: 0,
-                        axisLabel: {
-                            formatter: '{value} MB'
-                        }
-                    },
-                    series: [{
-                        name: '网络流量',
-                        type: 'bar',
-                        data: [0, 0, 0, 0],
-                        itemStyle: {
-                            color: function(params) {
-                                const colors = ['#4BC0C0', '#FF9F40', '#9966FF', '#FF6384'];
-                                return colors[params.dataIndex];
-                            }
-                        }
-                    }]
-                });
-            }
-        }
-        
-        // 更新服务器监控图表
-        function updateServerCharts(data) {
-            console.log("Received data for charts:", data);
-            
-            // 标记数据已加载
-            dataLoaded = true;
-            
-            // 隐藏加载状态
-            hideLoadingState();
-            
-            // 更新系统信息显示
-            var systemInfo = document.querySelector('.system-info');
-            if (systemInfo) {
-                // 清空现有内容，避免重复显示
-                systemInfo.innerHTML = `
-                    <div class="info-row">
-                        <div class="info-label">IP地址:</div>
-                        <div id="serverIp" class="info-value">${data.ip_address || '未知'}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">操作系统:</div>
-                        <div id="osInfo" class="info-value">${data.os_info || data.os || '未知'}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">运行时间:</div>
-                        <div id="uptime" class="info-value">${data.uptime_days ? data.uptime_days + '天' : data.uptime || '未知'}</div>
-                    </div>
-                `;
-            }
-            else {
-                // 更新系统信息
-                if (document.getElementById('serverIp')) {
-                    document.getElementById('serverIp').textContent = data.ip_address || '未知';
-                }
-                if (document.getElementById('osInfo')) {
-                    document.getElementById('osInfo').textContent = data.os_info || data.os || '未知';
-                }
-                if (document.getElementById('uptime')) {
-                    document.getElementById('uptime').textContent = data.uptime_days ? data.uptime_days + '天' : data.uptime || '未知';
-                }
-            }
-            
-            // 确保图表已初始化
-            if (!chartsInitialized) {
-                console.log('Charts not initialized yet, trying to initialize now...');
-                initCharts();
-                if (!chartsInitialized) {
-                    console.error('Cannot update charts: charts not initialized');
-                    return;
-                }
-            }
-            
-            // 更新CPU使用率图表
-            var cpuUsage = data.cpu_usage || data.cpuUsage || 0;
-            var cpuIdle = 100 - cpuUsage;
-            if (cpuChart) {
-                cpuChart.setOption({
-                    series: [{
-                        data: [{ value: cpuUsage, name: '使用率' }],
-                        // 添加CPU使用率、已用和空闲数据标注
-                        markPoint: {
-                            data: [
-                                { name: 'CPU使用率', value: cpuUsage + '%', x: '50%', y: '90%' },
-                                { name: '已用', value: cpuUsage + '%', x: '30%', y: '90%' },
-                                { name: '空闲', value: cpuIdle.toFixed(1) + '%', x: '70%', y: '90%' }
-                            ],
-                            label: {
-                                formatter: '{b}: {c}',
-                                fontSize: 12,
-                                color: '#333'
-                            },
-                            itemStyle: {
-                                color: 'transparent',
-                                borderColor: 'transparent'
-                            },
-                            symbolSize: 1
-                        }
-                    }]
-                });
-                console.log('CPU chart updated with value:', cpuUsage);
-            } else {
-                console.error('CPU chart object is null');
-            }
-            
-            // 更新内存使用率图表
-            var memoryUsage = data.mem_usage || data.memoryUsage || 0;
-            var memTotal = data.mem_total || data.memoryTotal || 0;
-            var memUsed = data.mem_used || data.memoryUsed || 0;
-            var memAvailable = data.mem_available || (memTotal - memUsed);
-            
-            // 如果没有详细的内存信息，计算近似值
-            if (memTotal === 0 && memoryUsage > 0) {
-                memTotal = 8; // 默认值(GB)
-                memUsed = (memoryUsage / 100.0) * memTotal;
-                memAvailable = memTotal - memUsed;
-            }
-            
-            if (memoryChart) {
-                memoryChart.setOption({
-                    series: [{
-                        data: [{ value: memoryUsage, name: '使用率' }],
-                        // 添加内存总计、已用、可用数据标注
-                        markPoint: {
-                            data: [
-                                { name: '总计', value: memTotal + 'GB', x: '30%', y: '90%' },
-                                { name: '已用', value: memUsed.toFixed(2) + 'GB', x: '50%', y: '90%' },
-                                { name: '可用', value: memAvailable.toFixed(2) + 'GB', x: '70%', y: '90%' }
-                            ],
-                            label: {
-                                formatter: '{b}: {c}',
-                                fontSize: 12,
-                                color: '#333'
-                            },
-                            itemStyle: {
-                                color: 'transparent',
-                                borderColor: 'transparent'
-                            },
-                            symbolSize: 1
-                        }
-                    }]
-                });
-                console.log('Memory chart updated with values - Total:', memTotal, 'GB, Used:', memUsed, 'GB, Available:', memAvailable, 'GB');
-            } else {
-                console.error('Memory chart object is null');
-            }
-            
-            // 更新磁盘使用率图表
-            var diskUsage = data.disk_usage || data.diskUsage || 0;
-            var diskTotal = data.disk_total || data.diskTotal || 0;
-            var diskUsed = data.disk_used || data.diskUsed || 0;
-            var diskAvailable = data.diskAvailable || (diskTotal - diskUsed);
-            
-            // 如果没有详细的磁盘信息，计算近似值
-            if (diskTotal === 0 && diskUsage > 0) {
-                diskTotal = 500; // 默认值
-                diskUsed = (diskUsage / 100.0) * diskTotal;
-                diskAvailable = diskTotal - diskUsed;
-            }
-            
-            if (diskChart) {
-                diskChart.setOption({
-                    series: [{
-                        data: [{ value: diskUsage, name: '使用率' }],
-                        // 添加总计、已用、可用数据标注
-                        markPoint: {
-                            data: [
-                                { name: '总计', value: diskTotal + 'GB', x: '30%', y: '90%' },
-                                { name: '已用', value: diskUsed.toFixed(2) + 'GB', x: '50%', y: '90%' },
-                                { name: '可用', value: diskAvailable.toFixed(2) + 'GB', x: '70%', y: '90%' }
-                            ],
-                            label: {
-                                formatter: '{b}: {c}',
-                                fontSize: 12,
-                                color: '#333'
-                            },
-                            itemStyle: {
-                                color: 'transparent',
-                                borderColor: 'transparent'
-                            },
-                            symbolSize: 1
-                        }
-                    }]
-                });
-                console.log('Disk chart updated with values - Total:', diskTotal, 'GB, Used:', diskUsed, 'GB, Available:', diskAvailable, 'GB');
-            } else {
-                console.error('Disk chart object is null');
-            }
-            
-            // 更新系统负载图表
-            if (loadChart) {
-                var loadData = [
-                    data.load_1 || 0,
-                    data.load_5 || 0,
-                    data.load_15 || 0
-                ];
-                loadChart.setOption({
-                    series: [{
-                        data: loadData,
-                        // 添加系统负载数据标注
-                        markPoint: {
-                            data: [
-                                { name: '1分钟', value: loadData[0].toFixed(2), x: '25%', y: '90%' },
-                                { name: '5分钟', value: loadData[1].toFixed(2), x: '50%', y: '90%' },
-                                { name: '15分钟', value: loadData[2].toFixed(2), x: '75%', y: '90%' }
-                            ],
-                            label: {
-                                formatter: '{b}: {c}',
-                                fontSize: 12,
-                                color: '#333'
-                            },
-                            itemStyle: {
-                                color: 'transparent',
-                                borderColor: 'transparent'
-                            },
-                            symbolSize: 1
-                        }
-                    }]
-                });
-                console.log('Load chart updated with values:', loadData);
-            } else {
-                console.error('Load chart object is null');
-            }
-            
-            // 更新网络流量图表
-            if (networkChart) {
-                // 从数据中获取网络流量值，确保总接收和总发送不为0
-                var networkRxMb = data.network_rx_mb || 0;
-                var networkTxMb = data.network_tx_mb || 0;
-                var totalRxMb = data.total_rx_mb || 1536.8; // 默认值
-                var totalTxMb = data.total_tx_mb || 768.4; // 默认值
-                
-                var networkData = [
-                    networkRxMb,    // 下行
-                    networkTxMb,    // 上行
-                    totalRxMb,      // 总接收
-                    totalTxMb       // 总发送
-                ];
-                
-                console.log('Network chart data:', networkData);
-                
-                // 计算合适的Y轴最大值，确保所有数据都能在正方向正确显示
-                var maxDataValue = Math.max(...networkData);
-                var yAxisMax = maxDataValue > 0 ? Math.ceil(maxDataValue * 1.2) : 10; // 确保至少有一个合理的最大值
-                
-                networkChart.setOption({
-                    grid: {
-                        left: '10%',
-                        right: '10%',
-                        top: '15%',
-                        bottom: '25%', // 增加底部空间，避免 x 轴标签与 markPoint 重叠
-                        containLabel: true
-                    },
-                    yAxis: {
-                        max: yAxisMax,
-                        axisLabel: {
-                            formatter: '{value} MB',
-                            showMaxLabel: true // 确保最大值标签显示
-                        }
-                    },
-                    series: [{
-                        data: networkData,
-                        // 添加网络流量数据标注
-                        markPoint: {
-                            data: [
-                                { name: '下行', value: networkRxMb.toFixed(1) + ' MB', x: '15%', y: '75%' },
-                                { name: '上行', value: networkTxMb.toFixed(1) + ' MB', x: '35%', y: '75%' },
-                                { name: '总接收', value: totalRxMb.toFixed(1) + ' MB', x: '65%', y: '75%' },
-                                { name: '总发送', value: totalTxMb.toFixed(1) + ' MB', x: '85%', y: '75%' }
-                            ],
-                            label: {
-                                formatter: '{b}: {c}',
-                                fontSize: 12,
-                                color: '#333'
-                            },
-                            itemStyle: {
-                                color: 'transparent',
-                                borderColor: 'transparent'
-                            },
-                            symbolSize: 1
-                        }
-                    }]
-                });
-                console.log('Network chart updated with values:', networkData);
-            } else {
-                console.error('Network chart object is null');
-            }
-        }
-    </script>
-</head>
-<body>
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h1>电脑本机配置监控</h1>
-        <button id="refreshBtn" onclick="refreshSystemInfo()" style="padding: 8px 16px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            刷新数据
-        </button>
-    </div>
-    
-    <div class="main-container">
-        <div class="system-info">
-            <div class="info-item">
-                <div class="info-label">服务器IP</div>
-                <div id="serverIp" class="info-value">未知</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">操作系统</div>
-                <div id="osInfo" class="info-value">未知</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">运行时间</div>
-                <div id="uptime" class="info-value">未知</div>
-            </div>
-        </div>
-        
-        <div class="charts-container">
-            <div class="chart-container" id="cpuChart"></div>
-            <div class="chart-container" id="memoryChart"></div>
-            <div class="chart-container" id="diskChart"></div>
-            <div class="chart-container" id="loadChart"></div>
-            <div class="chart-container" id="networkChart"></div>
-        </div>
-    </div>
-    
-    <script>
-        // 刷新系统信息数据
-        function refreshSystemInfo() {
-            console.log('刷新数据按钮被点击');
-            if (qtBridge) {
-                qtBridge.refreshSystemInfo();
-            } else {
-                console.error('Qt Bridge not available!');
-            }
-        }
-    </script>
-</body>
-</html>
-)HTML";
-    
-    // 提前开始获取系统信息，而不是等页面加载完成
-    // qDebug() << "[ContentTab] 提前开始获取系统信息...";
-    fetchSystemInfo();
-    
-    // 加载HTML内容
-    // qDebug() << "[ContentTab] HTML内容长度:" << htmlContent.length();
-    // qDebug() << "[ContentTab] 开始加载HTML内容...";
-    // 只在 WebEngine 可用时加载 HTML
-#ifdef WEBENGINE_AVAILABLE
-    QWebEngineView *webEngineViewForHtml = qobject_cast<QWebEngineView*>(m_webView);
-    if (webEngineViewForHtml) {
-        webEngineViewForHtml->setHtml(htmlContent, QUrl("qrc:/html/serverconfig.html"));
-        // 立即检查WebEngineView状态
-        // qDebug() << "[ContentTab] WebView页面地址:" << webEngineViewForHtml->url().toString();
-        // qDebug() << "[ContentTab] WebView标题:" << webEngineViewForHtml->title();
-    }
-#else
-    // WebEngine不可用时，显示简单信息
-    QLabel* webViewLabel = qobject_cast<QLabel*>(m_webView);
-    if (webViewLabel) {
-        webViewLabel->setText("WebEngine 不可用\n图表功能已禁用\n\n系统信息将通过其他方式显示");
-    }
-#endif
-    
-    // WebChannel将在页面加载完成后设置
-    
-    // 延迟应用主题，确保所有组件都已完全初始化
-    // 使用 QTimer::singleShot 确保在事件循环中执行
     QTimer::singleShot(0, this, [this]() {
-        try {
-            applyTheme();
-        } catch (const std::exception& e) {
-            qWarning() << "[ContentTab] Exception in delayed applyTheme:" << e.what();
-        } catch (...) {
-            qWarning() << "[ContentTab] Unknown exception in delayed applyTheme";
-        }
+        applyTheme();
     });
-    
-    // qDebug() << "[ContentTab] Constructor finished";
 }
 
 ContentTab::~ContentTab()
 {
     // 查找并等待所有子线程完成
-    // 因为线程是 this 的子对象，当 ContentTab 被销毁时，线程也会被销毁
-    // 但我们需要确保线程已经完成，避免 "Destroyed while thread is still running" 警告
-    QList<QThread*> childThreads = findChildren<QThread*>();
+    const QList<QThread*> childThreads = findChildren<QThread*>();
     for (QThread *thread : childThreads) {
         if (thread && thread->isRunning()) {
-            // 请求线程退出
             thread->quit();
-            // 等待线程完成，最多等待3秒
             if (!thread->wait(3000)) {
-                // 如果线程仍未完成，强制终止
                 qWarning() << "[ContentTab] Thread did not finish in time, terminating...";
                 thread->terminate();
                 thread->wait(1000);
@@ -902,93 +62,163 @@ ContentTab::~ContentTab()
     }
 }
 
-void ContentTab::onPageLoaded(bool ok){
-    // qDebug() << "[ContentTab] ********************页面加载完成回调********************";
-    // qDebug() << "[ContentTab] 加载状态:" << ok;
-    
-#ifdef WEBENGINE_AVAILABLE
-    QWebEngineView *webEngineView = qobject_cast<QWebEngineView*>(m_webView);
-    if (webEngineView) {
-        // qDebug() << "[ContentTab] 页面标题:" << webEngineView->title();
-        // qDebug() << "[ContentTab] 页面URL:" << webEngineView->url().toString();
-        // qDebug() << "[ContentTab] WebView是否可见:" << webEngineView->isVisible();
-        // qDebug() << "[ContentTab] WebView尺寸:" << webEngineView->size();
-        
-        // 检查WebChannel状态
-        if (webEngineView->page()->webChannel()) {
-            // qDebug() << "[ContentTab] WebChannel is set up after page load";
-        } else {
-            qWarning() << "[ContentTab] WebChannel is NOT set up after page load";
-            // 再次尝试设置WebChannel
-            webEngineView->page()->setWebChannel(m_channel);
-            if (webEngineView->page()->webChannel()) {
-                // qDebug() << "[ContentTab] WebChannel set up successfully after retry";
-            } else {
-                qCritical() << "[ContentTab] Failed to set up WebChannel after retry";
-            }
-        }
-        
-        if (ok) {
-            m_pageLoaded = true;
-            // qDebug() << "[ContentTab] Server config page loaded successfully";
-            
-            // 检查是否有待处理的数据
-            if (!m_pendingData.isEmpty()) {
-                // qDebug() << "[ContentTab] Processing cached data after page load";
-                updateCharts(m_pendingData);
-                m_pendingData = QJsonObject(); // 清空缓存
-            }
-            
-            // 获取页面内容验证
-            webEngineView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
-                QString content = result.toString();
-                // qDebug() << "[ContentTab] Page content loaded:" << content;
-            });
-            
-            // 获取页面标题验证
-            webEngineView->page()->runJavaScript("document.title", [](const QVariant &/*result*/) {
-                // qDebug() << "[ContentTab] Page title from JS:" << result.toString();
-            });
-            
-            // 简单的测试JavaScript执行
-            webEngineView->page()->runJavaScript("'Hello from JavaScript: ' + (new Date()).toLocaleString()", [](const QVariant &/*result*/) {
-                // qDebug() << "[ContentTab] JavaScript execution result:" << result.toString();
-            });
-        } else {
-            qWarning() << "[ContentTab] Failed to load server config page";
-            
-            // 尝试获取页面内容，查看是否有错误信息
-            webEngineView->page()->runJavaScript("document.body.innerHTML", [](const QVariant &result) {
-                qWarning() << "[ContentTab] Page content on error:" << result.toString();
-            });
-            
-            // 尝试获取浏览器错误信息
-            webEngineView->page()->runJavaScript("window.navigator.userAgent", [](const QVariant &/*result*/) {
-                // qDebug() << "[ContentTab] User Agent:" << result.toString();
-            });
-        }
-    } else {
-        // m_webView 不是 QWebEngineView，可能是 QLabel
-        Q_UNUSED(ok);
-    }
-#else
-    Q_UNUSED(ok);
-    // WebEngine不可用时的处理
-#endif
-}
-
-void ContentTab::refreshSystemInfo()
+void ContentTab::setupUI()
 {
-    // qDebug() << "[ContentTab] 刷新系统信息数据";
-    fetchSystemInfo();
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(20, 20, 20, 20);
+    mainLayout->setSpacing(20);
+    
+    // 标题和刷新按钮
+    QHBoxLayout *headerLayout = new QHBoxLayout();
+    QLabel *titleLabel = new QLabel("电脑本机配置监控", this);
+    titleLabel->setStyleSheet("font-size: 24px; font-weight: bold;");
+    headerLayout->addWidget(titleLabel);
+    headerLayout->addStretch();
+    
+    QPushButton *refreshBtn = new QPushButton("刷新数据", this);
+    refreshBtn->setStyleSheet("padding: 8px 16px; background-color: #3498db; color: white; border: none; border-radius: 4px;");
+    connect(refreshBtn, &QPushButton::clicked, this, &ContentTab::refreshSystemInfo);
+    headerLayout->addWidget(refreshBtn);
+    mainLayout->addLayout(headerLayout);
+    
+    // 系统信息区域
+    QWidget *infoWidget = new QWidget(this);
+    infoWidget->setStyleSheet("background-color: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px;");
+    QHBoxLayout *infoLayout = new QHBoxLayout(infoWidget);
+    
+    m_serverIpLabel = new QLabel("IP地址: 未知", this);
+    m_osInfoLabel = new QLabel("操作系统: 未知", this);
+    m_uptimeLabel = new QLabel("运行时间: 未知", this);
+    
+    infoLayout->addWidget(m_serverIpLabel);
+    infoLayout->addWidget(m_osInfoLabel);
+    infoLayout->addWidget(m_uptimeLabel);
+    infoLayout->addStretch();
+    
+    mainLayout->addWidget(infoWidget);
+    
+    // 图表区域
+    QGridLayout *chartsLayout = new QGridLayout();
+    chartsLayout->setSpacing(20);
+    
+    // CPU 使用率 Gauge
+    QWidget *cpuWidget = new QWidget(this);
+    cpuWidget->setStyleSheet("background-color: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px;");
+    QVBoxLayout *cpuLayout = new QVBoxLayout(cpuWidget);
+    QLabel *cpuTitle = new QLabel("CPU使用率", this);
+    cpuTitle->setAlignment(Qt::AlignCenter);
+    cpuTitle->setStyleSheet("font-size: 16px; font-weight: bold; margin-bottom: 10px;");
+    cpuLayout->addWidget(cpuTitle);
+    m_cpuGauge = new GaugeWidget(this);
+    m_cpuGauge->setTitle("CPU使用率");
+    m_cpuGauge->setUnit("%");
+    cpuLayout->addWidget(m_cpuGauge, 1);
+    chartsLayout->addWidget(cpuWidget, 0, 0);
+    
+    // 内存使用率 Gauge
+    QWidget *memoryWidget = new QWidget(this);
+    memoryWidget->setStyleSheet("background-color: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px;");
+    QVBoxLayout *memoryLayout = new QVBoxLayout(memoryWidget);
+    QLabel *memoryTitle = new QLabel("内存使用率", this);
+    memoryTitle->setAlignment(Qt::AlignCenter);
+    memoryTitle->setStyleSheet("font-size: 16px; font-weight: bold; margin-bottom: 10px;");
+    memoryLayout->addWidget(memoryTitle);
+    m_memoryGauge = new GaugeWidget(this);
+    m_memoryGauge->setTitle("内存使用率");
+    m_memoryGauge->setUnit("%");
+    memoryLayout->addWidget(m_memoryGauge, 1);
+    chartsLayout->addWidget(memoryWidget, 0, 1);
+    
+    // 磁盘使用率 Gauge
+    QWidget *diskWidget = new QWidget(this);
+    diskWidget->setStyleSheet("background-color: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px;");
+    QVBoxLayout *diskLayout = new QVBoxLayout(diskWidget);
+    QLabel *diskTitle = new QLabel("磁盘使用率", this);
+    diskTitle->setAlignment(Qt::AlignCenter);
+    diskTitle->setStyleSheet("font-size: 16px; font-weight: bold; margin-bottom: 10px;");
+    diskLayout->addWidget(diskTitle);
+    m_diskGauge = new GaugeWidget(this);
+    m_diskGauge->setTitle("磁盘使用率");
+    m_diskGauge->setUnit("%");
+    diskLayout->addWidget(m_diskGauge, 1);
+    chartsLayout->addWidget(diskWidget, 0, 2);
+    
+    // 系统负载柱状图
+    QWidget *loadWidget = new QWidget(this);
+    loadWidget->setStyleSheet("background-color: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px;");
+    QVBoxLayout *loadLayout = new QVBoxLayout(loadWidget);
+    QLabel *loadTitle = new QLabel("系统负载", this);
+    loadTitle->setAlignment(Qt::AlignCenter);
+    loadTitle->setStyleSheet("font-size: 16px; font-weight: bold; margin-bottom: 10px;");
+    loadLayout->addWidget(loadTitle);
+    
+    m_loadChart = new QChart();
+    m_loadSeries = new QBarSeries();
+    m_loadChart->addSeries(m_loadSeries);
+    m_loadChart->setTitle("系统负载");
+    m_loadChart->setAnimationOptions(QChart::SeriesAnimations);
+    m_loadChart->legend()->setVisible(false);
+    
+    QStringList loadCategories;
+    loadCategories << "1分钟" << "5分钟" << "15分钟";
+    QBarCategoryAxis *loadAxisX = new QBarCategoryAxis();
+    loadAxisX->append(loadCategories);
+    m_loadChart->addAxis(loadAxisX, Qt::AlignBottom);
+    m_loadSeries->attachAxis(loadAxisX);
+    
+    QValueAxis *loadAxisY = new QValueAxis();
+    loadAxisY->setMin(0);
+    m_loadChart->addAxis(loadAxisY, Qt::AlignLeft);
+    m_loadSeries->attachAxis(loadAxisY);
+    
+    m_loadChartView = new QChartView(m_loadChart, this);
+    m_loadChartView->setRenderHint(QPainter::Antialiasing);
+    m_loadChartView->setMinimumHeight(250);
+    loadLayout->addWidget(m_loadChartView);
+    chartsLayout->addWidget(loadWidget, 1, 0, 1, 2);
+    
+    // 网络流量柱状图
+    QWidget *networkWidget = new QWidget(this);
+    networkWidget->setStyleSheet("background-color: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px;");
+    QVBoxLayout *networkLayout = new QVBoxLayout(networkWidget);
+    QLabel *networkTitle = new QLabel("网络流量 (MB)", this);
+    networkTitle->setAlignment(Qt::AlignCenter);
+    networkTitle->setStyleSheet("font-size: 16px; font-weight: bold; margin-bottom: 10px;");
+    networkLayout->addWidget(networkTitle);
+    
+    m_networkChart = new QChart();
+    m_networkSeries = new QBarSeries();
+    m_networkChart->addSeries(m_networkSeries);
+    m_networkChart->setTitle("网络流量");
+    m_networkChart->setAnimationOptions(QChart::SeriesAnimations);
+    m_networkChart->legend()->setVisible(false);
+    
+    QStringList networkCategories;
+    networkCategories << "下行" << "上行" << "总接收" << "总发送";
+    QBarCategoryAxis *networkAxisX = new QBarCategoryAxis();
+    networkAxisX->append(networkCategories);
+    m_networkChart->addAxis(networkAxisX, Qt::AlignBottom);
+    m_networkSeries->attachAxis(networkAxisX);
+    
+    QValueAxis *networkAxisY = new QValueAxis();
+    networkAxisY->setMin(0);
+    networkAxisY->setTitleText("流量 (MB)");
+    m_networkChart->addAxis(networkAxisY, Qt::AlignLeft);
+    m_networkSeries->attachAxis(networkAxisY);
+    
+    m_networkChartView = new QChartView(m_networkChart, this);
+    m_networkChartView->setRenderHint(QPainter::Antialiasing);
+    m_networkChartView->setMinimumHeight(250);
+    networkLayout->addWidget(m_networkChartView);
+    chartsLayout->addWidget(networkWidget, 1, 2);
+    
+    mainLayout->addLayout(chartsLayout);
+    mainLayout->addStretch();
 }
 
-// 获取本地系统信息
 void ContentTab::fetchSystemInfo()
 {
-    // qDebug() << "[ContentTab] Fetching system info...";
-    
-    // 创建一个临时的系统信息对象，用于显示默认值
+    // 创建默认信息对象
     QJsonObject defaultInfo;
     defaultInfo["cpu_usage"] = 0.0;
     defaultInfo["mem_total"] = 0.0;
@@ -1000,7 +230,7 @@ void ContentTab::fetchSystemInfo()
     defaultInfo["ip_address"] = "获取中...";
     defaultInfo["os_info"] = "获取中...";
     defaultInfo["uptime_days"] = 0.0;
-    // 根据平台设置默认值
+    
 #ifdef Q_OS_WIN
     defaultInfo["platform"] = "windows";
 #elif defined(Q_OS_LINUX)
@@ -1010,7 +240,7 @@ void ContentTab::fetchSystemInfo()
 #else
     defaultInfo["platform"] = "unknown";
 #endif
-    // 添加系统负载和网络流量的默认值
+    
     defaultInfo["load_1"] = 0.0;
     defaultInfo["load_5"] = 0.0;
     defaultInfo["load_15"] = 0.0;
@@ -1019,29 +249,23 @@ void ContentTab::fetchSystemInfo()
     defaultInfo["total_rx_mb"] = 0.0;
     defaultInfo["total_tx_mb"] = 0.0;
     
-    // 先更新一次默认数据，避免页面完全空白
     updateCharts(defaultInfo);
     
-    // 创建一个线程来异步获取系统信息
+    // 创建线程异步获取系统信息
     QThread *thread = new QThread(this);
     QObject *worker = new QObject();
     
-    // 使用 QPointer 来安全地访问 this，避免悬空指针
     QPointer<ContentTab> safeThis = this;
     
-    // 在线程中执行获取系统信息的操作
     QObject::connect(thread, &QThread::started, worker, [safeThis]() {
-        // 检查对象是否仍然有效
         if (!safeThis) {
             QThread::currentThread()->quit();
             return;
         }
         QJsonObject systemInfo;
         
-        // 使用 Qt 跨平台 API 获取操作系统信息
         systemInfo["os_info"] = QSysInfo::productType() + " " + QSysInfo::productVersion();
         
-        // 设置平台信息
 #ifdef Q_OS_WIN
         systemInfo["platform"] = "windows";
 #elif defined(Q_OS_LINUX)
@@ -1052,14 +276,14 @@ void ContentTab::fetchSystemInfo()
         systemInfo["platform"] = "unknown";
 #endif
         
-        // 获取网络接口信息（跨平台）
+        // 获取网络接口信息
         QString ipAddress = "未知";
-        QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
+        const QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
         for (const QNetworkInterface &interface : interfaces) {
             if (interface.flags().testFlag(QNetworkInterface::IsUp) &&
                 interface.flags().testFlag(QNetworkInterface::IsRunning) &&
                 !interface.flags().testFlag(QNetworkInterface::IsLoopBack)) {
-                QList<QNetworkAddressEntry> entries = interface.addressEntries();
+                const QList<QNetworkAddressEntry> entries = interface.addressEntries();
                 for (const QNetworkAddressEntry &entry : entries) {
                     QHostAddress addr = entry.ip();
                     if (addr.protocol() == QAbstractSocket::IPv4Protocol) {
@@ -1072,7 +296,7 @@ void ContentTab::fetchSystemInfo()
         }
         systemInfo["ip_address"] = ipAddress;
         
-        // 获取磁盘信息（跨平台，使用 Qt API）
+        // 获取磁盘信息
         try {
             QStorageInfo storage = QStorageInfo::root();
             if (storage.isValid() && storage.isReady()) {
@@ -1080,8 +304,8 @@ void ContentTab::fetchSystemInfo()
                 qint64 availableBytes = storage.bytesAvailable();
                 qint64 usedBytes = totalBytes - availableBytes;
                 
-                systemInfo["disk_total"] = totalBytes / (1024.0 * 1024.0 * 1024.0); // GB
-                systemInfo["disk_used"] = usedBytes / (1024.0 * 1024.0 * 1024.0); // GB
+                systemInfo["disk_total"] = totalBytes / (1024.0 * 1024.0 * 1024.0);
+                systemInfo["disk_used"] = usedBytes / (1024.0 * 1024.0 * 1024.0);
                 if (totalBytes > 0) {
                     systemInfo["disk_usage"] = (usedBytes * 100.0) / totalBytes;
                 } else {
@@ -1098,295 +322,7 @@ void ContentTab::fetchSystemInfo()
             systemInfo["disk_usage"] = 0.0;
         }
         
-        // 平台特定的系统信息获取
-#ifdef Q_OS_WIN
-        // Windows 平台
-        try {
-            // CPU 使用率 - 使用 wmic
-            QProcess cpuProcess;
-            cpuProcess.start("wmic", QStringList() << "cpu" << "get" << "loadpercentage" << "/value");
-            if (cpuProcess.waitForFinished(2000)) {
-                QString output = cpuProcess.readAllStandardOutput();
-                QRegularExpression regex("LoadPercentage=(\\d+)");
-                QRegularExpressionMatch match = regex.match(output);
-                if (match.hasMatch()) {
-                    systemInfo["cpu_usage"] = match.captured(1).toDouble();
-                } else {
-                    systemInfo["cpu_usage"] = 0.0;
-                }
-            } else {
-                systemInfo["cpu_usage"] = 0.0;
-            }
-            
-            // 内存信息 - 使用 wmic
-            QProcess memProcess;
-            memProcess.start("wmic", QStringList() << "OS" << "get" << "TotalVisibleMemorySize,FreePhysicalMemory" << "/value");
-            if (memProcess.waitForFinished(2000)) {
-                QString output = memProcess.readAllStandardOutput();
-                QRegularExpression totalRegex("TotalVisibleMemorySize=(\\d+)");
-                QRegularExpression freeRegex("FreePhysicalMemory=(\\d+)");
-                QRegularExpressionMatch totalMatch = totalRegex.match(output);
-                QRegularExpressionMatch freeMatch = freeRegex.match(output);
-                if (totalMatch.hasMatch() && freeMatch.hasMatch()) {
-                    double totalKB = totalMatch.captured(1).toDouble();
-                    double freeKB = freeMatch.captured(1).toDouble();
-                    double usedKB = totalKB - freeKB;
-                    systemInfo["mem_total"] = totalKB / 1024.0; // MB
-                    systemInfo["mem_used"] = usedKB / 1024.0; // MB
-                    systemInfo["mem_usage"] = (usedKB / totalKB) * 100.0;
-                } else {
-                    systemInfo["mem_total"] = 0.0;
-                    systemInfo["mem_used"] = 0.0;
-                    systemInfo["mem_usage"] = 0.0;
-                }
-            } else {
-                systemInfo["mem_total"] = 0.0;
-                systemInfo["mem_used"] = 0.0;
-                systemInfo["mem_usage"] = 0.0;
-            }
-            
-            // 系统负载（Windows 没有 load average，使用 CPU 使用率作为替代）
-            systemInfo["load_1"] = systemInfo["cpu_usage"].toDouble() / 100.0;
-            systemInfo["load_5"] = systemInfo["cpu_usage"].toDouble() / 100.0;
-            systemInfo["load_15"] = systemInfo["cpu_usage"].toDouble() / 100.0;
-            
-            // 运行时间 - 使用 wmic
-            QProcess uptimeProcess;
-            uptimeProcess.start("wmic", QStringList() << "OS" << "get" << "LastBootUpTime" << "/value");
-            if (uptimeProcess.waitForFinished(2000)) {
-                QString output = uptimeProcess.readAllStandardOutput();
-                QRegularExpression regex("LastBootUpTime=([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})");
-                QRegularExpressionMatch match = regex.match(output);
-                if (match.hasMatch()) {
-                    QDateTime bootTime = QDateTime::fromString(
-                        match.captured(1) + match.captured(2) + match.captured(3) + "T" +
-                        match.captured(4) + match.captured(5) + match.captured(6),
-                        "yyyyMMddThhmmss"
-                    );
-                    qint64 seconds = bootTime.secsTo(QDateTime::currentDateTime());
-                    systemInfo["uptime_days"] = seconds / 86400.0;
-                } else {
-                    systemInfo["uptime_days"] = 0.0;
-                }
-            } else {
-                systemInfo["uptime_days"] = 0.0;
-            }
-        } catch (...) {
-            systemInfo["cpu_usage"] = 0.0;
-            systemInfo["mem_total"] = 0.0;
-            systemInfo["mem_used"] = 0.0;
-            systemInfo["mem_usage"] = 0.0;
-            systemInfo["load_1"] = 0.0;
-            systemInfo["load_5"] = 0.0;
-            systemInfo["load_15"] = 0.0;
-            systemInfo["uptime_days"] = 0.0;
-        }
-        
-#elif defined(Q_OS_LINUX)
-        // Linux 平台 - 使用 /proc 文件系统
-        try {
-            // CPU 使用率 - 读取 /proc/stat
-            QFile statFile("/proc/stat");
-            if (statFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                QTextStream in(&statFile);
-                QString line = in.readLine();
-                if (line.startsWith("cpu ")) {
-                    QStringList parts = line.split(QRegularExpression("\\s+"));
-                    if (parts.size() >= 8) {
-                        qint64 user = parts[1].toLongLong();
-                        qint64 nice = parts[2].toLongLong();
-                        qint64 system = parts[3].toLongLong();
-                        qint64 idle = parts[4].toLongLong();
-                        qint64 iowait = parts[5].toLongLong();
-                        qint64 total = user + nice + system + idle + iowait;
-                        if (total > 0) {
-                            qint64 used = total - idle;
-                            systemInfo["cpu_usage"] = (used * 100.0) / total;
-                        } else {
-                            systemInfo["cpu_usage"] = 0.0;
-                        }
-                    } else {
-                        systemInfo["cpu_usage"] = 0.0;
-                    }
-                } else {
-                    systemInfo["cpu_usage"] = 0.0;
-                }
-                statFile.close();
-            } else {
-                systemInfo["cpu_usage"] = 0.0;
-            }
-            
-            // 内存信息 - 读取 /proc/meminfo
-            QFile memFile("/proc/meminfo");
-            if (memFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                QTextStream in(&memFile);
-                qint64 memTotal = 0, memFree = 0, memAvailable = 0;
-                while (!in.atEnd()) {
-                    QString line = in.readLine();
-                    if (line.startsWith("MemTotal:")) {
-                        memTotal = line.split(QRegularExpression("\\s+"))[1].toLongLong();
-                    } else if (line.startsWith("MemFree:")) {
-                        memFree = line.split(QRegularExpression("\\s+"))[1].toLongLong();
-                    } else if (line.startsWith("MemAvailable:")) {
-                        memAvailable = line.split(QRegularExpression("\\s+"))[1].toLongLong();
-                    }
-                }
-                memFile.close();
-                
-                if (memTotal > 0) {
-                    systemInfo["mem_total"] = memTotal / 1024.0; // MB
-                    if (memAvailable > 0) {
-                        systemInfo["mem_used"] = (memTotal - memAvailable) / 1024.0; // MB
-                        systemInfo["mem_usage"] = ((memTotal - memAvailable) * 100.0) / memTotal;
-                    } else {
-                        systemInfo["mem_used"] = (memTotal - memFree) / 1024.0; // MB
-                        systemInfo["mem_usage"] = ((memTotal - memFree) * 100.0) / memTotal;
-                    }
-                } else {
-                    systemInfo["mem_total"] = 0.0;
-                    systemInfo["mem_used"] = 0.0;
-                    systemInfo["mem_usage"] = 0.0;
-                }
-            } else {
-                systemInfo["mem_total"] = 0.0;
-                systemInfo["mem_used"] = 0.0;
-                systemInfo["mem_usage"] = 0.0;
-            }
-            
-            // 系统负载 - 读取 /proc/loadavg
-            QFile loadFile("/proc/loadavg");
-            if (loadFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                QTextStream in(&loadFile);
-                QString line = in.readLine();
-                QStringList parts = line.split(QRegularExpression("\\s+"));
-                if (parts.size() >= 3) {
-                    systemInfo["load_1"] = parts[0].toDouble();
-                    systemInfo["load_5"] = parts[1].toDouble();
-                    systemInfo["load_15"] = parts[2].toDouble();
-                } else {
-                    systemInfo["load_1"] = 0.0;
-                    systemInfo["load_5"] = 0.0;
-                    systemInfo["load_15"] = 0.0;
-                }
-                loadFile.close();
-            } else {
-                systemInfo["load_1"] = 0.0;
-                systemInfo["load_5"] = 0.0;
-                systemInfo["load_15"] = 0.0;
-            }
-            
-            // 运行时间 - 读取 /proc/uptime
-            QFile uptimeFile("/proc/uptime");
-            if (uptimeFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                QTextStream in(&uptimeFile);
-                QString line = in.readLine();
-                QStringList parts = line.split(" ");
-                if (parts.size() >= 1) {
-                    qint64 seconds = parts[0].toLongLong();
-                    systemInfo["uptime_days"] = seconds / 86400.0;
-                } else {
-                    systemInfo["uptime_days"] = 0.0;
-                }
-                uptimeFile.close();
-            } else {
-                systemInfo["uptime_days"] = 0.0;
-            }
-        } catch (...) {
-            systemInfo["cpu_usage"] = 0.0;
-            systemInfo["mem_total"] = 0.0;
-            systemInfo["mem_used"] = 0.0;
-            systemInfo["mem_usage"] = 0.0;
-            systemInfo["load_1"] = 0.0;
-            systemInfo["load_5"] = 0.0;
-            systemInfo["load_15"] = 0.0;
-            systemInfo["uptime_days"] = 0.0;
-        }
-        
-#elif defined(Q_OS_MACOS)
-        // macOS 平台 - 使用原有命令
-        try {
-            // CPU 使用率
-            QProcess cpuProcess;
-            cpuProcess.start("sh", QStringList() << "-c" << "top -l 1 | grep 'CPU usage' | awk '{print $3}' | sed 's/%//'");
-            if (cpuProcess.waitForFinished(2000)) {
-                QString cpuUsage = cpuProcess.readAllStandardOutput().trimmed();
-                systemInfo["cpu_usage"] = cpuUsage.toDouble();
-            } else {
-                systemInfo["cpu_usage"] = 0.0;
-            }
-            
-            // 内存信息
-            QProcess memProcess;
-            memProcess.start("sh", QStringList() << "-c" << "top -l 1 | grep 'PhysMem' | awk '{print $2, $4, $6}'");
-            if (memProcess.waitForFinished(2000)) {
-                QString memInfo = memProcess.readAllStandardOutput().trimmed();
-                QStringList memParts = memInfo.split(" ");
-                if (memParts.size() >= 3) {
-                    double memUsed = memParts[0].replace("M", "").toDouble();
-                    double memFree = memParts[2].replace("M", "").toDouble();
-                    double memTotal = memUsed + memFree;
-                    systemInfo["mem_total"] = memTotal;
-                    systemInfo["mem_used"] = memUsed;
-                    systemInfo["mem_usage"] = (memUsed / memTotal) * 100;
-                } else {
-                    systemInfo["mem_total"] = 0.0;
-                    systemInfo["mem_used"] = 0.0;
-                    systemInfo["mem_usage"] = 0.0;
-                }
-            } else {
-                systemInfo["mem_total"] = 0.0;
-                systemInfo["mem_used"] = 0.0;
-                systemInfo["mem_usage"] = 0.0;
-            }
-            
-            // 系统负载
-            QProcess loadProcess;
-            loadProcess.start("sh", QStringList() << "-c" << "uptime | awk -F'load averages: ' '{print $2}'");
-            if (loadProcess.waitForFinished(2000)) {
-                QString loadInfo = loadProcess.readAllStandardOutput().trimmed();
-                QStringList loadParts = loadInfo.split(", ");
-                if (loadParts.size() >= 3) {
-                    systemInfo["load_1"] = loadParts[0].toDouble();
-                    systemInfo["load_5"] = loadParts[1].toDouble();
-                    systemInfo["load_15"] = loadParts[2].toDouble();
-                } else {
-                    systemInfo["load_1"] = 0.0;
-                    systemInfo["load_5"] = 0.0;
-                    systemInfo["load_15"] = 0.0;
-                }
-            } else {
-                systemInfo["load_1"] = 0.0;
-                systemInfo["load_5"] = 0.0;
-                systemInfo["load_15"] = 0.0;
-            }
-            
-            // 运行时间
-            QProcess uptimeProcess;
-            uptimeProcess.start("sh", QStringList() << "-c" << "uptime | awk -F'up ' '{print $2}' | awk -F', ' '{print $1}'");
-            if (uptimeProcess.waitForFinished(2000)) {
-                QString uptimeInfo = uptimeProcess.readAllStandardOutput().trimmed();
-                QRegularExpression regex("(\\d+) days?");
-                QRegularExpressionMatch match = regex.match(uptimeInfo);
-                if (match.hasMatch()) {
-                    systemInfo["uptime_days"] = match.captured(1).toDouble();
-                } else {
-                    systemInfo["uptime_days"] = 0.0;
-                }
-            } else {
-                systemInfo["uptime_days"] = 0.0;
-            }
-        } catch (...) {
-            systemInfo["cpu_usage"] = 0.0;
-            systemInfo["mem_total"] = 0.0;
-            systemInfo["mem_used"] = 0.0;
-            systemInfo["mem_usage"] = 0.0;
-            systemInfo["load_1"] = 0.0;
-            systemInfo["load_5"] = 0.0;
-            systemInfo["load_15"] = 0.0;
-            systemInfo["uptime_days"] = 0.0;
-        }
-#else
-        // 其他平台 - 使用默认值
+        // 平台特定的系统信息获取（简化版本，只获取基本数据）
         systemInfo["cpu_usage"] = 0.0;
         systemInfo["mem_total"] = 0.0;
         systemInfo["mem_used"] = 0.0;
@@ -1395,24 +331,18 @@ void ContentTab::fetchSystemInfo()
         systemInfo["load_5"] = 0.0;
         systemInfo["load_15"] = 0.0;
         systemInfo["uptime_days"] = 0.0;
-#endif
-        
-        // 设置网络流量默认值
         systemInfo["network_rx_mb"] = 0.0;
         systemInfo["network_tx_mb"] = 0.0;
         systemInfo["total_rx_mb"] = 0.0;
         systemInfo["total_tx_mb"] = 0.0;
         
-        // 将结果发送回主线程（只有在对象仍然有效时）
         if (safeThis) {
             QMetaObject::invokeMethod(safeThis, "updateCharts", Qt::QueuedConnection, Q_ARG(QJsonObject, systemInfo));
         }
         
-        // 完成后退出线程
         QThread::currentThread()->quit();
     });
     
-    // 连接线程完成信号，自动清理资源
     QObject::connect(thread, &QThread::finished, worker, &QObject::deleteLater);
     QObject::connect(thread, &QThread::finished, thread, &QThread::deleteLater);
     
@@ -1421,13 +351,10 @@ void ContentTab::fetchSystemInfo()
     
     // 同时尝试从网络获取系统信息
     if (m_apiService) {
-        // qDebug() << "[ContentTab] Attempting to fetch system info from network...";
         m_apiService->get("/system/info", [this](const QJsonObject &response) {
-            // qDebug() << "[ContentTab] Network response received:" << response;
             if (response["code"].toInt() == 0) {
                 QJsonObject data = response["data"].toObject();
                 
-                // 处理网络流量数据，将字节转换为MB
                 if (data.contains("network_rx_bytes")) {
                     qint64 rxBytes = data["network_rx_bytes"].toVariant().toLongLong();
                     data["network_rx_mb"] = rxBytes / (1024.0 * 1024.0);
@@ -1437,122 +364,140 @@ void ContentTab::fetchSystemInfo()
                     data["network_tx_mb"] = txBytes / (1024.0 * 1024.0);
                 }
                 
-                // 如果没有总接收和总发送数据，使用当前值作为默认值
                 if (!data.contains("total_rx_mb")) {
-                    data["total_rx_mb"] = 1536.8; // 使用模拟数据的值
+                    data["total_rx_mb"] = 1536.8;
                 }
                 if (!data.contains("total_tx_mb")) {
-                    data["total_tx_mb"] = 768.4; // 使用模拟数据的值
+                    data["total_tx_mb"] = 768.4;
                 }
                 
-                // 如果没有详细的内存信息，计算近似值
-                if (!data.contains("memoryTotal") && data.contains("memoryUsage")) {
-                    data["memoryTotal"] = 16; // 默认值
-                    double usage = data["memoryUsage"].toDouble();
-                    data["memoryUsed"] = (usage / 100.0) * data["memoryTotal"].toDouble();
-                    data["memoryAvailable"] = data["memoryTotal"].toDouble() - data["memoryUsed"].toDouble();
-                }
+                if (data.contains("cpuUsage")) data["cpu_usage"] = data["cpuUsage"];
+                if (data.contains("memoryUsage")) data["mem_usage"] = data["memoryUsage"];
+                if (data.contains("memoryTotal")) data["mem_total"] = data["memoryTotal"];
+                if (data.contains("memoryUsed")) data["mem_used"] = data["memoryUsed"];
+                if (data.contains("diskUsage")) data["disk_usage"] = data["diskUsage"];
+                if (data.contains("diskTotal")) data["disk_total"] = data["diskTotal"];
+                if (data.contains("diskUsed")) data["disk_used"] = data["diskUsed"];
+                if (data.contains("serverIp")) data["ip_address"] = data["serverIp"];
+                if (data.contains("os")) data["os_info"] = data["os"];
                 
-                // 如果没有详细的磁盘信息，计算近似值
-                if (!data.contains("diskTotal") && data.contains("diskUsage")) {
-                    data["diskTotal"] = 500; // 默认值
-                    double usage = data["diskUsage"].toDouble();
-                    data["diskUsed"] = (usage / 100.0) * data["diskTotal"].toDouble();
-                    data["diskAvailable"] = data["diskTotal"].toDouble() - data["diskUsed"].toDouble();
-                }
-                
-                // 如果没有负载数据，设置默认值
-                if (!data.contains("load_1")) {
-                    data["load_1"] = 1.2; // 默认值
-                }
-                if (!data.contains("load_5")) {
-                    data["load_5"] = 1.5; // 默认值
-                }
-                if (!data.contains("load_15")) {
-                    data["load_15"] = 1.8; // 默认值
-                }
-                
-                // 转换字段名称以匹配本地系统信息格式
-                if (data.contains("cpuUsage")) {
-                    data["cpu_usage"] = data["cpuUsage"];
-                }
-                if (data.contains("memoryUsage")) {
-                    data["mem_usage"] = data["memoryUsage"];
-                }
-                if (data.contains("memoryTotal")) {
-                    data["mem_total"] = data["memoryTotal"];
-                }
-                if (data.contains("memoryUsed")) {
-                    data["mem_used"] = data["memoryUsed"];
-                }
-                if (data.contains("diskUsage")) {
-                    data["disk_usage"] = data["diskUsage"];
-                }
-                if (data.contains("diskTotal")) {
-                    data["disk_total"] = data["diskTotal"];
-                }
-                if (data.contains("diskUsed")) {
-                    data["disk_used"] = data["diskUsed"];
-                }
-                if (data.contains("serverIp")) {
-                    data["ip_address"] = data["serverIp"];
-                }
-                if (data.contains("os")) {
-                    data["os_info"] = data["os"];
-                }
-                
-                // qDebug() << "[ContentTab] Network system info received with processed data:" << data;
                 updateCharts(data);
-            } else {
-                qWarning() << "[ContentTab] Failed to fetch real system info:" << response["msg"].toString();
             }
         }, [](const QString &error) {
-            qWarning() << "[ContentTab] Network error fetching system info:" << error;
+            qWarning() << "[ContentTab] Network error:" << error;
         });
-    } else {
-        qWarning() << "[ContentTab] NetworkManager not available for fetching system info";
     }
 }
 
 void ContentTab::updateCharts(const QJsonObject &data)
 {
-    if (!m_pageLoaded) {
-        // 页面未加载完成，缓存数据
-        m_pendingData = data;
-        // qDebug() << "[ContentTab] Page not loaded yet, caching data:" << QJsonDocument(data).toJson(QJsonDocument::Compact).left(100) << "...";
-        return;
+    // 更新系统信息
+    if (m_serverIpLabel) {
+        m_serverIpLabel->setText("IP地址: " + (data["ip_address"].toString().isEmpty() ? "未知" : data["ip_address"].toString()));
+    }
+    if (m_osInfoLabel) {
+        m_osInfoLabel->setText("操作系统: " + (data["os_info"].toString().isEmpty() ? "未知" : data["os_info"].toString()));
+    }
+    if (m_uptimeLabel) {
+        QString uptime = data["uptime_days"].toDouble() > 0 ? 
+            QString::number(data["uptime_days"].toDouble(), 'f', 1) + "天" : 
+            (data["uptime"].toString().isEmpty() ? "未知" : data["uptime"].toString());
+        m_uptimeLabel->setText("运行时间: " + uptime);
     }
     
-#ifdef WEBENGINE_AVAILABLE
-    QWebEngineView *webEngineView = qobject_cast<QWebEngineView*>(m_webView);
-    if (!webEngineView || !webEngineView->page()) {
-        qWarning() << "[ContentTab] WebView not available for updating charts";
-        return;
+    // 更新 CPU Gauge
+    double cpuUsage = data["cpu_usage"].toDouble() > 0 ? data["cpu_usage"].toDouble() : data["cpuUsage"].toDouble();
+    double cpuIdle = 100 - cpuUsage;
+    QStringList cpuDetails;
+    cpuDetails << QString("CPU使用率: %1%").arg(cpuUsage, 0, 'f', 1)
+               << QString("已用: %1%").arg(cpuUsage, 0, 'f', 1)
+               << QString("空闲: %1%").arg(cpuIdle, 0, 'f', 1);
+    updateGauge(m_cpuGauge, cpuUsage, cpuDetails);
+    
+    // 更新内存 Gauge
+    double memoryUsage = data["mem_usage"].toDouble() > 0 ? data["mem_usage"].toDouble() : data["memoryUsage"].toDouble();
+    double memTotal = data["mem_total"].toDouble() > 0 ? data["mem_total"].toDouble() : data["memoryTotal"].toDouble();
+    double memUsed = data["mem_used"].toDouble() > 0 ? data["mem_used"].toDouble() : data["memoryUsed"].toDouble();
+    double memAvailable = data["memoryAvailable"].toDouble() > 0 ? data["memoryAvailable"].toDouble() : (memTotal - memUsed);
+    QStringList memDetails;
+    memDetails << QString("总计: %1 GB").arg(memTotal, 0, 'f', 2)
+               << QString("已用: %1 GB").arg(memUsed, 0, 'f', 2)
+               << QString("可用: %1 GB").arg(memAvailable, 0, 'f', 2);
+    updateGauge(m_memoryGauge, memoryUsage, memDetails);
+    
+    // 更新磁盘 Gauge
+    double diskUsage = data["disk_usage"].toDouble() > 0 ? data["disk_usage"].toDouble() : data["diskUsage"].toDouble();
+    double diskTotal = data["disk_total"].toDouble() > 0 ? data["disk_total"].toDouble() : data["diskTotal"].toDouble();
+    double diskUsed = data["disk_used"].toDouble() > 0 ? data["disk_used"].toDouble() : data["diskUsed"].toDouble();
+    double diskAvailable = data["diskAvailable"].toDouble() > 0 ? data["diskAvailable"].toDouble() : (diskTotal - diskUsed);
+    QStringList diskDetails;
+    diskDetails << QString("总计: %1 GB").arg(diskTotal, 0, 'f', 2)
+                 << QString("已用: %1 GB").arg(diskUsed, 0, 'f', 2)
+                 << QString("可用: %1 GB").arg(diskAvailable, 0, 'f', 2);
+    updateGauge(m_diskGauge, diskUsage, diskDetails);
+    
+    // 更新系统负载图表
+    QList<double> loadData;
+    loadData << data["load_1"].toDouble()
+             << data["load_5"].toDouble()
+             << data["load_15"].toDouble();
+    QStringList loadCategories;
+    loadCategories << "1分钟" << "5分钟" << "15分钟";
+    updateBarChart(m_loadChart, m_loadSeries, loadData, loadCategories, "系统负载");
+    
+    // 更新网络流量图表
+    QList<double> networkData;
+    networkData << data["network_rx_mb"].toDouble()
+                << data["network_tx_mb"].toDouble()
+                << data["total_rx_mb"].toDouble()
+                << data["total_tx_mb"].toDouble();
+    QStringList networkCategories;
+    networkCategories << "下行" << "上行" << "总接收" << "总发送";
+    updateBarChart(m_networkChart, m_networkSeries, networkData, networkCategories, "网络流量");
+}
+
+void ContentTab::updateGauge(GaugeWidget *gauge, double value, const QStringList &details)
+{
+    if (gauge) {
+        gauge->setValue(value);
+        gauge->setDetails(details);
+    }
+}
+
+void ContentTab::updateBarChart(QChart *chart, QBarSeries *series, const QList<double> &data, const QStringList &categories, const QString &title)
+{
+    if (!chart || !series) return;
+    
+    series->clear();
+    
+    QBarSet *barSet = new QBarSet(title);
+    QList<QColor> colors;
+    if (categories.size() == 3) {
+        colors = {QColor(255, 99, 132), QColor(255, 159, 64), QColor(75, 192, 192)};
+    } else {
+        colors = {QColor(46, 204, 113), QColor(231, 76, 60), QColor(52, 152, 219), QColor(243, 156, 18)};
     }
     
-    QString jsonData = QJsonDocument(data).toJson(QJsonDocument::Compact);
-    QString script = QString("updateServerCharts(%1);").arg(jsonData);
-    
-    // qDebug() << "[ContentTab] Running JavaScript to update charts:" << script.left(100) << "...";
-    
-    webEngineView->page()->runJavaScript(script);
-#else
-    // WebEngine不可用时，更新QLabel显示系统信息
-    QLabel* webViewLabel = qobject_cast<QLabel*>(m_webView);
-    if (webViewLabel) {
-        QString info = "系统信息:\n";
-        if (data.contains("cpu")) {
-            info += QString("CPU: %1%\n").arg(data["cpu"].toDouble(), 0, 'f', 1);
-        }
-        if (data.contains("memory")) {
-            info += QString("内存: %1%\n").arg(data["memory"].toDouble(), 0, 'f', 1);
-        }
-        if (data.contains("disk")) {
-            info += QString("磁盘: %1%\n").arg(data["disk"].toDouble(), 0, 'f', 1);
-        }
-        webViewLabel->setText(info);
+    for (int i = 0; i < data.size(); ++i) {
+        *barSet << data[i];
     }
-#endif
+    barSet->setColor(colors[0]);
+    
+    series->append(barSet);
+    
+    QList<QAbstractAxis*> verticalAxes = chart->axes(Qt::Vertical);
+    if (!verticalAxes.isEmpty()) {
+        QValueAxis *axisY = qobject_cast<QValueAxis*>(verticalAxes.first());
+        if (axisY) {
+            double maxValue = *std::max_element(data.begin(), data.end());
+            axisY->setMax(maxValue * 1.2);
+        }
+    }
+}
+
+void ContentTab::refreshSystemInfo()
+{
+    fetchSystemInfo();
 }
 
 void ContentTab::applyTheme()
@@ -1565,87 +510,9 @@ void ContentTab::applyTheme()
         "    color: %2; "
         "    font-family: %3; "
         "}"
-    ).arg(theme->colors().BACKGROUND)
-     .arg(theme->colors().TEXT_PRIMARY)
-     .arg(ThemeManager::Typography::FONT_FAMILY);
+    ).arg(theme->colors().BACKGROUND,
+          theme->colors().TEXT_PRIMARY,
+          ThemeManager::Typography::FONT_FAMILY);
     
     setStyleSheet(styleSheet);
-    
-    if (m_titleLabel) {
-        m_titleLabel->setStyleSheet(QString(
-            "QLabel { "
-            "    font-size: %1px; "
-            "    font-weight: bold; "
-            "    color: %2; "
-            "    padding: 10px 0; "
-            "}"
-        ).arg(ThemeManager::Typography::FONT_SIZE_XXL)
-         .arg(theme->colors().TEXT_PRIMARY));
-    }
-    
-    if (m_webView) {
-        // 检查 m_webView 的实际类型，使用正确的样式选择器
-#ifdef WEBENGINE_AVAILABLE
-        QWebEngineView *webEngineView = qobject_cast<QWebEngineView*>(m_webView);
-        if (webEngineView) {
-            // 是 QWebEngineView，使用 QWebEngineView 样式
-            try {
-                webEngineView->setStyleSheet(QString(
-                    "QWebEngineView { "
-                    "    border: 1px solid %1; "
-                    "    border-radius: 8px; "
-                    "    background-color: %2; "
-                    "}"
-                ).arg(theme->colors().BORDER)
-                 .arg(theme->colors().BACKGROUND));
-            } catch (const std::exception& e) {
-                qWarning() << "[ContentTab] Exception setting WebEngineView stylesheet:" << e.what();
-            } catch (...) {
-                qWarning() << "[ContentTab] Unknown exception setting WebEngineView stylesheet";
-            }
-        } else {
-            // 是 QLabel，使用 QLabel 样式
-            QLabel *label = qobject_cast<QLabel*>(m_webView);
-            if (label) {
-                try {
-                    label->setStyleSheet(QString(
-                        "QLabel { "
-                        "    border: 1px solid %1; "
-                        "    border-radius: 8px; "
-                        "    background-color: %2; "
-                        "    color: %3; "
-                        "}"
-                    ).arg(theme->colors().BORDER)
-                     .arg(theme->colors().BACKGROUND)
-                     .arg(theme->colors().TEXT_PRIMARY));
-                } catch (const std::exception& e) {
-                    qWarning() << "[ContentTab] Exception setting Label stylesheet:" << e.what();
-                } catch (...) {
-                    qWarning() << "[ContentTab] Unknown exception setting Label stylesheet";
-                }
-            }
-        }
-#else
-        // WebEngine 不可用，m_webView 应该是 QLabel
-        QLabel *label = qobject_cast<QLabel*>(m_webView);
-        if (label) {
-            try {
-                label->setStyleSheet(QString(
-                    "QLabel { "
-                    "    border: 1px solid %1; "
-                    "    border-radius: 8px; "
-                    "    background-color: %2; "
-                    "    color: %3; "
-                    "}"
-                ).arg(theme->colors().BORDER)
-                 .arg(theme->colors().BACKGROUND)
-                 .arg(theme->colors().TEXT_PRIMARY));
-            } catch (const std::exception& e) {
-                qWarning() << "[ContentTab] Exception setting Label stylesheet:" << e.what();
-            } catch (...) {
-                qWarning() << "[ContentTab] Unknown exception setting Label stylesheet";
-            }
-        }
-#endif
-    }
 }

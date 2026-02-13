@@ -5,10 +5,6 @@
 #include <QDir>
 #include <QDebug>
 #include <QCoreApplication>
-#ifdef WEBENGINE_AVAILABLE
-#include <QWebChannel>
-#include <QWebEngineView>
-#endif
 #include <QFile>
 #include "../Services/ApiService.h"
 #include <QJsonDocument>
@@ -21,18 +17,34 @@
 #include <QList>
 #include <QDateTimeEdit>
 #include <QDate>
+#include <QtCharts/QChartView>
+#include <QtCharts/QChart>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QPieSlice>
+#include <QtCharts/QBarCategoryAxis>
+#include <QtCharts/QValueAxis>
+#include <QPainter>
+#include <algorithm>
 #include "../App/common.h"
 #include "../Analytics/analytics.h"
 #include "../Styles/theme_manager.h"
 
 EChartsTab::EChartsTab(QWidget *parent)
     : QMainWindow(parent)
+    , m_chartView(nullptr)
+    , m_chart(nullptr)
+    , m_lineSeries(nullptr)
+    , m_barSeries(nullptr)
+    , m_pieSeries(nullptr)
     , m_apiService(nullptr)
 {
     m_apiService = new ApiService(this);
     
     // 1. 设置窗口基本属性
-    this->setWindowTitle("Qt + ECharts Demo");
+    this->setWindowTitle("Qt Charts Demo");
     this->resize(800, 600);
 
     // 2. 创建中心部件和布局
@@ -43,38 +55,17 @@ EChartsTab::EChartsTab(QWidget *parent)
     layout->setSpacing(12);
     this->setCentralWidget(centralWidget);
 
-#ifdef WEBENGINE_AVAILABLE
-    // 3. 创建WebEngineView，加载ECharts HTML页面
-    m_webView = new QWebEngineView(this);
-    m_webView->setObjectName("echartsWebView");
-    layout->addWidget(m_webView);
-
-    // 4. 创建桥接对象，实现Qt与JS交互
-    m_bridge = new ChartBridge(this);
-    QWebChannel *channel = new QWebChannel(this);
-    channel->registerObject("qt", m_bridge);  // 注册为window.qt对象（供JS调用）
-    m_webView->page()->setWebChannel(channel);
-
-    // 5. 加载本地HTML文件（使用绝对路径确保文件能被找到）
-    QString htmlPath = "/Applications/qingpengxia/qt/qt6/example/src/ECharts/chart.html";
+    // 3. 创建 Qt Charts 图表视图
+    m_chart = new QChart();
+    m_chart->setTitle("API 数据统计");
+    m_chart->setAnimationOptions(QChart::SeriesAnimations);
+    m_chart->legend()->setVisible(true);
     
-    // 连接WebView加载完成信号
-    connect(m_webView, &QWebEngineView::loadFinished, this, &EChartsTab::onPageLoaded);
-    
-    m_webView->load(QUrl::fromLocalFile(htmlPath));
-#else
-    // WebEngine不可用时，创建一个更友好的替代界面
-    m_webView = new QLabel("当前平台不支持 WebEngine 组件\n图表功能已禁用", this);
-    m_webView->setAlignment(Qt::AlignCenter);
-    m_webView->setStyleSheet("QLabel { color: #666; font-size: 14px; line-height: 1.5; font-size: 18px; font-weight: bold; color: #333; margin: 20px; }");
-    m_webView->setObjectName("echartsWebView");
-    m_webView->setMinimumHeight(400);
-    layout->addWidget(m_webView);
-
-    // 创建桥接对象但不使用WebChannel
-    m_bridge = new ChartBridge(this);
-    m_channel = nullptr;
-#endif
+    m_chartView = new QChartView(m_chart, this);
+    m_chartView->setRenderHint(QPainter::Antialiasing);
+    m_chartView->setObjectName("echartsWebView");
+    m_chartView->setMinimumHeight(400);
+    layout->addWidget(m_chartView);
 
     // 6. 创建筛选控件
     QHBoxLayout *filterLayout = new QHBoxLayout();
@@ -289,6 +280,137 @@ void EChartsTab::onChartTypeChanged(int index)
     fetchApiData();
 }
 
+void EChartsTab::updateChart(const QStringList &categories, const QList<int> &counts, const QList<double> &avgDurations, const QString &chartType)
+{
+    if (!m_chart || !m_chartView) return;
+    
+    // 先清理系列指针，避免重复删除
+    if (m_lineSeries) {
+        m_chart->removeSeries(m_lineSeries);
+        m_lineSeries->deleteLater();
+        m_lineSeries = nullptr;
+    }
+    if (m_barSeries) {
+        m_chart->removeSeries(m_barSeries);
+        m_barSeries->deleteLater();
+        m_barSeries = nullptr;
+    }
+    if (m_pieSeries) {
+        m_chart->removeSeries(m_pieSeries);
+        m_pieSeries->deleteLater();
+        m_pieSeries = nullptr;
+    }
+    
+    // 清除所有现有轴（先移除再删除）
+    QList<QAbstractAxis*> axes = m_chart->axes();
+    for (QAbstractAxis *axis : axes) {
+        if (axis) {
+            m_chart->removeAxis(axis);
+            delete axis;  // 直接删除，因为轴是临时创建的
+        }
+    }
+    
+    ThemeManager *theme = ThemeManager::instance();
+    
+    if (chartType == "line" || chartType.isEmpty()) {
+        // 折线图：使用 counts 数据
+        m_lineSeries = new QLineSeries();
+        m_lineSeries->setName("数量");
+        
+        for (int i = 0; i < categories.size() && i < counts.size(); ++i) {
+            m_lineSeries->append(i, counts[i]);
+        }
+        
+        m_chart->addSeries(m_lineSeries);
+        
+        // 设置 X 轴
+        QBarCategoryAxis *axisX = new QBarCategoryAxis();
+        axisX->append(categories);
+        m_chart->addAxis(axisX, Qt::AlignBottom);
+        m_lineSeries->attachAxis(axisX);
+        
+        // 设置 Y 轴
+        QValueAxis *axisY = new QValueAxis();
+        if (!counts.isEmpty()) {
+            int maxValue = *std::max_element(counts.begin(), counts.end());
+            axisY->setRange(0, maxValue * 1.2);
+        }
+        m_chart->addAxis(axisY, Qt::AlignLeft);
+        m_lineSeries->attachAxis(axisY);
+        
+        m_chart->setTitle("系统日志统计 - 折线图");
+        
+    } else if (chartType == "bar") {
+        // 柱状图：使用 counts 数据
+        m_barSeries = new QBarSeries();
+        
+        QBarSet *barSet = new QBarSet("数量");
+        for (int i = 0; i < categories.size() && i < counts.size(); ++i) {
+            *barSet << counts[i];
+        }
+        barSet->setColor(QColor(theme->colors().PRIMARY));
+        m_barSeries->append(barSet);
+        
+        m_chart->addSeries(m_barSeries);
+        
+        // 设置 X 轴
+        QBarCategoryAxis *axisX = new QBarCategoryAxis();
+        axisX->append(categories);
+        m_chart->addAxis(axisX, Qt::AlignBottom);
+        m_barSeries->attachAxis(axisX);
+        
+        // 设置 Y 轴
+        QValueAxis *axisY = new QValueAxis();
+        if (!counts.isEmpty()) {
+            int maxValue = *std::max_element(counts.begin(), counts.end());
+            axisY->setRange(0, maxValue * 1.2);
+        }
+        m_chart->addAxis(axisY, Qt::AlignLeft);
+        m_barSeries->attachAxis(axisY);
+        
+        m_chart->setTitle("系统日志统计 - 柱状图");
+        
+    } else if (chartType == "pie") {
+        // 饼图：使用 counts 数据
+        m_pieSeries = new QPieSeries();
+        
+        QList<QColor> colors = {
+            QColor(theme->colors().PRIMARY),
+            QColor(theme->colors().SUCCESS),
+            QColor(theme->colors().WARNING),
+            QColor(theme->colors().ERROR),
+            QColor(theme->colors().INFO)
+        };
+        
+        int total = 0;
+        for (int count : counts) {
+            total += count;
+        }
+        
+        for (int i = 0; i < categories.size() && i < counts.size(); ++i) {
+            if (counts[i] > 0) {
+                double percentage = (total > 0) ? (counts[i] * 100.0 / total) : 0.0;
+                QPieSlice *slice = m_pieSeries->append(categories[i], counts[i]);
+                slice->setLabel(QString("%1: %2%").arg(categories[i]).arg(percentage, 0, 'f', 1));
+                slice->setLabelVisible(true);
+                slice->setColor(colors[i % colors.size()]);
+            }
+        }
+        
+        m_chart->addSeries(m_pieSeries);
+        m_chart->setTitle("系统日志统计 - 饼图");
+        
+        // 设置图例
+        if (m_chart->legend()) {
+            m_chart->legend()->setAlignment(Qt::AlignRight);
+        }
+    }
+    
+    // 应用主题样式
+    m_chart->setTheme(static_cast<QChart::ChartTheme>(
+        theme->getCurrentTheme() == ThemeManager::DARK ? QChart::ChartThemeDark : QChart::ChartThemeLight));
+}
+
 void EChartsTab::onTimeShortcutClicked(int days)
 {
     QDateTime now = QDateTime::currentDateTime();
@@ -441,17 +563,6 @@ void EChartsTab::updateButtonHighlight(int days)
     }
 }
 
-void EChartsTab::onPageLoaded(bool ok)
-{
-    if (ok) {
-        // 页面加载完成后，延迟一小段时间确保JavaScript环境准备好
-        // QTimer::singleShot(500, this, &EChartsTab::fetchApiData); // 已禁用自动获取数据
-        // 改为直接调用，不使用定时器延迟
-        fetchApiData();
-    } else {
-        // WebView页面加载失败
-    }
-}
 
 void EChartsTab::fetchApiData()
 {
@@ -570,32 +681,13 @@ void EChartsTab::fetchApiData()
             // 获取当前选择的图表类型
             QString chartType = m_chartTypeCombo->currentData().toString();
             
-            // 生成JavaScript代码更新图表
-            QString jsCode = QString(
-                "if (window.updateApiChart) {"
-                "    window.updateApiChart(%1, %2, %3, '%4');"
-                "} else {"
-                "    console.log('updateApiChart函数未找到');"
-                "}"
-            ).arg(jsonArrayToString(categories))
-             .arg(jsonArrayToString(counts))
-             .arg(jsonArrayToString(avgDurations))
-             .arg(chartType);
-            
-#ifdef WEBENGINE_AVAILABLE
-            m_webView->page()->runJavaScript(jsCode);
-#else
-            // WebEngine不可用时，更新QLabel显示信息
-            QLabel* chartLabel = qobject_cast<QLabel*>(m_webView);
-            if (chartLabel) {
-                chartLabel->setText("WebEngine 不可用\nECharts功能已禁用\n\n图表数据已更新");
-            }
-#endif
+            // 使用 Qt Charts 更新图表
+            updateChart(categories, counts, avgDurations, chartType);
             
         } else {
             qWarning() << "API返回错误:" << rootObj["msg"].toString();
         }
-    }, [this, timer](const QString &errorMsg) {
+    }, [timer](const QString &errorMsg) {
         // 记录API请求失败性能
         qint64 responseTime = timer.elapsed();
         Analytics::SDK::instance()->trackPerformance("api_response_time", responseTime, {
@@ -613,15 +705,8 @@ void EChartsTab::fetchApiData()
             "    console.log('showNetworkErrorMessage函数未找到');"
             "}"
         );
-#ifdef WEBENGINE_AVAILABLE
-        m_webView->page()->runJavaScript(jsCode);
-#else
-        // WebEngine不可用时，更新QLabel显示信息
-        QLabel* chartLabel = qobject_cast<QLabel*>(m_webView);
-        if (chartLabel) {
-            chartLabel->setText("WebEngine 不可用\n网络错误");
-        }
-#endif
+        // 网络错误时，图表会保持之前的状态
+        qWarning() << "[EChartsTab] Network error:" << errorMsg;
     }, queryParams);
 }
 
@@ -682,11 +767,10 @@ void EChartsTab::applyTheme()
      .arg(theme->colors().TEXT_PRIMARY)
      .arg(ThemeManager::Typography::FONT_SIZE_SM));
     
-    // 应用WebView样式
-    if (m_webView) {
-#ifdef WEBENGINE_AVAILABLE
-        m_webView->setStyleSheet(QString(
-            "QWebEngineView#echartsWebView { "
+    // 应用图表视图样式
+    if (m_chartView) {
+        m_chartView->setStyleSheet(QString(
+            "QChartView#echartsWebView { "
             "    border: 1px solid %1; "
             "    border-radius: %2px; "
             "    background-color: %3; "
@@ -694,19 +778,6 @@ void EChartsTab::applyTheme()
         ).arg(theme->colors().BORDER)
          .arg(ThemeManager::BorderRadius::MD)
          .arg(theme->colors().SURFACE));
-#else
-        m_webView->setStyleSheet(QString(
-            "QLabel#echartsWebView { "
-            "    border: 1px solid %1; "
-            "    border-radius: %2px; "
-            "    background-color: %3; "
-            "    color: %4; "
-            "}"
-        ).arg(theme->colors().BORDER)
-         .arg(ThemeManager::BorderRadius::MD)
-         .arg(theme->colors().SURFACE)
-         .arg(theme->colors().TEXT_PRIMARY));
-#endif
     }
     
     // 应用下拉框样式

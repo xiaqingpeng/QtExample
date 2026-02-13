@@ -1,5 +1,10 @@
 // clazy: excludeall
 #include "userprofiletab.h"
+#include <QtCharts/QChartView>
+#include <QtCharts/QChart>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QPieSlice>
+#include <QPainter>
 #include <QDir>
 #include "../Services/NetworkService.h"
 #include "../Services/NetworkManagerAdapter.h"
@@ -165,34 +170,29 @@ void UserProfileTab::setupBehaviorStats()
 
 void UserProfileTab::setupInterestAnalysis()
 {
-#ifdef WEBENGINE_AVAILABLE
-    m_interestChartView = new QWebEngineView();
+    // 使用 Qt Charts 创建饼图
+    m_interestChart = new QChart();
+    m_interestSeries = new QPieSeries();
+    m_interestChart->addSeries(m_interestSeries);
+    m_interestChart->setTitle("兴趣分布");
+    m_interestChart->setAnimationOptions(QChart::SeriesAnimations);
+    m_interestChart->legend()->setVisible(true);
+    m_interestChart->legend()->setAlignment(Qt::AlignRight);
+    
+    m_interestChartView = new QChartView(m_interestChart);
+    m_interestChartView->setRenderHint(QPainter::Antialiasing);
     m_interestChartView->setMinimumHeight(350);
     m_interestChartView->setObjectName("chartView");
-#else
-    // 创建更友好的兴趣分析替代界面
-    m_interestChartView = new QLabel("当前平台不支持 WebEngine 组件\n兴趣分析图表功能已禁用");
-    m_interestChartView->setAlignment(Qt::AlignCenter);
-    m_interestChartView->setStyleSheet("QLabel { color: #666; font-size: 12px; line-height: 1.5; font-size: 16px; font-weight: bold; color: #333; margin: 10px; }");
-    m_interestChartView->setMinimumHeight(350);
-    m_interestChartView->setObjectName("chartView");
-#endif
 }
 
 void UserProfileTab::setupValueAssessment()
 {
-#ifdef WEBENGINE_AVAILABLE
-    m_valueRadarView = new QWebEngineView();
-    m_valueRadarView->setMinimumHeight(350);
-    m_valueRadarView->setObjectName("chartView");
-#else
-    // 创建更友好的价值评估替代界面
-    m_valueRadarView = new QLabel("当前平台不支持 WebEngine 组件\n价值评估图表功能已禁用");
+    // Qt Charts 不支持雷达图，使用标签显示价值评估信息
+    m_valueRadarView = new QLabel("价值评估\n\nQt Charts 不支持雷达图\n将显示文本形式的价值评估数据");
     m_valueRadarView->setAlignment(Qt::AlignCenter);
-    m_valueRadarView->setStyleSheet("QLabel { color: #666; font-size: 12px; line-height: 1.5; font-size: 16px; font-weight: bold; color: #333; margin: 10px; }");
+    m_valueRadarView->setStyleSheet("QLabel { color: #666; font-size: 14px; line-height: 1.8; padding: 20px; }");
     m_valueRadarView->setMinimumHeight(350);
     m_valueRadarView->setObjectName("chartView");
-#endif
 }
 
 void UserProfileTab::loadUserList()
@@ -527,99 +527,46 @@ void UserProfileTab::updateBehaviorStatsDisplay(const QJsonObject &behaviorStats
 
 void UserProfileTab::updateInterestAnalysisDisplay(const QJsonArray &interests)
 {
-    // 构建ECharts饼图配置
-    QString chartData;
+    if (!m_interestChart || !m_interestSeries) return;
+    
+    // 清除现有数据
+    m_interestSeries->clear();
+    m_interestChart->removeSeries(m_interestSeries);
+    
+    // 准备数据
+    QList<QColor> colors = {
+        QColor(0, 123, 255),    // #007bff
+        QColor(40, 167, 69),    // #28a745
+        QColor(255, 193, 7),    // #ffc107
+        QColor(220, 53, 69),    // #dc3545
+        QColor(23, 162, 184),   // #17a2b8
+        QColor(102, 16, 242),   // #6610f2
+        QColor(253, 126, 20),   // #fd7e14
+        QColor(32, 201, 151)    // #20c997
+    };
+    
+    double totalScore = 0;
     for (const QJsonValue &interestValue : interests) {
         QJsonObject interest = interestValue.toObject();
-        chartData += QString("{name: '%1', value: %2},")
-            .arg(interest["name"].toString())
-            .arg(interest["score"].toDouble());
-    }
-    if (!chartData.isEmpty()) {
-        chartData.chop(1); // 移除最后一个逗号
+        totalScore += interest["score"].toDouble();
     }
     
-    QString html = QString(R"(
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <script src="qrc:/src/ECharts/echarts.min.js"></script>
-        </head>
-        <body style="margin:0;padding:0;background:#ffffff;">
-            <div id="chart" style="width:100%%;height:350px;"></div>
-            <script>
-                var chart = echarts.init(document.getElementById('chart'));
-                var option = {
-                    title: { 
-                        text: '兴趣分布',
-                        left: 'center',
-                        top: 20,
-                        textStyle: {
-                            fontSize: 16,
-                            fontWeight: '600',
-                            color: '#2c3e50'
-                        }
-                    },
-                    tooltip: { 
-                        trigger: 'item',
-                        formatter: '{a} <br/>{b}: {c} ({d}%%)'
-                    },
-                    legend: { 
-                        orient: 'vertical', 
-                        left: 'left',
-                        top: 'middle',
-                        textStyle: {
-                            fontSize: 12,
-                            color: '#495057'
-                        }
-                    },
-                    series: [{
-                        name: '兴趣',
-                        type: 'pie',
-                        radius: ['40%%', '70%%'],
-                        center: ['60%%', '50%%'],
-                        data: [%1],
-                        emphasis: {
-                            itemStyle: {
-                                shadowBlur: 10,
-                                shadowOffsetX: 0,
-                                shadowColor: 'rgba(0, 0, 0, 0.5)'
-                            }
-                        },
-                        itemStyle: {
-                            borderRadius: 8,
-                            borderColor: '#fff',
-                            borderWidth: 2
-                        },
-                        label: {
-                            show: false
-                        },
-                        labelLine: {
-                            show: false
-                        }
-                    }],
-                    color: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6610f2', '#fd7e14', '#20c997']
-                };
-                chart.setOption(option);
-                
-                // 响应式调整
-                window.addEventListener('resize', function() {
-                    chart.resize();
-                });
-            </script>
-        </body>
-        </html>
-    )").arg(chartData);
-    
-#ifdef WEBENGINE_AVAILABLE
-    m_interestChartView->setHtml(html);
-#else
-    QLabel* chartLabel = qobject_cast<QLabel*>(m_interestChartView);
-    if (chartLabel) {
-        chartLabel->setText("WebEngine 不可用\n兴趣分析图表已禁用");
+    int colorIndex = 0;
+    for (const QJsonValue &interestValue : interests) {
+        QJsonObject interest = interestValue.toObject();
+        QString name = interest["name"].toString();
+        double score = interest["score"].toDouble();
+        double percentage = totalScore > 0 ? (score / totalScore) * 100.0 : 0;
+        
+        QPieSlice *slice = m_interestSeries->append(name, score);
+        slice->setColor(colors[colorIndex % colors.size()]);
+        slice->setLabelVisible(true);
+        slice->setLabel(QString("%1: %2%").arg(name).arg(percentage, 0, 'f', 1));
+        colorIndex++;
     }
-#endif
+    
+    m_interestChart->addSeries(m_interestSeries);
+    m_interestChart->setTitle("兴趣分布");
 }
 
 
@@ -630,111 +577,37 @@ void UserProfileTab::updateValueAssessmentDisplay(const QJsonObject &valueAssess
 
 void UserProfileTab::renderValueRadarChart(const QJsonObject &valueData)
 {
-    QString html = QString(R"(
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <script src="qrc:/src/ECharts/echarts.min.js"></script>
-        </head>
-        <body style="margin:0;padding:0;background:#ffffff;">
-            <div id="chart" style="width:100%%;height:350px;"></div>
-            <script>
-                var chart = echarts.init(document.getElementById('chart'));
-                var option = {
-                    title: { 
-                        text: '价值评估',
-                        left: 'center',
-                        top: 20,
-                        textStyle: {
-                            fontSize: 16,
-                            fontWeight: '600',
-                            color: '#2c3e50'
-                        }
-                    },
-                    tooltip: {
-                        trigger: 'item',
-                        formatter: function(params) {
-                            return params.name + ': ' + params.value;
-                        }
-                    },
-                    legend: { 
-                        data: ['评分'], 
-                        top: 50,
-                        textStyle: {
-                            fontSize: 12,
-                            color: '#495057'
-                        }
-                    },
-                    radar: {
-                        center: ['50%%', '60%%'],
-                        radius: '60%%',
-                        indicator: [
-                            { name: '活跃度', max: 100 },
-                            { name: '忠诚度', max: 100 },
-                            { name: '行为深度', max: 100 },
-                            { name: '时间价值', max: 100 },
-                            { name: '综合评分', max: 100 }
-                        ],
-                        name: {
-                            textStyle: {
-                                color: '#495057',
-                                fontSize: 12
-                            }
-                        },
-                        splitArea: {
-                            areaStyle: {
-                                color: ['rgba(0, 123, 255, 0.1)', 'rgba(0, 123, 255, 0.05)']
-                            }
-                        },
-                        splitLine: {
-                            lineStyle: {
-                                color: 'rgba(0, 123, 255, 0.2)'
-                            }
-                        }
-                    },
-                    series: [{
-                        name: '价值评估',
-                        type: 'radar',
-                        data: [{
-                            value: [%2, %3, %4, %5, %6],
-                            name: '评分',
-                            itemStyle: {
-                                color: '#007bff'
-                            },
-                            areaStyle: {
-                                color: 'rgba(0, 123, 255, 0.2)'
-                            },
-                            lineStyle: {
-                                color: '#007bff',
-                                width: 2
-                            }
-                        }]
-                    }]
-                };
-                chart.setOption(option);
-                
-                // 响应式调整
-                window.addEventListener('resize', function() {
-                    chart.resize();
-                });
-            </script>
-        </body>
-        </html>
-    )").arg(valueData["activityScore"].toInt())
-      .arg(valueData["loyaltyScore"].toInt())
-      .arg(valueData["behaviorScore"].toInt())
-      .arg(valueData["timeScore"].toInt())
-      .arg(valueData["totalScore"].toInt());
+    // Qt Charts 不支持雷达图，使用文本形式显示价值评估数据
+    if (!m_valueRadarView) return;
     
-#ifdef WEBENGINE_AVAILABLE
-    m_valueRadarView->setHtml(html);
-#else
-    QLabel* chartLabel = qobject_cast<QLabel*>(m_valueRadarView);
-    if (chartLabel) {
-        chartLabel->setText("WebEngine 不可用\n价值评估图表已禁用");
-    }
-#endif
+    int activityScore = valueData["activityScore"].toInt();
+    int loyaltyScore = valueData["loyaltyScore"].toInt();
+    int behaviorScore = valueData["behaviorScore"].toInt();
+    int timeScore = valueData["timeScore"].toInt();
+    int totalScore = valueData["totalScore"].toInt();
+    
+    QString text = QString(
+        "<div style='text-align: center; padding: 20px;'>"
+        "<h3 style='margin-bottom: 20px; color: #2c3e50;'>价值评估</h3>"
+        "<div style='font-size: 14px; line-height: 2;'>"
+        "<div><strong>活跃度:</strong> %1/100</div>"
+        "<div><strong>忠诚度:</strong> %2/100</div>"
+        "<div><strong>行为深度:</strong> %3/100</div>"
+        "<div><strong>时间价值:</strong> %4/100</div>"
+        "<div style='margin-top: 15px; padding-top: 15px; border-top: 2px solid #e9ecef;'>"
+        "<div style='font-size: 18px; font-weight: bold; color: #007bff;'>"
+        "<strong>综合评分:</strong> %5/100</div>"
+        "</div>"
+        "</div>"
+        "</div>"
+    ).arg(activityScore)
+     .arg(loyaltyScore)
+     .arg(behaviorScore)
+     .arg(timeScore)
+     .arg(totalScore);
+    
+    m_valueRadarView->setText(text);
+    m_valueRadarView->setAlignment(Qt::AlignCenter);
 }
 
 
@@ -1169,7 +1042,7 @@ void UserProfileTab::applyTheme()
     
     // 应用图表视图样式
     QString chartViewStyle = QString(R"(
-        QWebEngineView#chartView {
+        QChartView#chartView {
             border: none;
             border-radius: %1px;
             background-color: %2;

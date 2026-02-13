@@ -12,7 +12,9 @@ else()
     message(STATUS "Reports module: WebEngine disabled")
 endif()
 
-target_link_libraries(reports PRIVATE
+target_link_libraries(reports PUBLIC
+    Qt6::Charts
+PRIVATE
     Qt6::Core
     Qt6::Widgets
     Qt6::Network

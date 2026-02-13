@@ -1,4 +1,4 @@
-QT += core gui widgets network
+QT += core gui widgets network charts
 
 # WebEngine 模块设为可选
 # Windows平台禁用WebEngine以确保兼容性

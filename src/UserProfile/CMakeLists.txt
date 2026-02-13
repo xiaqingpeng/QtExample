@@ -14,7 +14,9 @@ else()
     message(STATUS "UserProfile module: WebEngine disabled")
 endif()
 
-target_link_libraries(userprofile PRIVATE
+target_link_libraries(userprofile PUBLIC
+    Qt6::Charts
+PRIVATE
     Qt6::Core
     Qt6::Widgets
     Qt6::Network

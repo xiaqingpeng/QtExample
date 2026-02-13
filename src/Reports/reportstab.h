@@ -12,13 +12,15 @@
 #include <QDateEdit>
 #include <QTableWidget>
 #include <QTableWidgetItem>
-#ifdef WEBENGINE_AVAILABLE
-#ifdef WEBENGINE_AVAILABLE
-#include <QWebEngineView>
-#endif
-#endif
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QtCharts/QChartView>
+#include <QtCharts/QChart>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
+#include <QtCharts/QBarCategoryAxis>
+#include <QtCharts/QValueAxis>
 #include "../Styles/theme_manager.h"
 
 class ReportsTab : public QWidget
@@ -104,14 +106,13 @@ private:
     QLabel *m_todayEventsLabel;
     QLabel *m_totalEventsLabel;
     
-    // 趋势图表组件
-#ifdef WEBENGINE_AVAILABLE
-    QWebEngineView *m_trendChartView;
-    QWebEngineView *m_activityChartView;
-#else
-    QLabel *m_trendChartView;  // 使用QLabel作为占位符
-    QLabel *m_activityChartView;
-#endif
+    // 趋势图表组件（使用 Qt Charts）
+    QChartView *m_trendChartView;
+    QChartView *m_activityChartView;
+    QChart *m_trendChart;
+    QChart *m_activityChart;
+    QLineSeries *m_trendSeries;
+    QLineSeries *m_activitySeries;
     
     // 排行榜表格组件
     QTableWidget *m_topPagesTable;

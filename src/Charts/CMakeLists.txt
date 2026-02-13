@@ -3,6 +3,8 @@ qt6_add_library(charts STATIC
     echartstab.cpp
     logstatstab.h
     logstatstab.cpp
+    gaugewidget.h
+    gaugewidget.cpp
 )
 
 # 检查WebEngine是否可用（使用主 CMakeLists.txt 中的 WEBENGINE_AVAILABLE）
@@ -14,7 +16,9 @@ else()
     message(STATUS "Charts module: WebEngine disabled")
 endif()
 
-target_link_libraries(charts PRIVATE
+target_link_libraries(charts PUBLIC
+    Qt6::Charts
+PRIVATE
     Qt6::Core
     Qt6::Widgets
     Qt6::Network

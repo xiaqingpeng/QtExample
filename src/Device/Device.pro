@@ -1,4 +1,4 @@
-QT += core gui widgets network
+QT += core gui widgets network charts
 
 # WebEngine 模块设为可选
 # 如果系统中没有安装 Qt WebEngine，将禁用相关功能
@@ -32,6 +32,9 @@ INCLUDEPATH += ../Styles
 
 # 链接Services库
 LIBS += -L$$OUT_PWD/../Services -lenterpriseservices
+
+# 链接Charts库（包含GaugeWidget）
+LIBS += -L$$OUT_PWD/../Charts -lcharts
 
 # 资源文件
 RESOURCES += ../../layoutexamplestab.qrc

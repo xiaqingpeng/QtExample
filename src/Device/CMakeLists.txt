@@ -16,13 +16,16 @@ else()
     message(STATUS "Device module: WebEngine disabled")
 endif()
 
-target_link_libraries(Device PRIVATE
+target_link_libraries(Device PUBLIC
+    Qt6::Charts
+PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
     Qt6::Network
     network
     Styles
+    ECharts
 )
 
 # 只在 WebEngine 可用时链接

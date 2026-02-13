@@ -1,4 +1,4 @@
-QT += core gui widgets network
+QT += core gui widgets network charts
 
 # WebEngine 模块设为可选
 # Windows平台禁用WebEngine以确保兼容性
@@ -23,11 +23,13 @@ TARGET = charts
 
 HEADERS += \
     echartstab.h \
-    logstatstab.h
+    logstatstab.h \
+    gaugewidget.h
 
 SOURCES += \
     echartstab.cpp \
-    logstatstab.cpp
+    logstatstab.cpp \
+    gaugewidget.cpp
 
 # 包含路径
 INCLUDEPATH += ../..

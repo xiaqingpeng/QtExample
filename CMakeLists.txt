@@ -11,7 +11,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # 查找Qt模块 - 将WebEngine设为可选
-find_package(Qt6 COMPONENTS Core Gui Widgets Network PrintSupport REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets Network PrintSupport Charts REQUIRED)
 find_package(Qt6 COMPONENTS WebEngineWidgets QUIET)
 
 # 检查WebEngine是否可用，特别处理Windows平台
@@ -195,12 +195,14 @@ target_include_directories(Styles PRIVATE
 # Dialogs模块 - 已移除
 # LayoutExamples模块 - 已移除
 
-# ECharts模块
+# ECharts模块（现在包含 Qt Charts 组件）
 qt_add_library(ECharts STATIC
     src/Charts/echartstab.cpp
     src/Charts/echartstab.h
     src/Charts/logstatstab.cpp
     src/Charts/logstatstab.h
+    src/Charts/gaugewidget.cpp
+    src/Charts/gaugewidget.h
     layoutexamplestab.qrc
 )
 
@@ -209,7 +211,9 @@ if(WEBENGINE_AVAILABLE)
     target_compile_definitions(ECharts PRIVATE WEBENGINE_AVAILABLE)
 endif()
 
-target_link_libraries(ECharts PRIVATE
+target_link_libraries(ECharts PUBLIC
+    Qt6::Charts
+PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
@@ -245,7 +249,9 @@ if(WEBENGINE_AVAILABLE)
     target_compile_definitions(ReportsTab PRIVATE WEBENGINE_AVAILABLE)
 endif()
 
-target_link_libraries(ReportsTab PRIVATE
+target_link_libraries(ReportsTab PUBLIC
+    Qt6::Charts
+PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
@@ -352,6 +358,7 @@ target_link_libraries(QTExample PRIVATE
     analytics
     Styles
     Device
+    Qt6::Charts
 )
 
 # 只在 WebEngine 可用时链接

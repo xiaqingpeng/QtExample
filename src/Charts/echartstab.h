@@ -3,11 +3,16 @@
 
 #include <QMainWindow>
 #include <QLabel>
-#ifdef WEBENGINE_AVAILABLE
-#include <QWebEngineView>
-#include <QWebChannel>
-#endif
 #include <QVariant>
+#include <QtCharts/QChartView>
+#include <QtCharts/QChart>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QPieSlice>
+#include <QtCharts/QBarCategoryAxis>
+#include <QtCharts/QValueAxis>
 #include "../Services/ApiService.h"
 #include "theme_manager.h"
 // #include <QTimer>  // 已禁用定时器功能
@@ -46,22 +51,21 @@ private slots:
     void onTimeFilterChanged();
     // 快捷时间按钮点击事件
     void onTimeShortcutClicked(int days);
-    // WebView页面加载完成后获取API数据
-    void onPageLoaded(bool ok);
+    // 更新图表数据
+    void updateChart(const QStringList &categories, const QList<int> &counts, const QList<double> &avgDurations, const QString &chartType);
     // 图表类型切换事件
     void onChartTypeChanged(int index);
     // 主题变化事件
     void applyTheme();
 
 private:
-#ifdef WEBENGINE_AVAILABLE
-    QWebEngineView *m_webView;  // 加载HTML的WebView
-    QWebChannel *m_channel;
-#else
-    QLabel *m_webView;  // 使用QLabel作为占位符
-    QObject *m_channel; // 占位符
-#endif
-    ChartBridge *m_bridge;      // Qt与JS的桥接对象
+    // 图表组件（使用 Qt Charts）
+    QChartView *m_chartView;
+    QChart *m_chart;
+    QLineSeries *m_lineSeries;
+    QBarSeries *m_barSeries;
+    QPieSeries *m_pieSeries;
+    
     ApiService *m_apiService;
     // QTimer *m_apiTimer;         // API自动更新定时器 - 已禁用
     

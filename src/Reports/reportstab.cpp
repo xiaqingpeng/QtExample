@@ -18,6 +18,15 @@
 #include <QStandardPaths>
 #include <QCoreApplication>
 #include <QDir>
+#include <QtCharts/QChartView>
+#include <QtCharts/QChart>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
+#include <QtCharts/QBarCategoryAxis>
+#include <QtCharts/QValueAxis>
+#include <QPainter>
+#include <algorithm>
 
 ReportsTab::ReportsTab(QWidget *parent)
     : QWidget(parent)
@@ -155,29 +164,47 @@ void ReportsTab::setupKeyMetrics()
 
 void ReportsTab::setupTrendCharts()
 {
-#ifdef WEBENGINE_AVAILABLE
-    m_trendChartView = new QWebEngineView();
+    // 使用 Qt Charts 创建趋势图表
+    m_trendChart = new QChart();
+    m_trendSeries = new QLineSeries();
+    m_trendChart->addSeries(m_trendSeries);
+    m_trendChart->setTitle("趋势分析");
+    m_trendChart->setAnimationOptions(QChart::SeriesAnimations);
+    m_trendChart->legend()->setVisible(false);
+    
+    QValueAxis *axisX = new QValueAxis();
+    QValueAxis *axisY = new QValueAxis();
+    axisY->setMin(0);
+    m_trendChart->addAxis(axisX, Qt::AlignBottom);
+    m_trendChart->addAxis(axisY, Qt::AlignLeft);
+    m_trendSeries->attachAxis(axisX);
+    m_trendSeries->attachAxis(axisY);
+    
+    m_trendChartView = new QChartView(m_trendChart);
+    m_trendChartView->setRenderHint(QPainter::Antialiasing);
     m_trendChartView->setMinimumHeight(450);
     m_trendChartView->setObjectName("chartView");
     
-    m_activityChartView = new QWebEngineView();
-    m_activityChartView->setMinimumHeight(350);
-    m_activityChartView->setObjectName("chartView");
-#else
-    // 创建更友好的趋势图表替代界面
-    m_trendChartView = new QLabel("当前平台不支持 WebEngine 组件\n趋势图表功能已禁用");
-    m_trendChartView->setAlignment(Qt::AlignCenter);
-    m_trendChartView->setStyleSheet("QLabel { color: #666; font-size: 12px; line-height: 1.5; font-size: 16px; font-weight: bold; color: #333; margin: 10px; }");
-    m_trendChartView->setMinimumHeight(450);
-    m_trendChartView->setObjectName("chartView");
+    // 活动图表
+    m_activityChart = new QChart();
+    m_activitySeries = new QLineSeries();
+    m_activityChart->addSeries(m_activitySeries);
+    m_activityChart->setTitle("活动统计");
+    m_activityChart->setAnimationOptions(QChart::SeriesAnimations);
+    m_activityChart->legend()->setVisible(false);
     
-    // 创建更友好的活动图表替代界面
-    m_activityChartView = new QLabel("当前平台不支持 WebEngine 组件\n活动图表功能已禁用");
-    m_activityChartView->setAlignment(Qt::AlignCenter);
-    m_activityChartView->setStyleSheet("QLabel { color: #666; font-size: 12px; line-height: 1.5; font-size: 16px; font-weight: bold; color: #333; margin: 10px; }");
+    QValueAxis *activityAxisX = new QValueAxis();
+    QValueAxis *activityAxisY = new QValueAxis();
+    activityAxisY->setMin(0);
+    m_activityChart->addAxis(activityAxisX, Qt::AlignBottom);
+    m_activityChart->addAxis(activityAxisY, Qt::AlignLeft);
+    m_activitySeries->attachAxis(activityAxisX);
+    m_activitySeries->attachAxis(activityAxisY);
+    
+    m_activityChartView = new QChartView(m_activityChart);
+    m_activityChartView->setRenderHint(QPainter::Antialiasing);
     m_activityChartView->setMinimumHeight(350);
     m_activityChartView->setObjectName("chartView");
-#endif
 }
 
 void ReportsTab::setupTopRankings()
@@ -610,150 +637,87 @@ void ReportsTab::updateRealTimeStats(const QJsonArray &stats)
 
 void ReportsTab::renderTrendChart(const QJsonArray &trendData, const QString &title, const QString &chartType)
 {
-    QString xAxisData;
-    QString seriesData;
+    if (!m_trendChart || !m_trendSeries) return;
+    
+    // 清除现有数据
+    m_trendSeries->clear();
+    m_trendChart->removeAllSeries();
+    
+    // 移除现有坐标轴
+    QList<QAbstractAxis*> axes = m_trendChart->axes();
+    for (QAbstractAxis *axis : axes) {
+        m_trendChart->removeAxis(axis);
+        delete axis;
+    }
+    
+    // 准备数据
+    QStringList categories;
+    QList<double> values;
+    double maxValue = 0;
     
     for (const QJsonValue &value : trendData) {
         QJsonObject item = value.toObject();
         QString timeBucket = item["time_bucket"].toString();
+        double count = item["count"].toDouble();
         
-        // 检查count字段的类型
-        QJsonValue countValue = item["count"];
-        double count = countValue.toDouble();
-        
-        xAxisData += QString("'%1',").arg(timeBucket.left(10)); // 只取日期部分
-        seriesData += QString("%1,").arg(count);
+        categories << timeBucket.left(10);
+        values << count;
+        if (count > maxValue) maxValue = count;
     }
     
-    if (!xAxisData.isEmpty()) xAxisData.chop(1);
-    if (!seriesData.isEmpty()) seriesData.chop(1);
-    
-    QString html = QString(R"(
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <script src="qrc:/src/ECharts/echarts.min.js"></script>
-        </head>
-        <body style="margin:0;padding:0;background:#ffffff;">
-            <div id="chart" style="width:100%%;height:450px;"></div>
-            <script>
-                var chart = echarts.init(document.getElementById('chart'));
-                var option = {
-                    title: { 
-                        text: '%2',
-                        left: 'center',
-                        top: 20,
-                        textStyle: {
-                            fontSize: 16,
-                            fontWeight: '600',
-                            color: '#2c3e50'
-                        }
-                    },
-                    tooltip: { 
-                        trigger: 'axis',
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        borderColor: '#e9ecef',
-                        borderWidth: 1,
-                        textStyle: {
-                            color: '#495057'
-                        }
-                    },
-                    legend: { 
-                        data: ['数值'], 
-                        top: 50,
-                        textStyle: {
-                            fontSize: 12,
-                            color: '#495057'
-                        }
-                    },
-                    grid: {
-                        left: '3%%',
-                        right: '4%%',
-                        bottom: '3%%',
-                        top: '15%%',
-                        containLabel: true
-                    },
-                    xAxis: { 
-                        type: 'category', 
-                        data: [%3],
-                        axisLine: {
-                            lineStyle: {
-                                color: '#e9ecef'
-                            }
-                        },
-                        axisLabel: {
-                            color: '#6c757d',
-                            fontSize: 11
-                        }
-                    },
-                    yAxis: { 
-                        type: 'value',
-                        axisLine: {
-                            lineStyle: {
-                                color: '#e9ecef'
-                            }
-                        },
-                        axisLabel: {
-                            color: '#6c757d',
-                            fontSize: 11
-                        },
-                        splitLine: {
-                            lineStyle: {
-                                color: '#f1f3f4',
-                                type: 'dashed'
-                            }
-                        }
-                    },
-                    series: [{
-                        name: '数值',
-                        type: '%4',
-                        data: [%5],
-                        smooth: true,
-                        itemStyle: {
-                            color: '#007bff',
-                            borderRadius: 4
-                        },
-                        areaStyle: { 
-                            opacity: 0.1,
-                            color: {
-                                type: 'linear',
-                                x: 0,
-                                y: 0,
-                                x2: 0,
-                                y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: '#007bff'
-                                }, {
-                                    offset: 1, color: 'rgba(0, 123, 255, 0)'
-                                }]
-                            }
-                        },
-                        lineStyle: {
-                            width: 3,
-                            color: '#007bff'
-                        }
-                    }]
-                };
-                chart.setOption(option);
-                
-                // 响应式调整
-                window.addEventListener('resize', function() {
-                    chart.resize();
-                });
-            </script>
-        </body>
-        </html>
-    )").arg(title).arg(xAxisData).arg(chartType).arg(seriesData);
-    
-#ifdef WEBENGINE_AVAILABLE
-    m_trendChartView->setHtml(html);
-#else
-    QLabel* chartLabel = qobject_cast<QLabel*>(m_trendChartView);
-    if (chartLabel) {
-        chartLabel->setText("WebEngine 不可用\n趋势图表已禁用");
+    // 根据图表类型创建不同的系列
+    if (chartType == "line") {
+        // 折线图
+        m_trendSeries = new QLineSeries();
+        m_trendSeries->setName("数值");
+        m_trendSeries->setColor(QColor(0, 123, 255));
+        
+        for (int i = 0; i < values.size(); ++i) {
+            m_trendSeries->append(i, values[i]);
+        }
+        
+        m_trendChart->addSeries(m_trendSeries);
+        
+        // X 轴（分类）
+        QBarCategoryAxis *axisX = new QBarCategoryAxis();
+        axisX->append(categories);
+        m_trendChart->addAxis(axisX, Qt::AlignBottom);
+        m_trendSeries->attachAxis(axisX);
+        
+        // Y 轴（数值）
+        QValueAxis *axisY = new QValueAxis();
+        axisY->setMin(0);
+        axisY->setMax(maxValue * 1.2);
+        m_trendChart->addAxis(axisY, Qt::AlignLeft);
+        m_trendSeries->attachAxis(axisY);
+        
+    } else if (chartType == "bar") {
+        // 柱状图
+        QBarSeries *barSeries = new QBarSeries();
+        QBarSet *barSet = new QBarSet("数值");
+        for (double value : values) {
+            *barSet << value;
+        }
+        barSet->setColor(QColor(0, 123, 255));
+        barSeries->append(barSet);
+        
+        m_trendChart->addSeries(barSeries);
+        
+        // X 轴（分类）
+        QBarCategoryAxis *axisX = new QBarCategoryAxis();
+        axisX->append(categories);
+        m_trendChart->addAxis(axisX, Qt::AlignBottom);
+        barSeries->attachAxis(axisX);
+        
+        // Y 轴（数值）
+        QValueAxis *axisY = new QValueAxis();
+        axisY->setMin(0);
+        axisY->setMax(maxValue * 1.2);
+        m_trendChart->addAxis(axisY, Qt::AlignLeft);
+        barSeries->attachAxis(axisY);
     }
-#endif
+    
+    m_trendChart->setTitle(title);
 }
 
 
@@ -1247,7 +1211,7 @@ void ReportsTab::applyTheme()
     
     // 应用图表视图样式
     QString chartViewStyle = QString(R"(
-        QWebEngineView#chartView {
+        QChartView#chartView {
             border: none;
             border-radius: %1px;
             background-color: %2;
