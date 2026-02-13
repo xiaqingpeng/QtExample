@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 查找Qt6组件
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network WebEngineWidgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
 # 启用Qt的MOC、UIC和RCC
 set(CMAKE_AUTOMOC ON)

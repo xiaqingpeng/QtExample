@@ -10,27 +10,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-# 查找Qt模块 - 将WebEngine设为可选
+# 查找Qt模块
 find_package(Qt6 COMPONENTS Core Gui Widgets Network PrintSupport Charts REQUIRED)
-find_package(Qt6 COMPONENTS WebEngineWidgets QUIET)
-
-# 检查WebEngine是否可用，特别处理Windows平台
-set(WEBENGINE_AVAILABLE FALSE)
-if(Qt6WebEngineWidgets_FOUND AND NOT WIN32 AND NOT APPLE)
-    message(STATUS "Qt WebEngine found - enabling web features")
-    set(WEBENGINE_AVAILABLE TRUE)
-    add_definitions(-DWEBENGINE_AVAILABLE)
-    set(WEBENGINE_LIBRARIES Qt6::WebEngineWidgets)
-elseif(WIN32)
-    message(STATUS "Windows platform detected - WebEngine features disabled for compatibility")
-    set(WEBENGINE_LIBRARIES "")
-elseif(APPLE)
-    message(STATUS "macOS platform detected - WebEngine features disabled to avoid GPU crashes")
-    set(WEBENGINE_LIBRARIES "")
-else()
-    message(WARNING "Qt WebEngine not found - web features will be disabled")
-    set(WEBENGINE_LIBRARIES "")
-endif()
 
 # 企业级架构作为标准（移除条件编译）
 # add_definitions(-DENTERPRISE_EDITION) # 不再需要条件编译
@@ -46,8 +27,6 @@ if(APPLE)
     set(MACOSX_BUNDLE_ICON_FILE "icon")
 elseif(WIN32)
     # Windows 特定配置
-    # Windows 上禁用 WebEngine（兼容性考虑）
-    message(STATUS "Windows platform: WebEngine disabled for compatibility")
 endif()
 
 # 定义模块库
@@ -206,11 +185,6 @@ qt_add_library(ECharts STATIC
     layoutexamplestab.qrc
 )
 
-# 检查WebEngine是否可用，特别处理Windows平台
-if(WEBENGINE_AVAILABLE)
-    target_compile_definitions(ECharts PRIVATE WEBENGINE_AVAILABLE)
-endif()
-
 target_link_libraries(ECharts PUBLIC
     Qt6::Charts
 PRIVATE
@@ -223,11 +197,6 @@ PRIVATE
     Styles
     Device
 )
-
-# 只在 WebEngine 可用时链接
-if(WEBENGINE_AVAILABLE)
-    target_link_libraries(ECharts PRIVATE Qt6::WebEngineWidgets)
-endif()
 
 target_include_directories(ECharts PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -244,11 +213,6 @@ qt_add_library(ReportsTab STATIC
     layoutexamplestab.qrc
 )
 
-# 检查WebEngine是否可用，特别处理Windows平台
-if(WEBENGINE_AVAILABLE)
-    target_compile_definitions(ReportsTab PRIVATE WEBENGINE_AVAILABLE)
-endif()
-
 target_link_libraries(ReportsTab PUBLIC
     Qt6::Charts
 PRIVATE
@@ -260,11 +224,6 @@ PRIVATE
     EnterpriseServices
     Styles
 )
-
-# 只在 WebEngine 可用时链接
-if(WEBENGINE_AVAILABLE)
-    target_link_libraries(ReportsTab PRIVATE Qt6::WebEngineWidgets)
-endif()
 target_include_directories(ReportsTab PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Styles
@@ -361,10 +320,6 @@ target_link_libraries(QTExample PRIVATE
     Qt6::Charts
 )
 
-# 只在 WebEngine 可用时链接
-if(WEBENGINE_AVAILABLE)
-    target_link_libraries(QTExample PRIVATE Qt6::WebEngineWidgets)
-endif()
 
 # 包含模块头文件目录
 target_include_directories(QTExample PRIVATE

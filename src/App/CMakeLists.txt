@@ -14,7 +14,6 @@ qt6_add_resources(QtEnterpriseApp "resources"
 target_link_libraries(QtEnterpriseApp
     Qt6::Core
     Qt6::Widgets
-    Qt6::WebEngineWidgets
     Qt6::Network
     enterprisecore
     enterpriseinterfaces

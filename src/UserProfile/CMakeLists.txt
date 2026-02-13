@@ -5,15 +5,6 @@ qt6_add_library(userprofile STATIC
     userprofiletab.cpp
 )
 
-# 检查WebEngine是否可用（使用主 CMakeLists.txt 中的 WEBENGINE_AVAILABLE）
-if(WEBENGINE_AVAILABLE)
-    target_compile_definitions(userprofile PRIVATE WEBENGINE_AVAILABLE)
-    target_link_libraries(userprofile PRIVATE Qt6::WebEngineWidgets)
-    message(STATUS "UserProfile module: WebEngine enabled")
-else()
-    message(STATUS "UserProfile module: WebEngine disabled")
-endif()
-
 target_link_libraries(userprofile PUBLIC
     Qt6::Charts
 PRIVATE

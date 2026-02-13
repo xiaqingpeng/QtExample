@@ -8,14 +8,6 @@ qt_add_library(Device STATIC
     serverconfigtab.h
 )
 
-# 检查WebEngine是否可用
-if(WEBENGINE_AVAILABLE)
-    target_compile_definitions(Device PRIVATE WEBENGINE_AVAILABLE)
-    message(STATUS "Device module: WebEngine enabled")
-else()
-    message(STATUS "Device module: WebEngine disabled")
-endif()
-
 target_link_libraries(Device PUBLIC
     Qt6::Charts
 PRIVATE
@@ -27,11 +19,6 @@ PRIVATE
     Styles
     ECharts
 )
-
-# 只在 WebEngine 可用时链接
-if(WEBENGINE_AVAILABLE)
-    target_link_libraries(Device PRIVATE Qt6::WebEngineWidgets)
-endif()
 
 target_include_directories(Device PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../Core

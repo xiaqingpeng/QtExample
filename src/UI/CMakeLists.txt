@@ -7,7 +7,6 @@ qt6_add_library(ui STATIC
 target_link_libraries(ui
     Qt6::Core
     Qt6::Widgets
-    Qt6::WebEngineWidgets
     Qt6::Network
     EnterpriseCore
     EnterpriseServices

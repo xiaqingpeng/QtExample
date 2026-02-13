@@ -3,15 +3,6 @@ qt6_add_library(reports STATIC
     reportstab.cpp
 )
 
-# 检查WebEngine是否可用（使用主 CMakeLists.txt 中的 WEBENGINE_AVAILABLE）
-if(WEBENGINE_AVAILABLE)
-    target_compile_definitions(reports PRIVATE WEBENGINE_AVAILABLE)
-    target_link_libraries(reports PRIVATE Qt6::WebEngineWidgets)
-    message(STATUS "Reports module: WebEngine enabled")
-else()
-    message(STATUS "Reports module: WebEngine disabled")
-endif()
-
 target_link_libraries(reports PUBLIC
     Qt6::Charts
 PRIVATE

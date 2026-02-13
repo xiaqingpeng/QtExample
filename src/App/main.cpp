@@ -118,18 +118,6 @@ void setupPlatformStyle()
 
 int main(int argc, char *argv[])
 {
-    // ========== QtWebEngine 配置 ==========
-    // 必须在 QApplication 创建之前设置
-    
-    // 禁用 QtWebEngine 的 GPU 加速，避免崩溃
-    qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu --disable-software-rasterizer --disable-gpu-compositing --disable-3d-transforms --disable-accelerated-video-decode --disable-accelerated-video-encode");
-    
-    // 使用软件渲染
-    qputenv("QTWEBENGINE_DISABLE_SANDBOX", "1");
-    
-    // 禁用硬件加速
-    qputenv("QT_QUICK_BACKEND", "software");
-    
     // 使用企业级应用程序类作为标准
     Application app(argc, argv);
     
