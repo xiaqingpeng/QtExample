@@ -1,4 +1,3 @@
-// /Applications/qingpengxia/qt/qt6/example/src/Services/PersistentCookieJar.h
 #ifndef PERSISTENTCOOKIEJAR_H
 #define PERSISTENTCOOKIEJAR_H
 

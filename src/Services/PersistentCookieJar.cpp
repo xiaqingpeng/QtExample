@@ -1,4 +1,3 @@
-// /Applications/qingpengxia/qt/qt6/example/src/Services/PersistentCookieJar.cpp
 #include "PersistentCookieJar.h"
 
 PersistentCookieJar::PersistentCookieJar(QObject *parent)

@@ -363,7 +363,7 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
                         left: '10%', // 增加左 margin 确保 Y 轴不被遮挡
                         right: '10%', // 增加右 margin
                         top: '15%',
-                        bottom: '15%',
+                        bottom: '25%', // 增加底部空间，避免 x 轴标签与 markPoint 重叠
                         containLabel: true // 确保标签不被裁剪
                     },
                     xAxis: {
@@ -371,7 +371,11 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
                         data: ['下行', '上行', '总接收', '总发送'],
                         axisLabel: {
                             interval: 0, // 显示所有标签
-                            rotate: 0 // 不旋转标签
+                            rotate: 0, // 不旋转标签
+                            margin: 10 // 增加标签与轴线的距离
+                        },
+                        axisTick: {
+                            alignWithLabel: true // 刻度线与标签对齐
                         }
                     },
                     yAxis: {
@@ -637,10 +641,10 @@ ServerConfigTab::ServerConfigTab(QWidget *parent)
                         // 添加网络流量数据标注
                         markPoint: {
                             data: [
-                                { name: '下行', value: networkRxMb.toFixed(1) + ' MB', x: '15%', y: '90%' },
-                                { name: '上行', value: networkTxMb.toFixed(1) + ' MB', x: '35%', y: '90%' },
-                                { name: '总接收', value: totalRxMb.toFixed(1) + ' MB', x: '65%', y: '90%' },
-                                { name: '总发送', value: totalTxMb.toFixed(1) + ' MB', x: '85%', y: '90%' }
+                                { name: '下行', value: networkRxMb.toFixed(1) + ' MB', x: '15%', y: '75%' },
+                                { name: '上行', value: networkTxMb.toFixed(1) + ' MB', x: '35%', y: '75%' },
+                                { name: '总接收', value: totalRxMb.toFixed(1) + ' MB', x: '65%', y: '75%' },
+                                { name: '总发送', value: totalTxMb.toFixed(1) + ' MB', x: '85%', y: '75%' }
                             ],
                             label: {
                                 formatter: '{b}: {c}',

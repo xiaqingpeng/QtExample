@@ -483,9 +483,23 @@ ContentTab::ContentTab(QWidget *parent)
                         trigger: 'axis',
                         formatter: '{b}: {c} MB'
                     },
+                    grid: {
+                        left: '10%',
+                        right: '10%',
+                        top: '15%',
+                        bottom: '25%', // 增加底部空间，避免 x 轴标签与 markPoint 重叠
+                        containLabel: true
+                    },
                     xAxis: {
                         type: 'category',
-                        data: ['下行', '上行', '总接收', '总发送']
+                        data: ['下行', '上行', '总接收', '总发送'],
+                        axisLabel: {
+                            interval: 0, // 显示所有标签
+                            margin: 10 // 增加标签与轴线的距离
+                        },
+                        axisTick: {
+                            alignWithLabel: true // 刻度线与标签对齐
+                        }
                     },
                     yAxis: {
                         type: 'value',
@@ -734,6 +748,13 @@ ContentTab::ContentTab(QWidget *parent)
                 var yAxisMax = maxDataValue > 0 ? Math.ceil(maxDataValue * 1.2) : 10; // 确保至少有一个合理的最大值
                 
                 networkChart.setOption({
+                    grid: {
+                        left: '10%',
+                        right: '10%',
+                        top: '15%',
+                        bottom: '25%', // 增加底部空间，避免 x 轴标签与 markPoint 重叠
+                        containLabel: true
+                    },
                     yAxis: {
                         max: yAxisMax,
                         axisLabel: {
@@ -746,10 +767,10 @@ ContentTab::ContentTab(QWidget *parent)
                         // 添加网络流量数据标注
                         markPoint: {
                             data: [
-                                { name: '下行', value: networkRxMb.toFixed(1) + ' MB', x: '15%', y: '90%' },
-                                { name: '上行', value: networkTxMb.toFixed(1) + ' MB', x: '35%', y: '90%' },
-                                { name: '总接收', value: totalRxMb.toFixed(1) + ' MB', x: '65%', y: '90%' },
-                                { name: '总发送', value: totalTxMb.toFixed(1) + ' MB', x: '85%', y: '90%' }
+                                { name: '下行', value: networkRxMb.toFixed(1) + ' MB', x: '15%', y: '75%' },
+                                { name: '上行', value: networkTxMb.toFixed(1) + ' MB', x: '35%', y: '75%' },
+                                { name: '总接收', value: totalRxMb.toFixed(1) + ' MB', x: '65%', y: '75%' },
+                                { name: '总发送', value: totalTxMb.toFixed(1) + ' MB', x: '85%', y: '75%' }
                             ],
                             label: {
                                 formatter: '{b}: {c}',
