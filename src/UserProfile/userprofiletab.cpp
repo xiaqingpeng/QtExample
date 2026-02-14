@@ -19,7 +19,7 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QStandardPaths>
-#include <QPrinter>
+#include <QPdfWriter>
 #include <QTextDocument>
 #include <QPushButton>
 #include <QCoreApplication>
@@ -823,6 +823,7 @@ void UserProfileTab::exportUserProfileToExcel()
 
 void UserProfileTab::exportUserProfileToPDF()
 {
+#ifdef HAS_QT_PDF
     // qDebug() << "开始PDF格式用户画像导出...";
     
     // 设置默认文件名和路径
@@ -937,9 +938,7 @@ void UserProfileTab::exportUserProfileToPDF()
       .arg(topFeatures);
     
     // 创建PDF文档
-    QPrinter printer(QPrinter::HighResolution);
-    printer.setOutputFormat(QPrinter::PdfFormat);
-    printer.setOutputFileName(fileName);
+    QPdfWriter printer(fileName);
     printer.setPageSize(QPageSize::A4);
     printer.setPageMargins(QMarginsF(20, 20, 20, 20), QPageLayout::Millimeter);
     
@@ -950,6 +949,9 @@ void UserProfileTab::exportUserProfileToPDF()
     
     // qDebug() << "PDF用户画像导出完成，文件保存到:" << fileName;
     QMessageBox::information(this, "成功", "用户画像导出成功!\n文件保存到: " + fileName);
+#else
+    QMessageBox::warning(this, "提示", "Qt Pdf模块未安装，PDF导出功能不可用");
+#endif
 }
 
 void UserProfileTab::applyTheme()

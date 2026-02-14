@@ -9,13 +9,11 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDateTime>
-#include <QDebug>
-#include <QPrinter>
+#include <QStandardPaths>
+#include <QPdfWriter>
 #include <QTextDocument>
-#include <QPageSetupDialog>
 #include <QHeaderView>
 #include <QTimer>
-#include <QStandardPaths>
 #include <QCoreApplication>
 #include <QDir>
 #include <QtCharts/QChartView>
@@ -942,6 +940,7 @@ void ReportsTab::exportToExcel()
 
 void ReportsTab::exportToPDF()
 {
+#ifdef HAS_QT_PDF
     QString fileName = QFileDialog::getSaveFileName(this, "导出报表为PDF", 
         QString("report_%1.pdf").arg(QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss")), 
         "PDF文件 (*.pdf)");
@@ -1076,9 +1075,7 @@ void ReportsTab::exportToPDF()
     )";
     
     // 创建PDF文档
-    QPrinter printer(QPrinter::HighResolution);
-    printer.setOutputFormat(QPrinter::PdfFormat);
-    printer.setOutputFileName(fileName);
+    QPdfWriter printer(fileName);
     printer.setPageSize(QPageSize::A4);
     printer.setPageMargins(QMarginsF(20, 20, 20, 20), QPageLayout::Millimeter);
     
@@ -1088,6 +1085,9 @@ void ReportsTab::exportToPDF()
     document.print(&printer);
     
     QMessageBox::information(this, "成功", "报表导出成功!");
+#else
+    QMessageBox::warning(this, "提示", "Qt Pdf模块未安装，PDF导出功能不可用");
+#endif
 }
 
 void ReportsTab::applyTheme()

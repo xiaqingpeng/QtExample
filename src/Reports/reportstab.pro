@@ -1,4 +1,4 @@
-QT += core gui widgets network charts
+QT += core gui widgets network charts pdf
 
 CONFIG += c++17 sdk_no_version_check
 

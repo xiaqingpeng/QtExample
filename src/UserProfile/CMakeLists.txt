@@ -10,11 +10,15 @@ if(Qt6Charts_FOUND)
     target_compile_definitions(userprofile PRIVATE HAS_QT_CHARTS)
 endif()
 
+if(Qt6Pdf_FOUND)
+    target_link_libraries(userprofile PRIVATE Qt6::Pdf)
+    target_compile_definitions(userprofile PRIVATE HAS_QT_PDF)
+endif()
+
 target_link_libraries(userprofile PRIVATE
     Qt6::Core
     Qt6::Widgets
     Qt6::Network
-    Qt6::PrintSupport
     EnterpriseCore
     EnterpriseServices
     network

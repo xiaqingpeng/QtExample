@@ -11,14 +11,30 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # 查找Qt模块
-find_package(Qt6 COMPONENTS Core Gui Widgets Network PrintSupport REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets Network REQUIRED)
 find_package(Qt6 COMPONENTS Charts QUIET)
+find_package(Qt6 COMPONENTS Pdf QUIET)
+find_package(Qt6 COMPONENTS PrintSupport QUIET)
 
 # 设置Qt Charts可用性宏
 if(Qt6Charts_FOUND)
     message(STATUS "Qt6 Charts found - Charting features will be enabled")
 else()
     message(WARNING "Qt6 Charts not found - Charting features will be disabled")
+endif()
+
+# 设置Qt Pdf可用性宏
+if(Qt6Pdf_FOUND)
+    message(STATUS "Qt6 Pdf found - PDF features will be enabled")
+else()
+    message(WARNING "Qt6 Pdf not found - PDF features will be disabled")
+endif()
+
+# 设置Qt PrintSupport可用性宏
+if(Qt6PrintSupport_FOUND)
+    message(STATUS "Qt6 PrintSupport found - Printing features will be enabled")
+else()
+    message(WARNING "Qt6 PrintSupport not found - Printing features will be disabled")
 endif()
 
 # 企业级架构作为标准（移除条件编译）
@@ -229,12 +245,16 @@ if(Qt6Charts_FOUND)
     target_compile_definitions(ReportsTab PRIVATE HAS_QT_CHARTS)
 endif()
 
+if(Qt6Pdf_FOUND)
+    target_link_libraries(ReportsTab PRIVATE Qt6::Pdf)
+    target_compile_definitions(ReportsTab PRIVATE HAS_QT_PDF)
+endif()
+
 target_link_libraries(ReportsTab PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
     Qt6::Network
-    Qt6::PrintSupport
     EnterpriseServices
     Styles
 )
@@ -319,7 +339,6 @@ target_link_libraries(QTExample PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::Network
-    Qt6::PrintSupport
     EnterpriseServices
     EnterpriseCore
     EnterpriseInterfaces
@@ -331,8 +350,22 @@ target_link_libraries(QTExample PRIVATE
     analytics
     Styles
     Device
-    Qt6::Charts
 )
+
+# 条件链接Qt6::PrintSupport
+if(Qt6PrintSupport_FOUND)
+    target_link_libraries(QTExample PRIVATE Qt6::PrintSupport)
+endif()
+
+# 条件链接Qt6::Charts
+if(Qt6Charts_FOUND)
+    target_link_libraries(QTExample PRIVATE Qt6::Charts)
+endif()
+
+# 条件链接Qt6::Pdf
+if(Qt6Pdf_FOUND)
+    target_link_libraries(QTExample PRIVATE Qt6::Pdf)
+endif()
 
 
 # 包含模块头文件目录
