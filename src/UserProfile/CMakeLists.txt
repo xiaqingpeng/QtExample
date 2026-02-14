@@ -21,7 +21,6 @@ target_link_libraries(userprofile PRIVATE
     Qt6::Network
     EnterpriseCore
     EnterpriseServices
-    network
     auth
     Styles
 )

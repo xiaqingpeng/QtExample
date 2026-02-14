@@ -15,7 +15,6 @@ PRIVATE
     Qt6::Network
     EnterpriseCore
     EnterpriseServices
-    network
     Styles
 )
 

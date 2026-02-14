@@ -10,7 +10,7 @@ target_link_libraries(ui
     Qt6::Network
     EnterpriseCore
     EnterpriseServices
-    network
+  
     analytics
     auth
     userprofile

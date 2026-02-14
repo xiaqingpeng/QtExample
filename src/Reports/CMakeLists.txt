@@ -11,7 +11,6 @@ PRIVATE
     Qt6::Network
     EnterpriseCore
     EnterpriseServices
-    network
     analytics
     Styles
 )

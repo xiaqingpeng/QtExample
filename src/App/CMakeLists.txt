@@ -21,7 +21,6 @@ target_link_libraries(QtEnterpriseApp
     enterpriselocalization
     utils
     styles
-    network
     analytics
     auth
     userprofile

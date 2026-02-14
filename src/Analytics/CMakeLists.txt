@@ -8,7 +8,6 @@ target_link_libraries(analytics
     Qt6::Network
     EnterpriseCore
     EnterpriseServices
-    network
 )
 
 target_include_directories(analytics PUBLIC

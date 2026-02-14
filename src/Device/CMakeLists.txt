@@ -18,7 +18,6 @@ target_link_libraries(Device PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::Network
-    network
     Styles
     ECharts
 )

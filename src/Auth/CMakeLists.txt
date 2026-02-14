@@ -14,7 +14,6 @@ target_link_libraries(auth
     Qt6::Network
     EnterpriseCore
     EnterpriseServices
-    network
     Styles
 )
 
