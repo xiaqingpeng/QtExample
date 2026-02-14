@@ -5,9 +5,12 @@ qt6_add_library(userprofile STATIC
     userprofiletab.cpp
 )
 
-target_link_libraries(userprofile PUBLIC
-    Qt6::Charts
-PRIVATE
+if(Qt6Charts_FOUND)
+    target_link_libraries(userprofile PUBLIC Qt6::Charts)
+    target_compile_definitions(userprofile PRIVATE HAS_QT_CHARTS)
+endif()
+
+target_link_libraries(userprofile PRIVATE
     Qt6::Core
     Qt6::Widgets
     Qt6::Network

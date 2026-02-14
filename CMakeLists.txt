@@ -11,7 +11,15 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 # 查找Qt模块
-find_package(Qt6 COMPONENTS Core Gui Widgets Network PrintSupport Charts REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets Network PrintSupport REQUIRED)
+find_package(Qt6 COMPONENTS Charts QUIET)
+
+# 设置Qt Charts可用性宏
+if(Qt6Charts_FOUND)
+    message(STATUS "Qt6 Charts found - Charting features will be enabled")
+else()
+    message(WARNING "Qt6 Charts not found - Charting features will be disabled")
+endif()
 
 # 企业级架构作为标准（移除条件编译）
 # add_definitions(-DENTERPRISE_EDITION) # 不再需要条件编译
@@ -185,9 +193,12 @@ qt_add_library(ECharts STATIC
     layoutexamplestab.qrc
 )
 
-target_link_libraries(ECharts PUBLIC
-    Qt6::Charts
-PRIVATE
+if(Qt6Charts_FOUND)
+    target_link_libraries(ECharts PUBLIC Qt6::Charts)
+    target_compile_definitions(ECharts PRIVATE HAS_QT_CHARTS)
+endif()
+
+target_link_libraries(ECharts PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
@@ -213,9 +224,12 @@ qt_add_library(ReportsTab STATIC
     layoutexamplestab.qrc
 )
 
-target_link_libraries(ReportsTab PUBLIC
-    Qt6::Charts
-PRIVATE
+if(Qt6Charts_FOUND)
+    target_link_libraries(ReportsTab PUBLIC Qt6::Charts)
+    target_compile_definitions(ReportsTab PRIVATE HAS_QT_CHARTS)
+endif()
+
+target_link_libraries(ReportsTab PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets

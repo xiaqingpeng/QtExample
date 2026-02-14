@@ -3,6 +3,8 @@ QT += core gui widgets network charts
 CONFIG += c++17 staticlib
 CONFIG -= single_module
 
+defines += HAS_QT_CHARTS
+
 TEMPLATE = lib
 TARGET = userprofile
 

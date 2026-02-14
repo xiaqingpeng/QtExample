@@ -8,9 +8,12 @@ qt_add_library(Device STATIC
     serverconfigtab.h
 )
 
-target_link_libraries(Device PUBLIC
-    Qt6::Charts
-PRIVATE
+if(Qt6Charts_FOUND)
+    target_link_libraries(Device PUBLIC Qt6::Charts)
+    target_compile_definitions(Device PRIVATE HAS_QT_CHARTS)
+endif()
+
+target_link_libraries(Device PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
