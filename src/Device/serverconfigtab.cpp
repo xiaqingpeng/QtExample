@@ -206,48 +206,22 @@ void ServerConfigTab::setupUI()
 
 void ServerConfigTab::fetchSystemInfo()
 {
-    // 创建模拟数据（实际应该从API获取）
-    QJsonObject mockData;
-    mockData["serverIp"] = "192.168.1.100";
-    mockData["os"] = "Ubuntu 20.04 LTS";
-    mockData["platform"] = "x86_64";
-    mockData["uptime"] = "2 days, 12 hours, 34 minutes";
-    mockData["cpuUsage"] = 45;
-    mockData["cpuCores"] = 8;
-    mockData["memoryUsage"] = 68;
-    mockData["memoryTotal"] = 16;
-    mockData["memoryUsed"] = 10.88;
-    mockData["memoryAvailable"] = 5.12;
-    mockData["diskUsage"] = 72;
-    mockData["diskTotal"] = 500;
-    mockData["diskUsed"] = 360;
-    mockData["diskAvailable"] = 140;
-    mockData["load_1"] = 1.2;
-    mockData["load_5"] = 1.5;
-    mockData["load_15"] = 1.8;
-    mockData["network_rx_mb"] = 128.5;
-    mockData["network_tx_mb"] = 64.2;
-    mockData["total_rx_mb"] = 1536.8;
-    mockData["total_tx_mb"] = 768.4;
-    
-    updateCharts(mockData);
-    
-    // 同时尝试真实的网络请求
+    // 从服务器API接口获取系统信息
     if (m_apiService) {
-    m_apiService->get("/system/info", [this](const QJsonObject &response) {
-        if (response["code"].toInt() == 0) {
-            QJsonObject data = response["data"].toObject();
-            
+        m_apiService->get("/system/info", [this](const QJsonObject &response) {
+            if (response["code"].toInt() == 0) {
+                QJsonObject data = response["data"].toObject();
+                
                 // 处理网络流量数据
-            if (data.contains("network_rx_bytes")) {
-                qint64 rxBytes = data["network_rx_bytes"].toVariant().toLongLong();
-                data["network_rx_mb"] = rxBytes / (1024.0 * 1024.0);
-            }
-            if (data.contains("network_tx_bytes")) {
-                qint64 txBytes = data["network_tx_bytes"].toVariant().toLongLong();
-                data["network_tx_mb"] = txBytes / (1024.0 * 1024.0);
-            }
-            
+                if (data.contains("network_rx_bytes")) {
+                    qint64 rxBytes = data["network_rx_bytes"].toVariant().toLongLong();
+                    data["network_rx_mb"] = rxBytes / (1024.0 * 1024.0);
+                }
+                if (data.contains("network_tx_bytes")) {
+                    qint64 txBytes = data["network_tx_bytes"].toVariant().toLongLong();
+                    data["network_tx_mb"] = txBytes / (1024.0 * 1024.0);
+                }
+                
                 // 转换字段名称
                 if (data.contains("cpuUsage")) data["cpu_usage"] = data["cpuUsage"];
                 if (data.contains("memoryUsage")) data["mem_usage"] = data["memoryUsage"];
@@ -260,10 +234,10 @@ void ServerConfigTab::fetchSystemInfo()
                 if (data.contains("os")) data["os_info"] = data["os"];
                 
                 updateCharts(data);
-        }
-    }, [](const QString &error) {
+            }
+        }, [](const QString &error) {
             qWarning() << "[ServerConfigTab] Network error:" << error;
-    });
+        });
     }
 }
 

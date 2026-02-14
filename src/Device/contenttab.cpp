@@ -322,7 +322,118 @@ void ContentTab::fetchSystemInfo()
             systemInfo["disk_usage"] = 0.0;
         }
         
-        // 平台特定的系统信息获取（简化版本，只获取基本数据）
+        // 平台特定的系统信息获取
+#ifdef Q_OS_WIN
+        // Windows系统信息获取
+        QProcess process;
+        process.start("wmic", QStringList() << "cpu" << "get" << "loadpercentage" << "/value");
+        process.waitForFinished();
+        QString cpuOutput = process.readAllStandardOutput().trimmed();
+        systemInfo["cpu_usage"] = cpuOutput.toDouble();
+        
+        process.start("wmic", QStringList() << "OS" << "get" << "TotalVisibleMemorySize,FreePhysicalMemory" << "/value");
+        process.waitForFinished();
+        QString memOutput = process.readAllStandardOutput().trimmed();
+        QStringList memLines = memOutput.split("\n");
+        if (memLines.size() >= 2) {
+            qint64 totalMem = memLines[0].split("=")[1].trimmed().toLongLong();
+            qint64 freeMem = memLines[1].split("=")[1].trimmed().toLongLong();
+            qint64 usedMem = totalMem - freeMem;
+            systemInfo["mem_total"] = totalMem / (1024.0 * 1024.0 * 1024.0);
+            systemInfo["mem_used"] = usedMem / (1024.0 * 1024.0 * 1024.0);
+            systemInfo["mem_usage"] = (usedMem * 100.0) / totalMem;
+        }
+#elif defined(Q_OS_LINUX)
+        // Linux系统信息获取
+        QProcess process;
+        process.start("cat", QStringList() << "/proc/meminfo");
+        process.waitForFinished();
+        QString memOutput = process.readAllStandardOutput();
+        QStringList memLines = memOutput.split("\n");
+        qint64 totalMem = 0, freeMem = 0, buffers = 0, cached = 0;
+        for (const QString &line : memLines) {
+            if (line.startsWith("MemTotal:")) {
+                totalMem = line.split(QRegularExpression("\\s+"))[1].toLongLong();
+            } else if (line.startsWith("MemFree:")) {
+                freeMem = line.split(QRegularExpression("\\s+"))[1].toLongLong();
+            } else if (line.startsWith("Buffers:")) {
+                buffers = line.split(QRegularExpression("\\s+"))[1].toLongLong();
+            } else if (line.startsWith("Cached:")) {
+                cached = line.split(QRegularExpression("\\s+"))[1].toLongLong();
+            }
+        }
+        qint64 usedMem = totalMem - freeMem - buffers - cached;
+        systemInfo["mem_total"] = totalMem / (1024.0 * 1024.0);
+        systemInfo["mem_used"] = usedMem / (1024.0 * 1024.0);
+        systemInfo["mem_usage"] = (usedMem * 100.0) / totalMem;
+        
+        process.start("cat", QStringList() << "/proc/loadavg");
+        process.waitForFinished();
+        QString loadOutput = process.readAllStandardOutput();
+        QStringList loadValues = loadOutput.split(QRegularExpression("\\s+"));
+        if (loadValues.size() >= 3) {
+            systemInfo["load_1"] = loadValues[0].toDouble();
+            systemInfo["load_5"] = loadValues[1].toDouble();
+            systemInfo["load_15"] = loadValues[2].toDouble();
+        }
+        
+        process.start("cat", QStringList() << "/proc/stat");
+        process.waitForFinished();
+        QString cpuOutput = process.readAllStandardOutput();
+        QStringList cpuLines = cpuOutput.split("\n");
+        if (!cpuLines.isEmpty()) {
+            QStringList cpuValues = cpuLines[0].split(QRegularExpression("\\s+"));
+            if (cpuValues.size() >= 8) {
+                qint64 user = cpuValues[1].toLongLong();
+                qint64 nice = cpuValues[2].toLongLong();
+                qint64 system = cpuValues[3].toLongLong();
+                qint64 idle = cpuValues[4].toLongLong();
+                qint64 total = user + nice + system + idle;
+                systemInfo["cpu_usage"] = ((total - idle) * 100.0) / total;
+            }
+        }
+#elif defined(Q_OS_MACOS)
+        // macOS系统信息获取
+        QProcess process;
+        process.start("top", QStringList() << "-l" << "1" << "-n" << "0");
+        process.waitForFinished();
+        QString topOutput = process.readAllStandardOutput();
+        QRegularExpression cpuRegex("CPU usage: (\\d+\\.\\d+)%");
+        QRegularExpressionMatch cpuMatch = cpuRegex.match(topOutput);
+        if (cpuMatch.hasMatch()) {
+            systemInfo["cpu_usage"] = cpuMatch.captured(1).toDouble();
+        }
+        
+        process.start("vm_stat");
+        process.waitForFinished();
+        QString vmOutput = process.readAllStandardOutput();
+        QRegularExpression memRegex("Pages free: (\\d+)\\.");
+        QRegularExpressionMatch memMatch = memRegex.match(vmOutput);
+        if (memMatch.hasMatch()) {
+            qint64 freePages = memMatch.captured(1).toLongLong();
+            qint64 pageSize = 4096; // macOS页面大小
+            qint64 freeMem = freePages * pageSize;
+            process.start("sysctl", QStringList() << "-n" << "hw.memsize");
+            process.waitForFinished();
+            QString memSizeOutput = process.readAllStandardOutput().trimmed();
+            qint64 totalMem = memSizeOutput.toLongLong();
+            qint64 usedMem = totalMem - freeMem;
+            systemInfo["mem_total"] = totalMem / (1024.0 * 1024.0 * 1024.0);
+            systemInfo["mem_used"] = usedMem / (1024.0 * 1024.0 * 1024.0);
+            systemInfo["mem_usage"] = (usedMem * 100.0) / totalMem;
+        }
+        
+        process.start("uptime");
+        process.waitForFinished();
+        QString uptimeOutput = process.readAllStandardOutput();
+        QStringList uptimeParts = uptimeOutput.split(QRegularExpression("\\s+"));
+        if (uptimeParts.size() >= 3) {
+            systemInfo["load_1"] = uptimeParts[0].toDouble();
+            systemInfo["load_5"] = uptimeParts[1].toDouble();
+            systemInfo["load_15"] = uptimeParts[2].toDouble();
+        }
+#else
+        // 其他系统，使用默认值
         systemInfo["cpu_usage"] = 0.0;
         systemInfo["mem_total"] = 0.0;
         systemInfo["mem_used"] = 0.0;
@@ -335,6 +446,7 @@ void ContentTab::fetchSystemInfo()
         systemInfo["network_tx_mb"] = 0.0;
         systemInfo["total_rx_mb"] = 0.0;
         systemInfo["total_tx_mb"] = 0.0;
+#endif
         
         if (safeThis) {
             QMetaObject::invokeMethod(safeThis, "updateCharts", Qt::QueuedConnection, Q_ARG(QJsonObject, systemInfo));
@@ -348,45 +460,6 @@ void ContentTab::fetchSystemInfo()
     
     worker->moveToThread(thread);
     thread->start();
-    
-    // 同时尝试从网络获取系统信息
-    if (m_apiService) {
-        m_apiService->get("/system/info", [this](const QJsonObject &response) {
-            if (response["code"].toInt() == 0) {
-                QJsonObject data = response["data"].toObject();
-                
-                if (data.contains("network_rx_bytes")) {
-                    qint64 rxBytes = data["network_rx_bytes"].toVariant().toLongLong();
-                    data["network_rx_mb"] = rxBytes / (1024.0 * 1024.0);
-                }
-                if (data.contains("network_tx_bytes")) {
-                    qint64 txBytes = data["network_tx_bytes"].toVariant().toLongLong();
-                    data["network_tx_mb"] = txBytes / (1024.0 * 1024.0);
-                }
-                
-                if (!data.contains("total_rx_mb")) {
-                    data["total_rx_mb"] = 1536.8;
-                }
-                if (!data.contains("total_tx_mb")) {
-                    data["total_tx_mb"] = 768.4;
-                }
-                
-                if (data.contains("cpuUsage")) data["cpu_usage"] = data["cpuUsage"];
-                if (data.contains("memoryUsage")) data["mem_usage"] = data["memoryUsage"];
-                if (data.contains("memoryTotal")) data["mem_total"] = data["memoryTotal"];
-                if (data.contains("memoryUsed")) data["mem_used"] = data["memoryUsed"];
-                if (data.contains("diskUsage")) data["disk_usage"] = data["diskUsage"];
-                if (data.contains("diskTotal")) data["disk_total"] = data["diskTotal"];
-                if (data.contains("diskUsed")) data["disk_used"] = data["diskUsed"];
-                if (data.contains("serverIp")) data["ip_address"] = data["serverIp"];
-                if (data.contains("os")) data["os_info"] = data["os"];
-                
-                updateCharts(data);
-            }
-        }, [](const QString &error) {
-            qWarning() << "[ContentTab] Network error:" << error;
-        });
-    }
 }
 
 void ContentTab::updateCharts(const QJsonObject &data)
@@ -406,7 +479,7 @@ void ContentTab::updateCharts(const QJsonObject &data)
     }
     
     // 更新 CPU Gauge
-    double cpuUsage = data["cpu_usage"].toDouble() > 0 ? data["cpu_usage"].toDouble() : data["cpuUsage"].toDouble();
+    double cpuUsage = data["cpu_usage"].toDouble();
     double cpuIdle = 100 - cpuUsage;
     QStringList cpuDetails;
     cpuDetails << QString("CPU使用率: %1%").arg(cpuUsage, 0, 'f', 1)
@@ -415,10 +488,10 @@ void ContentTab::updateCharts(const QJsonObject &data)
     updateGauge(m_cpuGauge, cpuUsage, cpuDetails);
     
     // 更新内存 Gauge
-    double memoryUsage = data["mem_usage"].toDouble() > 0 ? data["mem_usage"].toDouble() : data["memoryUsage"].toDouble();
-    double memTotal = data["mem_total"].toDouble() > 0 ? data["mem_total"].toDouble() : data["memoryTotal"].toDouble();
-    double memUsed = data["mem_used"].toDouble() > 0 ? data["mem_used"].toDouble() : data["memoryUsed"].toDouble();
-    double memAvailable = data["memoryAvailable"].toDouble() > 0 ? data["memoryAvailable"].toDouble() : (memTotal - memUsed);
+    double memoryUsage = data["mem_usage"].toDouble();
+    double memTotal = data["mem_total"].toDouble();
+    double memUsed = data["mem_used"].toDouble();
+    double memAvailable = memTotal - memUsed;
     QStringList memDetails;
     memDetails << QString("总计: %1 GB").arg(memTotal, 0, 'f', 2)
                << QString("已用: %1 GB").arg(memUsed, 0, 'f', 2)
@@ -426,10 +499,10 @@ void ContentTab::updateCharts(const QJsonObject &data)
     updateGauge(m_memoryGauge, memoryUsage, memDetails);
     
     // 更新磁盘 Gauge
-    double diskUsage = data["disk_usage"].toDouble() > 0 ? data["disk_usage"].toDouble() : data["diskUsage"].toDouble();
-    double diskTotal = data["disk_total"].toDouble() > 0 ? data["disk_total"].toDouble() : data["diskTotal"].toDouble();
-    double diskUsed = data["disk_used"].toDouble() > 0 ? data["disk_used"].toDouble() : data["diskUsed"].toDouble();
-    double diskAvailable = data["diskAvailable"].toDouble() > 0 ? data["diskAvailable"].toDouble() : (diskTotal - diskUsed);
+    double diskUsage = data["disk_usage"].toDouble();
+    double diskTotal = data["disk_total"].toDouble();
+    double diskUsed = data["disk_used"].toDouble();
+    double diskAvailable = diskTotal - diskUsed;
     QStringList diskDetails;
     diskDetails << QString("总计: %1 GB").arg(diskTotal, 0, 'f', 2)
                  << QString("已用: %1 GB").arg(diskUsed, 0, 'f', 2)
