@@ -117,6 +117,9 @@ void NetworkService::getCallback(const QString &url,
         fullUrl = requestUrl.toString();
     }
     
+    qDebug() << "[NetworkService] GET Request URL:" << fullUrl;
+    qDebug() << "[NetworkService] GET Query Params:" << queryParams.toString();
+    
     QNetworkRequest request = createRequest(fullUrl);
     QNetworkReply *reply = m_manager->get(request);
     
@@ -137,28 +140,20 @@ void NetworkService::postCallback(const QString &url,
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     
     QJsonDocument doc(data);
-    //  qDebug() << "[NetworkService] About to call m_manager->post()";
+    qDebug() << "[NetworkService] POST Request URL:" << fullUrl;
+    qDebug() << "[NetworkService] POST Request Data:" << doc.toJson(QJsonDocument::Compact);
+    
     QNetworkReply *reply = m_manager->post(request, doc.toJson());
-    //  qDebug() << "[NetworkService] m_manager->post() returned";
     
     if (!reply) {
-        //  qDebug() << "[NetworkService] ERROR: Reply is null!";
         return;
     }
     
-    //  qDebug() << "[NetworkService] POST request to:" << fullUrl;
-    //  qDebug() << "[NetworkService] Request data:" << doc.toJson(QJsonDocument::Compact);
-    //  qDebug() << "[NetworkService] Reply created:" << reply;
-    
     RequestInfo info;
-    //  qDebug() << "[NetworkService] Creating RequestInfo";
     info.promise->start();
-    //  qDebug() << "[NetworkService] Promise started";
     info.successCallback = successCallback;
     info.errorCallback = errorCallback;
-    //  qDebug() << "[NetworkService] Inserting into pending requests";
     m_pendingRequests.insert(reply, info);
-    //  qDebug() << "[NetworkService] Pending requests count:" << m_pendingRequests.size();
 }
 
 void NetworkService::putCallback(const QString &url,
@@ -171,6 +166,9 @@ void NetworkService::putCallback(const QString &url,
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     
     QJsonDocument doc(data);
+    qDebug() << "[NetworkService] PUT Request URL:" << fullUrl;
+    qDebug() << "[NetworkService] PUT Request Data:" << doc.toJson(QJsonDocument::Compact);
+    
     QNetworkReply *reply = m_manager->put(request, doc.toJson());
     
     RequestInfo info;
@@ -186,6 +184,8 @@ void NetworkService::deleteCallback(const QString &url,
 {
     QString fullUrl = buildFullUrl(url);
     QNetworkRequest request = createRequest(fullUrl);
+    
+    qDebug() << "[NetworkService] DELETE Request URL:" << fullUrl;
     
     QNetworkReply *reply = m_manager->deleteResource(request);
     
@@ -284,36 +284,31 @@ QFuture<QJsonObject> NetworkService::executeRequest(QNetworkReply* reply)
 
 void NetworkService::onReplyFinished(QNetworkReply* reply)
 {
-    //  qDebug() << "[NetworkService] onReplyFinished called, reply:" << reply;
-    
     if (!reply) {
-        //  qDebug() << "[NetworkService] Reply is null";
         return;
     }
     
     if (!m_pendingRequests.contains(reply)) {
-        //  qDebug() << "[NetworkService] Reply not in pending requests";
         return;
     }
     
     RequestInfo info = m_pendingRequests.take(reply);
-    //  qDebug() << "[NetworkService] Processing reply, has callbacks:" << (info.successCallback || info.errorCallback);
     
     QJsonObject result;
     
     if (reply->error() != QNetworkReply::NoError) {
-        //  qDebug() << "[NetworkService] Request failed:" << reply->error() << reply->errorString();
+        qDebug() << "[NetworkService] Request Error:" << reply->error() << reply->errorString();
         result["success"] = false;
         result["message"] = reply->errorString();
         result["error_code"] = reply->error();
     } else {
         QByteArray data = reply->readAll();
-        //  qDebug() << "[NetworkService] Response data:" << data;
+        qDebug() << "[NetworkService] Response Data:" << data;
         QJsonParseError parseError;
         QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
         
         if (parseError.error != QJsonParseError::NoError) {
-            //  qDebug() << "[NetworkService] JSON parse error:" << parseError.errorString();
+            qDebug() << "[NetworkService] JSON Parse Error:" << parseError.errorString();
             result["success"] = false;
             result["message"] = "JSON解析错误: " + parseError.errorString();
         } else {
@@ -330,22 +325,15 @@ void NetworkService::onReplyFinished(QNetworkReply* reply)
     }
     
     if (info.successCallback || info.errorCallback) {
-        //  qDebug() << "[NetworkService] About to call callbacks, hasSuccess:" << (bool)info.successCallback << "hasError:" << (bool)info.errorCallback;
         if (reply->error() != QNetworkReply::NoError) {
-            //  qDebug() << "[NetworkService] Calling error callback with:" << reply->errorString();
             if (info.errorCallback) {
                 info.errorCallback(reply->errorString());
-                //  qDebug() << "[NetworkService] Error callback completed";
             }
         } else {
-            //  qDebug() << "[NetworkService] Calling success callback with result:" << result;
             if (info.successCallback) {
                 info.successCallback(result);
-                //  qDebug() << "[NetworkService] Success callback completed";
             }
         }
-    } else {
-        //  qDebug() << "[NetworkService] No callbacks to call";
     }
     
     reply->deleteLater();
